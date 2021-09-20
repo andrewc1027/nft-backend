@@ -1,0 +1,26 @@
+{
+	"name": "nft-backend app",
+	
+	
+	"host": "http://localhost:3000",
+	
+	"port": 3010,
+	"dbhost": "cluster0.7m78n.mongodb.net",
+    "dbuser": "db_user",
+    "dbuser_pwd": "upo11rJuuDW3Ff5d",
+    "db":  "nft_market",
+	
+
+	"pinata_api":{
+		"api_key": "d412778569c288ded351",
+		"api_secret": "0173067c0452fbdad731a4a8709b35915609c45c4de1a5b683db684eee9bc7e0",
+		"JWT": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI3ZDU2Yjg1Zi1iY2IwLTRhNzYtYmY1Yy1kZDMxMTAxNTFiY2IiLCJlbWFpbCI6InN0cmFubmlrMTAwMG53QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2V9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJkNDEyNzc4NTY5YzI4OGRlZDM1MSIsInNjb3BlZEtleVNlY3JldCI6IjAxNzMwNjdjMDQ1MmZiZGFkNzMxYTRhODcwOWIzNTkxNTYwOWM0NWM0ZGUxYTViNjgzZGI2ODRlZWU5YmM3ZTAiLCJpYXQiOjE2MzIxNDQyMzV9.62imUKIkCTPZiQrpkgf4XY_2be68zgzBumviLknMUPU"
+		},
+
+
+	"upload_paths": {
+		"local_root": "."
+		
+	}
+	
+}

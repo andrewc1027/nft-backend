@@ -1,0 +1,44 @@
+{
+	"name": "crmjet-server",
+	"version": "1.0.0",
+	"main": "app.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "essotec",
+	"license": "ISC",
+	"dependencies": {
+		"app-root-path": "^3.0.0",
+		"bcrypt": "^3.0.8",
+		"body-parser": "^1.19.0",
+		"config": "^3.3.0",
+		"cors": "^2.8.5",
+		"express": "^4.17.1",
+		"express-async-errors": "^3.1.1",
+		"express-fileupload": "^1.2.0",
+		"express-handlebars": "^3.1.0",
+		"fawn": "^2.1.5",
+		"html-to-text": "^7.1.1",
+		"joi": "^14.3.1",
+		"jsonwebtoken": "^8.5.1",
+		"moment": "^2.24.0",
+		"mongoose": "^5.9.5",
+		"morgan": "^1.10.0",
+		"mpath": "^0.5.2",
+		"multer": "^1.4.2",
+		"mysql": "^2.18.1",
+		"nodemailer": "^6.4.5",
+		"nodemon": "^1.19.4",
+		"sharp": "^0.25.4",
+		"winston": "^3.2.1",
+		"winston-mongodb": "^5.0.1",
+		"uuid": "^8.3.0",
+		"axios": "^0.19.2"
+	},
+	"devDependencies": {},
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@essotec.net.co.ua:7999/crmjet/crmjet_server.git"
+	},
+	"description": ""
+}

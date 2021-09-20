@@ -1,0 +1,28 @@
+{
+	"name": "My express APP production",
+	"mail": {
+		"host": "prod-mail-sever"
+	},
+	"dbhost": "et-sandbox-rmwgv.mongodb.net",
+	"localhost": "localhost",
+	"host": "https://solemar.net.co.ua",
+	"db": "test",
+	"port": 3031,
+	"dbuser": "et_dev_mongocloud_user",
+	"dbuser_pwd": "es_ET_DEV_MONGOCLOUD_USER",
+	"way4pay": {
+		"merchant_login": "botanique_in_ua",
+		"merchant_sycret_key": "afe57413534d466483b094f2cd2c368e10fab7a1"
+	},
+	"upload_paths": {
+		"local_root": "../solemar_img",
+		"temp": "/tmp",
+		"news": "/uploads/news",
+		"apartments": "/uploads/apartments",
+		"services": "/uploads/services",
+		"user": "/uploads/user",
+		"sliders": "/uploads/sliders",
+		"currency": "/uploads/currency",
+		"usertype": "/uploads/usertype"
+	}
+}
