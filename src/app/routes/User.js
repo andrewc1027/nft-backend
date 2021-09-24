@@ -2,17 +2,17 @@ const express = require('express');
 // eslint-disable-next-line new-cap
 const router = express.Router();
 const {handlerException} = require('../exceptions/handler');
-const UserController = require('../controllers/UserController');
+const userController = require('../controllers/userController');
 const tokenValidator = require('../middleware/tokenValidator');
 
-router.post('/user/:address', handlerException(UserController.findAndRegister));
+router.post('/user/:address', handlerException(userController.findAndRegister));
 
 router.get('/user/:address',
     handlerException(tokenValidator),
-    handlerException(UserController.find));
+    handlerException(userController.find));
 
 router.patch('/user/:id',
     handlerException(tokenValidator),
-    handlerException(UserController.update));
+    handlerException(userController.update));
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const NftService = require('../services/nftPhotoService');
+const collectionSvc = require('../services/collectionService');
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -9,7 +9,7 @@ async function index(req, res, next) {
   const limit = req.query.limit || 10;
   const query = req.query;
   const user = req.user;
-  const data = await NftService.getAll(query, user, page, limit);
+  const data = await collectionSvc.getAll(query, user, page, limit);
   return res.json(data);
 }
 
@@ -21,7 +21,7 @@ async function index(req, res, next) {
 async function getOne(req, res, next) {
   const id = req.params.id;
   try {
-    const data = await NftService.getOne(id);
+    const data = await collectionSvc.getOne(id);
     return res.json({data});
   } catch (err) {
     return res.status(404).json(err);
@@ -35,13 +35,13 @@ async function getOne(req, res, next) {
  */
 async function insert(req, res, next) {
   const body = req.body;
-  const files = req.files;
-  if (files.raw==undefined) {
+  const file = req.file;
+  if (file==undefined) {
     return res.status(402).json({
-      message: 'Raw NFT Required',
+      message: 'Logo File Required',
     });
   }
-  const data = await NftService.insert(body, files, req.user);
+  const data = await collectionSvc.insert(body, file, req.user);
   return res.json(data);
 }
 
@@ -51,7 +51,7 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const data = await NftService.update(req.params.id, req.body);
+  const data = await collectionSvc.update(req.params.id, req.body, req.file);
   return res.json({data});
 }
 
@@ -62,9 +62,10 @@ async function update(req, res, next) {
  */
 async function remove(req, res, next) {
   const id = req.params.id;
-  const data = await NftService.remove(id);
+  const data = await collectionSvc.remove(id);
   return res.json({data});
 }
+
 
 module.exports = {
   index,

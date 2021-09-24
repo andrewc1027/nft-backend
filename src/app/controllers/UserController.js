@@ -1,4 +1,4 @@
-const UserService = require('../services/UserService');
+const UserService = require('../services/userService');
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -24,7 +24,7 @@ async function find(req, res, next) {
  * @param  {Object} res
  * @param  {Object} next
  */
- async function update(req, res, next) {
+async function update(req, res, next) {
   const user = await UserService.update(req.params.id, req.body, req.user);
   return res.json(user);
 }
