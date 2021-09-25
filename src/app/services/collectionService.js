@@ -20,10 +20,9 @@ async function getAll(query, user, page, limit) {
  * @return {Object}
  */
 async function getOne(id) {
-  const collection = await collection.findById(id).exec();
-  if (!collection) {
-    throw new Error();
-  }
+  const collection = await collection.findById(id).orFail(
+      () => Error('Not Found'),
+  );
   return collection;
 }
 
@@ -52,7 +51,9 @@ async function insert(data, file, user) {
  * @return {Object}
  */
 async function update(id, data, file) {
-  const exs = await collection.findById(id).exec();
+  const exs = await collection.findById(id).orFail(
+      () => Error('Not Found'),
+  ); ;
   let filePath = exs.logo;
   if (file) {
     filePath = file.path;
@@ -71,7 +72,9 @@ async function update(id, data, file) {
  * @return {Object}
  */
 async function remove(id) {
-  const result = await collection.findByIdAndDelete(id).exec();
+  const result = await collection.findByIdAndDelete(id).orFail(
+      () => Error('Not Found'),
+  );
   return result;
 }
 

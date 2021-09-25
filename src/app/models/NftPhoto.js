@@ -21,6 +21,6 @@ const schema = new mongoose.Schema({
 });
 
 schema.plugin(paginate);
-const NFTPhotos = mongoose.model('nftphotos', schema);
+const nFTPhotos = mongoose.model('nftphotos', schema);
 
-module.exports = NFTPhotos;
+module.exports = nFTPhotos;

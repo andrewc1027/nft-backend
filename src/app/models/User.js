@@ -10,6 +10,6 @@ const schema = new mongoose.Schema({
   lastLoginAt: {type: Date},
 });
 schema.plugin(uniqueValidator);
-const NFTPhotos = mongoose.model('user', schema);
+const user = mongoose.model('user', schema);
 
-module.exports = NFTPhotos;
+module.exports = user;

@@ -22,10 +22,9 @@ async function getAll(query, user, page, limit) {
  * @return {Array}
  */
 async function getOne(id) {
-  const photo = await NFTPhotos.findById(id).exec();
-  if (!photo) {
-    throw new Error();
-  }
+  const photo = await NFTPhotos.findById(id).orFail(
+      () => Error('Not Found'),
+  );
   return photo;
 }
 
@@ -74,7 +73,9 @@ async function insert(data, files, user) {
  * @return {Array}
  */
 async function update(id, data) {
-  return await NFTPhotos.findByIdAndUpdate(id, data).exec();
+  return await NFTPhotos.findByIdAndUpdate(id, data).orFail(
+      () => Error('Not Found'),
+  ); ;
 }
 
 /**
@@ -82,7 +83,9 @@ async function update(id, data) {
  * @return {Array}
  */
 async function remove(id) {
-  const exs = await NFTPhotos.findById(id).exec();
+  const exs = await NFTPhotos.findById(id).orFail(
+      () => Error('Not Found'),
+  ); ;
   pinata.unpin(exs.cid).then((result) => {
     NFTPhotos.findByIdAndDelete(id).exec();
   });

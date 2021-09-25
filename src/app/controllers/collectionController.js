@@ -22,7 +22,7 @@ async function getOne(req, res, next) {
   const id = req.params.id;
   try {
     const data = await collectionSvc.getOne(id);
-    return res.json({data});
+    return res.json(data);
   } catch (err) {
     return res.status(404).json(err);
   }
@@ -52,7 +52,7 @@ async function insert(req, res, next) {
  */
 async function update(req, res, next) {
   const data = await collectionSvc.update(req.params.id, req.body, req.file);
-  return res.json({data});
+  return res.json(data);
 }
 
 /**
@@ -63,7 +63,7 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
   const id = req.params.id;
   const data = await collectionSvc.remove(id);
-  return res.json({data});
+  return res.json(data);
 }
 
 

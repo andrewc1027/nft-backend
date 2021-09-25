@@ -5,6 +5,9 @@ const {handlerException} = require('../exceptions/handler');
 const userController = require('../controllers/userController');
 const tokenValidator = require('../middleware/tokenValidator');
 
+/**
+ * These Routes are for seller page
+ */
 router.post('/user/:address', handlerException(userController.findAndRegister));
 
 router.get('/user/:address',
