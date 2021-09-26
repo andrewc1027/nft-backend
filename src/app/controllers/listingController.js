@@ -22,8 +22,19 @@ async function detail(req, res, next) {
   return res.json(listing);
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function purchase(req, res, next) {
+  const trade = await listingService
+      .purchase(req.params.id, req.body, req.user);
+  return res.json(trade);
+}
 
 module.exports = {
   index,
   detail,
+  purchase,
 };

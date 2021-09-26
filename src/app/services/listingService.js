@@ -1,4 +1,5 @@
 const listing = require('../models/listing');
+const trading = require('../models/tradingHistory');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -16,6 +17,12 @@ async function getAll(query, page, limit) {
  * @param {String} id
  */
 async function getOne(id) {
+  listing.findByIdAndUpdate({
+    views: views+1,
+  }).then((res)=> {
+    console.log('then', res);
+  });
+  console.log('after');
   const detail = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
@@ -23,13 +30,26 @@ async function getOne(id) {
 }
 
 /**
- *
  * @param {String} id
+ * @param {Object} data
+ * @param {Object} user
  */
-async function purchase(id) {
+async function purchase(id, data, user) {
+  // What if there's 2 simultaneous purchase ?
+  const item = await listing.findById(id).exec();
+  const trade = await trading.create({
+    to: user.address,
+    from: item.owner,
+    price: item.price,
+    date: new Date.Now(),
+    listingID: id,
+  });
 
+  return trade;
 }
+
 module.exports = {
   getAll,
   getOne,
+  purchase,
 };
