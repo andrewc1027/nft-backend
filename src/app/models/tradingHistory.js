@@ -7,7 +7,11 @@ const schema = new mongoose.Schema({
   to: {type: String, required: true},
   date: {type: Date, required: true},
   price: {type: Number, required: true},
-  listingID: {type: ObjectId, required: true},
+  quantity: {type: Number, required: true},
+  event: {type: String, required: true},
+  listingID: {type: ObjectId, required: true, ref: 'listing'},
+  listingName: {type: String, required: true},
+  listingCID: {type: String, required: true},
   remark: {type: String},
 });
 
