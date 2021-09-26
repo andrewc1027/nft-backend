@@ -7,17 +7,17 @@ const schema = new mongoose.Schema({
   originalName: {type: String, required: true},
   location: {type: String, required: true},
   address: {type: String, required: true},
-  description: {type: String},
+  description: {type: String, required: true},
   tags: {type: String}, // Comma Separated
-  originalOwner: {type: String, required: true},
-  originalOwnerID: {type: ObjectId, required: true},
+  creator: {type: String, required: true},
+  creatorID: {type: ObjectId, required: true},
   collections: {type: [String]},
-  currentOwner: {type: String},
   blockchain: {type: String},
-  cid: {type: String, unique: true, sparse: true},
-  pinDate: {type: Date},
-  pinSize: {type: Number},
-  size: {type: Number},
+  published: {type: Boolean, default: false},
+  imagePath: {type: String, required: true},
+  imageSize: {type: Number, required: true},
+  rawImagePath: {type: String, required: true},
+  rawImageSize: {type: Number, required: true},
 });
 
 schema.plugin(paginate);

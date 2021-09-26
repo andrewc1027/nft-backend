@@ -66,10 +66,21 @@ async function remove(req, res, next) {
   return res.json(data);
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function publish(req, res, next) {
+  const data = await NftService.publish(req.params.id, req.body);
+  return res.json(data);
+}
+
 module.exports = {
   index,
   insert,
   getOne,
   update,
   remove,
+  publish,
 };

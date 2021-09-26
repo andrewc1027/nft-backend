@@ -42,4 +42,8 @@ router.delete('/photo/:id',
     handlerException(tokenValidator),
     handlerException(NftController.remove));
 
+router.post('/photo/:id/publish',
+    handlerException(tokenValidator),
+    handlerException(NftController.publish));
+
 module.exports = router;

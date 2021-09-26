@@ -6,7 +6,7 @@ const schema = new mongoose.Schema({
   description: {type: String},
   logo: {type: String, required: true},
   owner: {type: String, required: true},
-  images: {type: [String]},
+  // images: [nFTPhotos],
   featureImage: {type: String},
   bannerImage: {type: String},
   url: {type: String},
