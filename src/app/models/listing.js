@@ -8,7 +8,8 @@ const schema = new mongoose.Schema({
   location: {type: String, required: true},
   address: {type: String, required: true},
   creator: {type: String, required: true},
-  owner: {type: String, required: true},
+  owner: {type: String, required: true}, // Creator are the initial owner
+  copies: {type: Number, default: 1},
   imageID: {type: ObjectId, required: true, ref: 'nftPhotos'},
   collections: {type: [String]},
   featureImage: {type: String},

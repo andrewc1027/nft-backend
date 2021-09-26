@@ -12,8 +12,7 @@ const listing = require('../models/listing');
  */
 async function getAll(query, user, page, limit) {
   const collections = await nftPhotos.paginate({
-    originalOwner: user.username,
-    cid: {$ne: null},
+    creator: user.username,
   }, {page: page, limit: limit});
   return collections;
 }
@@ -74,6 +73,11 @@ async function remove(id) {
   const exs = await nftPhotos.findById(id).orFail(
       () => Error('Not Found'),
   );
+
+  /**
+   *  We Can't remove file from IPFS,
+   *  but we can unpin it so it'll get removed by IPFS garbage collector
+   */
   pinata.unpin(exs.cid).then((result) => {
     nftPhotos.findByIdAndDelete(id).exec();
   });
@@ -89,6 +93,12 @@ async function publish(id, data) {
   const item = await nftPhotos.findById(id).orFail(
       () => Error('Not Found'),
   );
+
+  /**
+   * Start transcational operation.
+   * Pin File to IPFS network, create Listing record based on nftPhoto,
+   * then Update nftPhoto record to Published = true
+   */
   const trx = await listing.startSession();
   await trx.withTransaction(async () => {
     const fileStream = fs.createReadStream(item.rawImagePath);
