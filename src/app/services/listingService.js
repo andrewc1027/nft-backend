@@ -17,12 +17,7 @@ async function getAll(query, page, limit) {
  * @param {String} id
  */
 async function getOne(id) {
-  listing.findByIdAndUpdate({
-    views: views+1,
-  }).then((res)=> {
-    console.log('then', res);
-  });
-  console.log('after');
+  viewCounter(id);
   const detail = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
@@ -43,13 +38,39 @@ async function purchase(id, data, user) {
     price: item.price,
     date: new Date.Now(),
     listingID: id,
+    listingCID: item.cid,
   });
 
   return trade;
+}
+
+/**
+ * @param {String} id
+ */
+async function viewCounter(id) {
+  const item = await listing.findById(id);
+  await listing.findByIdAndUpdate(id, {
+    views: item.views+1,
+  });
+}
+
+/**
+ * @param {String} id
+ */
+async function likeCounter(id) {
+  const item = await listing.findById(id);
+  await listing.findByIdAndUpdate(id, {
+    likes: item.likes+1,
+  });
+  /**
+   * TODO:
+   * add to liked collection of user
+   */
 }
 
 module.exports = {
   getAll,
   getOne,
   purchase,
+  likeCounter,
 };

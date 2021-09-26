@@ -33,8 +33,20 @@ async function purchase(req, res, next) {
   return res.json(trade);
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function like(req, res, next) {
+  listingService
+      .likeCounter(req.params.id, req.user);
+  return res.json('ok');
+}
+
 module.exports = {
   index,
   detail,
   purchase,
+  like,
 };

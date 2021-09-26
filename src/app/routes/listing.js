@@ -11,4 +11,7 @@ router.post('/listing/:id/purchase',
     handlerException(tokenValidator),
     handlerException(listingController.purchase));
 
+router.patch('/listing/:id/like',
+    handlerException(tokenValidator),
+    handlerException(listingController.like));
 module.exports = router;
