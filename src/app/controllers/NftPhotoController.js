@@ -1,4 +1,5 @@
 const NftService = require('../services/nftPhotoService');
+const {handler} = require('./errHandler');
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -72,8 +73,12 @@ async function remove(req, res, next) {
  * @param  {Object} next
  */
 async function publish(req, res, next) {
-  const data = await NftService.publish(req.params.id, req.body);
-  return res.json(data);
+  try {
+    const data = await NftService.publish(req.params.id, req.body);
+    return res.json(data);
+  } catch (err) {
+    handler(err, res);
+  }
 }
 
 module.exports = {

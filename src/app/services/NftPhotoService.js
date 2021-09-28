@@ -2,6 +2,7 @@ const nftPhotos = require('../models/nftPhoto');
 const fs = require('fs');
 const pinata = require('../config/pinata');
 const listing = require('../models/listing');
+const contract = require('./contractService');
 
 /**
  * @param {Object} query
@@ -108,24 +109,30 @@ async function publish(id, data) {
       },
     });
 
-    const listedItem = await listing.create([{
-      name: item.name,
-      description: item.description,
-      location: item.location,
-      address: item.address,
-      creator: item.creatorID,
-      owner: item.creatorID,
-      imageID: id,
-      collections: item.collections,
-      price: data.price,
-      royalties: data.royalties,
-      activeDate: data.activeDate,
-      buyerAddress: data.buyerAddress,
-      tokenID: data.tokenID,
-      cid: result.IpfsHash,
-      pinSize: result.PinSize,
-      pinDate: result.Timestamp,
-    }], {session: trx});
+    // if (result.isDuplicate) {
+    //   throw new Error('NFT is a duplicate');
+    // }
+
+    await contract.listNFTForSell(result.IpfsHash, data.price, data.royalties);
+    // const listedItem = await listing.create([{
+    //   name: item.name,
+    //   description: item.description,
+    //   location: item.location,
+    //   address: item.address,
+    //   creator: item.creatorID,
+    //   owner: item.creatorID,
+    //   imageID: id,
+    //   collections: item.collections,
+    //   price: data.price,
+    //   royalties: data.royalties,
+    //   activeDate: data.activeDate,
+    //   buyerAddress: data.buyerAddress,
+    //   tokenID: data.tokenID,
+    //   cid: result.IpfsHash,
+    //   pinSize: result.PinSize,
+    //   pinDate: result.Timestamp,
+    // }], {session: trx});
+
 
     await nftPhotos.findByIdAndUpdate(id, {
       published: true,
