@@ -19,7 +19,7 @@ async function findAndSignIn(address) {
       {signedUser},
       process.env.JWT_SECRET,
       {expiresIn: process.env.JWT_EXPIRE});
-
+  await user.findByIdAndUpdate(signedUser._id, {lastLoginAt: Date.now()});
   return {
     signedUser,
     token,
@@ -39,7 +39,7 @@ async function find(address) {
  */
 async function register(address) {
   await user.create({
-    address: address,
+    walletAddress: address,
   });
   const data = await user.findOne({address: address}).exec();
   return data;

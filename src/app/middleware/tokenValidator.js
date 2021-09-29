@@ -8,8 +8,8 @@ module.exports = async (req, res, next) => {
     });
   }
   jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
-    if (err) {
-      return res.status(500).json(err);
+    if (err || decoded.signedUser == undefined) {
+      return res.status(500).json({msg: 'Token Decode Failed'});
     }
     req.user = decoded.signedUser;
   });

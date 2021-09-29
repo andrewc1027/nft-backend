@@ -50,6 +50,8 @@ async function insert(data, files, user) {
     creatorID: user._id,
     collections: data.collections,
     description: data.description,
+    creator: user.username,
+    creatorID: user._id,
   });
   return item;
 }
@@ -89,8 +91,9 @@ async function remove(id) {
  * Add Nft to published listing
  * @param {String} id
  * @param {Object} data
+ * @param {Object} user
  */
-async function publish(id, data) {
+async function publish(id, data, user) {
   const item = await nftPhotos.findById(id).orFail(
       () => Error('Not Found'),
   );
@@ -109,12 +112,12 @@ async function publish(id, data) {
       },
     });
 
-    if (result.isDuplicate) {
-      throw new Error('NFT is a duplicate');
-    }
+    // if (result.isDuplicate) {
+    //   throw new Error('NFT is a duplicate');
+    // }
 
     // Mint an NFT to retrieve the tokenID
-    const tokenID = await contract.mint(data.royalties);
+    const tokenID = await contract.mint(data.royalties, user.walletAddress);
 
     const listedItem = await listing.create([{
       name: item.name,
@@ -137,7 +140,7 @@ async function publish(id, data) {
 
 
     // Use the tokenID to sell
-    await contract.listNFTForSell(tokenID, data.price);
+    await contract.sellNft(tokenID, data.price, user.walletAddress);
 
 
     await nftPhotos.findByIdAndUpdate(id, {
