@@ -14,7 +14,7 @@ router.get('/user/:address',
     handlerException(tokenValidator),
     handlerException(userController.find));
 
-router.patch('/user/:id',
+router.patch('/user',
     handlerException(tokenValidator),
     handlerException(userController.update));
 

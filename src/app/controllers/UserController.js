@@ -5,8 +5,8 @@ const UserService = require('../services/userService');
  * @param  {Object} next
  */
 async function findAndRegister(req, res, next) {
-  const {user, token} = await UserService.findAndSignIn(req.params.address);
-  return res.status(200).json({user, token});
+  const {token} = await UserService.findAndSignIn(req.params.address);
+  return res.status(200).json({token});
 }
 
 /**
@@ -25,7 +25,7 @@ async function find(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const user = await UserService.update(req.params.id, req.body, req.user);
+  const user = await UserService.update(req.user, req.body);
   return res.json(user);
 }
 

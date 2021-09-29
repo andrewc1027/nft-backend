@@ -1,45 +1,58 @@
 const homejab = require('../config/homejabContract');
 /**
- * @param {String} nftCID
- * @param {Number} price
- * @param {Number} royalties
+ * @param {uint256} tokenID
+ * @param {uint256} price
  */
-async function listNFTForSell(nftCID, price, royalties) {
-  console.log(royalties);
-  const id = await homejab.methods.mint(royalties).call();
-  console.log(id, 'id');
-  // const res = await homejab.methods.listForSell(id, 1).call();
-  // console.log(res);
-  process.exit(1);
+async function sellNft(tokenID, price) {
+  const res = await homejab.methods.listForSell(tokenID, price).call();
+  return res;
 }
 
 /**
- * @param {String} NftID
- * @param {Number} price
+ * @param {uint256} royalties
+ * @return {uint256}
  */
-async function revokeNftSale(NftID, price) {
+async function mint(royalties) {
+  const tokenID = await homejab.methods.mint(royalties).call();
+  return tokenID;
+}
 
+/**
+ * @param {uint256} price
+ * @param {uint256} royalties
+ */
+async function mintAndSell(price, royalties) {
+  await homejab.methods.mintAndList(royalties, price).call();
+}
+
+/**
+ * @param {String} tokenID
+ */
+async function revokeNftSale(tokenID) {
+  homejab.methods.revokeSell(tokenID).call();
 }
 
 /**
  * @param {Object} user
- * @param {String} NftID
+ * @param {String} tokenID
  * @param {Number} price
  */
-async function editNFTPrice(user, NftID, price) {
-
+async function editNFTPrice(user, tokenID, price) {
+  await homejab.methods.editPrice(tokenID, price).call();
 }
 
 /**
  * @param {Object} buyer
- * @param {String} NftID
+ * @param {String} tokenID
  */
-async function buyNFT(buyer, NftID) {
-
+async function buyNFT(buyer, tokenID) {
+  await homejab.methods.buy(tokenID).call();
 }
 
 module.exports = {
-  listNFTForSell,
+  sellNft,
+  mint,
+  mintAndSell,
   revokeNftSale,
   editNFTPrice,
   buyNFT,

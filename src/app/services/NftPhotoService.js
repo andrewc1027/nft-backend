@@ -109,29 +109,35 @@ async function publish(id, data) {
       },
     });
 
-    // if (result.isDuplicate) {
-    //   throw new Error('NFT is a duplicate');
-    // }
+    if (result.isDuplicate) {
+      throw new Error('NFT is a duplicate');
+    }
 
-    await contract.listNFTForSell(result.IpfsHash, data.price, data.royalties);
-    // const listedItem = await listing.create([{
-    //   name: item.name,
-    //   description: item.description,
-    //   location: item.location,
-    //   address: item.address,
-    //   creator: item.creatorID,
-    //   owner: item.creatorID,
-    //   imageID: id,
-    //   collections: item.collections,
-    //   price: data.price,
-    //   royalties: data.royalties,
-    //   activeDate: data.activeDate,
-    //   buyerAddress: data.buyerAddress,
-    //   tokenID: data.tokenID,
-    //   cid: result.IpfsHash,
-    //   pinSize: result.PinSize,
-    //   pinDate: result.Timestamp,
-    // }], {session: trx});
+    // Mint an NFT to retrieve the tokenID
+    const tokenID = await contract.mint(data.royalties);
+
+    const listedItem = await listing.create([{
+      name: item.name,
+      description: item.description,
+      location: item.location,
+      address: item.address,
+      creator: item.creatorID,
+      owner: item.creatorID,
+      imageID: id,
+      collections: item.collections,
+      price: data.price,
+      royalties: data.royalties,
+      activeDate: data.activeDate,
+      buyerAddress: data.buyerAddress,
+      tokenID: tokenID,
+      cid: result.IpfsHash,
+      pinSize: result.PinSize,
+      pinDate: result.Timestamp,
+    }], {session: trx});
+
+
+    // Use the tokenID to sell
+    await contract.listNFTForSell(tokenID, data.price);
 
 
     await nftPhotos.findByIdAndUpdate(id, {

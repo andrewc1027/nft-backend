@@ -21,28 +21,28 @@ const multi = upload.fields([
   {name: 'raw', maxCount: 1},
 ]);
 
-router.get('/photos',
+router.get('/seller/photos',
     handlerException(tokenValidator),
     handlerException(NftController.index));
 
-router.get('/photo/:id',
+router.get('/seller/photo/:id',
     handlerException(tokenValidator),
     handlerException(NftController.getOne));
 
-router.post('/photo',
+router.post('/seller/photo',
     multi,
     handlerException(tokenValidator),
     handlerException(NftController.insert));
 
-router.patch('/photo/:id',
+router.patch('/seller/photo/:id',
     handlerException(tokenValidator),
     handlerException(NftController.update));
 
-router.delete('/photo/:id',
+router.delete('/seller/photo/:id',
     handlerException(tokenValidator),
     handlerException(NftController.remove));
 
-router.post('/photo/:id/publish',
+router.post('/seller/photo/:id/publish',
     handlerException(tokenValidator),
     handlerException(NftController.publish));
 

@@ -1,25 +1,27 @@
 
 require('dotenv').config();
-const User = require('../models/user');
+const user = require('../models/user');
 const jwt = require('jsonwebtoken');
 
 /**
  * @param {String} address
  */
 async function findAndSignIn(address) {
-  let user;
-  const exUser = await User.find({address: address}).limit(1).exec();
-  user = exUser[0];
-  if (exUser.length == 0) {
-    user = await register(address);
+  let signedUser = {};
+  const exUser = await user.findOne({address: address});
+  if (!exUser) {
+    signedUser = await register(address);
+  } else {
+    signedUser = exUser;
   }
+
   const token = jwt.sign(
-      {user: user},
+      {signedUser},
       process.env.JWT_SECRET,
       {expiresIn: process.env.JWT_EXPIRE});
 
   return {
-    user,
+    signedUser,
     token,
   };
 }
@@ -28,33 +30,52 @@ async function findAndSignIn(address) {
  * @param {String} address
  */
 async function find(address) {
-  const user = await User.findOne({address: address}).exec();
-  return user;
+  const data = await user.findOne({address: address}).exec();
+  return data;
 }
 
 /**
  * @param {String} address
  */
 async function register(address) {
-  await User.create({
+  await user.create({
     address: address,
   });
-  const user = await User.findOne({address: address}).exec();
-  return user;
+  const data = await user.findOne({address: address}).exec();
+  return data;
 }
 
 /**
- * @param {String} id
+ * @param {Object} userRequest
  * @param {Object} data
  */
-async function update(id, data) {
-  await User.updateOne({'_id': id}, data);
-  const user = await User.findById(id).exec();
-  return user;
+async function update(userRequest, data) {
+  await user.updateOne({'_id': userRequest._id}, data);
+  const res = await user.findById(userRequest._id).exec();
+  return res;
 }
+
+/**
+ * @param {String} userID
+ */
+async function getUserFavourites(userID) {
+  const favs = user.findOne({'_id': userID}).select('favourites');
+  return favs;
+}
+
+/**
+ * @param {String} userID
+ */
+async function addUserFavourites(userID) {
+  const favs = user.findOne({'_id': userID}).select('favourites');
+  return favs;
+}
+
 
 module.exports = {
   find,
   findAndSignIn,
   update,
+  getUserFavourites,
+  addUserFavourites,
 };

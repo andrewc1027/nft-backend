@@ -19,7 +19,7 @@ const schema = new mongoose.Schema({
   blockchain: {type: String},
   paymentTokens: {type: [String], required: true},
   price: {type: Number, required: true},
-  tokenID: {type: String, required: true},
+  tokenID: {type: Number, required: true},
   views: {type: Number},
   likes: {type: Number},
   activeDate: {type: Date},
