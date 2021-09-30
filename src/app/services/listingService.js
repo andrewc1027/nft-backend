@@ -1,5 +1,6 @@
 const listing = require('../models/listing');
 const trading = require('../models/tradingHistory');
+const userSvc = require('../services/userService');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -31,7 +32,9 @@ async function getOne(id) {
  */
 async function purchase(id, data, user) {
   // What if there's 2 simultaneous purchase ?
-  const item = await listing.findById(id).exec();
+  const item = await listing.findById(id).orFail(
+      () => Error('Listing Not Found'),
+  );
   const trade = await trading.create({
     to: user.address,
     from: item.owner,
@@ -56,16 +59,19 @@ async function viewCounter(id) {
 
 /**
  * @param {String} id
+ * @param {Object} user
  */
-async function likeCounter(id) {
+async function likeCounter(id, user) {
   const item = await listing.findById(id);
   await listing.findByIdAndUpdate(id, {
     likes: item.likes+1,
   });
-  /**
-   * TODO:
-   * add to liked collection of user
-   */
+
+  // Add Listing to User Favourites List
+  const userData = await userSvc.find(user.address);
+  if (!userData.favourites.includes('id')) {
+    userData.favourites.push(id);
+  }
 }
 
 module.exports = {

@@ -25,8 +25,8 @@ async function find(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const user = await UserService.update(req.user, req.body);
-  return res.json(user);
+  const token = await UserService.update(req.user, req.body);
+  return res.json({token});
 }
 
 module.exports = {

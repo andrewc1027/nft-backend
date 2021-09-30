@@ -30,7 +30,8 @@ async function findAndSignIn(address) {
  * @param {String} address
  */
 async function find(address) {
-  const data = await user.findOne({address: address}).exec();
+  const data = await user.findOne({address: address}).orFail(
+      () => Error('User not Found'));
   return data;
 }
 
@@ -40,8 +41,9 @@ async function find(address) {
 async function register(address) {
   await user.create({
     walletAddress: address,
+    createdAt: Date.now(),
   });
-  const data = await user.findOne({address: address}).exec();
+  const data = await user.findOne({address: address});
   return data;
 }
 
@@ -50,9 +52,10 @@ async function register(address) {
  * @param {Object} data
  */
 async function update(userRequest, data) {
-  await user.updateOne({'_id': userRequest._id}, data);
-  const res = await user.findById(userRequest._id).exec();
-  return res;
+  await user.findByIdAndUpdate(userRequest._id, data).orFail(
+      (err) => console.log(err));
+  const {token} = await findAndSignIn(userRequest.walletAddress);
+  return token;
 }
 
 /**

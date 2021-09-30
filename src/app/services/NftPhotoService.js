@@ -2,7 +2,9 @@ const nftPhotos = require('../models/nftPhoto');
 const fs = require('fs');
 const pinata = require('../config/pinata');
 const listing = require('../models/listing');
-const contract = require('./contractService');
+const contractSvc = require('./contractService');
+const userSvc = require('./userService');
+const web3 = require('../config/web3');
 
 /**
  * @param {Object} query
@@ -36,6 +38,8 @@ async function getOne(id) {
  * @return {Array}
  */
 async function insert(data, files, user) {
+  // Pre Check if user exists
+  await userSvc.find(user.address);
   const item = await nftPhotos.create({
     name: data.name,
     location: data.location,
@@ -82,7 +86,7 @@ async function remove(id) {
    *  but we can unpin it so it'll get removed by IPFS garbage collector
    */
   pinata.unpin(exs.cid).then((result) => {
-    nftPhotos.findByIdAndDelete(id).exec();
+    nftPhotos.findByIdAndDelete(id);
   });
   return exs;
 }
@@ -112,13 +116,14 @@ async function publish(id, data, user) {
       },
     });
 
-    // if (result.isDuplicate) {
-    //   throw new Error('NFT is a duplicate');
-    // }
+    if (result.isDuplicate) {
+      throw new Error('NFT is a duplicate');
+    }
 
     // Mint an NFT to retrieve the tokenID
-    const tokenID = await contract.mint(data.royalties, user.walletAddress);
-
+    const accounts = await web3.eth.getAccounts();
+    const tokenID = await contractSvc.mint(data.royalties, accounts[0]);
+    console.log('tokenid', tokenID);
     const listedItem = await listing.create([{
       name: item.name,
       description: item.description,
@@ -140,7 +145,7 @@ async function publish(id, data, user) {
 
 
     // Use the tokenID to sell
-    await contract.sellNft(tokenID, data.price, user.walletAddress);
+    await contractSvc.sellNft(tokenID, data.price, user.walletAddress);
 
 
     await nftPhotos.findByIdAndUpdate(id, {
