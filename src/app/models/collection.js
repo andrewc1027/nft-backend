@@ -10,8 +10,6 @@ const schema = new mongoose.Schema({
   featureImage: {type: String},
   bannerImage: {type: String},
   url: {type: String},
-  royalties: {type: Number}, // in percentage
-  payoutWalletAddress: {type: String}, // Royalties will go to this address,
   blockchain: {type: String},
   paymentTokens: {type: [String], required: true},
 });

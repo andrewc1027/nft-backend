@@ -5,6 +5,11 @@ const logger = require('morgan');
 const fs = require('fs');
 const mongoose = require('mongoose');
 const app = express();
+const cors = require('cors');
+
+app.use(cors({
+  origin: '*',
+}));
 mongoose.connect(process.env.MONGO_CONN);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error: '));
