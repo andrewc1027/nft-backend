@@ -1,4 +1,6 @@
 const collectionSvc = require('../services/collectionService');
+const {handler} = require('./errHandler');
+
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -9,8 +11,13 @@ async function index(req, res, next) {
   const limit = req.query.limit || 10;
   const query = req.query;
   const user = req.user;
-  const data = await collectionSvc.getAll(query, user, page, limit);
-  return res.json(data);
+  collectionSvc.getAll(query, user, page, limit)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=> {
+        handler(err, res);
+      });
 }
 
 /**
@@ -20,12 +27,13 @@ async function index(req, res, next) {
  */
 async function getOne(req, res, next) {
   const id = req.params.id;
-  try {
-    const data = await collectionSvc.getOne(id);
-    return res.json(data);
-  } catch (err) {
-    return res.status(404).json(err);
-  }
+  collectionSvc.getOne(id)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=> {
+        handler(err, res);
+      });
 }
 
 /**
@@ -41,8 +49,13 @@ async function insert(req, res, next) {
       message: 'Logo File Required',
     });
   }
-  const data = await collectionSvc.insert(body, file, req.user);
-  return res.json(data);
+  collectionSvc.insert(body, file, req.user)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
 }
 
 /**
@@ -51,8 +64,13 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const data = await collectionSvc.update(req.params.id, req.body, req.file);
-  return res.json(data);
+  collectionSvc.update(req.params.id, req.body, req.file)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
 }
 
 /**
@@ -62,8 +80,13 @@ async function update(req, res, next) {
  */
 async function remove(req, res, next) {
   const id = req.params.id;
-  const data = await collectionSvc.remove(id);
-  return res.json(data);
+  collectionSvc.remove(id)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
 }
 
 

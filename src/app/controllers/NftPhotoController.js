@@ -1,4 +1,4 @@
-const NftService = require('../services/nftPhotoService');
+const nftService = require('../services/nftPhotoService');
 const {handler} = require('./errHandler');
 /**
  * @param  {Object} req
@@ -10,8 +10,13 @@ async function index(req, res, next) {
   const limit = req.query.limit || 10;
   const query = req.query;
   const user = req.user;
-  const data = await NftService.getAll(query, user, page, limit);
-  return res.json(data);
+  nftService.getAll(query, user, page, limit)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
 }
 
 /**
@@ -21,12 +26,13 @@ async function index(req, res, next) {
  */
 async function getOne(req, res, next) {
   const id = req.params.id;
-  try {
-    const data = await NftService.getOne(id);
-    return res.json(data);
-  } catch (err) {
-    return res.status(404).json(err);
-  }
+  nftService.getOne(id)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 /**
@@ -42,8 +48,13 @@ async function insert(req, res, next) {
       message: 'Raw NFT Required',
     });
   }
-  const data = await NftService.insert(body, files, req.user);
-  return res.json(data);
+  nftService.insert(body, files, req.user)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 /**
@@ -52,8 +63,13 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const data = await NftService.update(req.params.id, req.body);
-  return res.json(data);
+  nftService.update(req.params.id, req.body)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 /**
@@ -63,8 +79,13 @@ async function update(req, res, next) {
  */
 async function remove(req, res, next) {
   const id = req.params.id;
-  const data = await NftService.remove(id);
-  return res.json(data);
+  nftService.remove(id)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 /**
@@ -73,12 +94,13 @@ async function remove(req, res, next) {
  * @param  {Object} next
  */
 async function publish(req, res, next) {
-  try {
-    const data = await NftService.publish(req.params.id, req.body);
-    return res.json(data);
-  } catch (err) {
-    handler(err, res);
-  }
+  nftService.publish(req.params.id, req.body, req.user)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=> {
+        handler(err, res);
+      });
 }
 
 module.exports = {
