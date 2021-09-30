@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
  */
 async function findAndSignIn(address) {
   let signedUser = {};
-  const exUser = await user.findOne({address: address});
+  const exUser = await user.findOne({walletAddress: address});
   if (!exUser) {
     signedUser = await register(address);
   } else {

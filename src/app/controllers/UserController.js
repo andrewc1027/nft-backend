@@ -5,8 +5,12 @@ const UserService = require('../services/userService');
  * @param  {Object} next
  */
 async function findAndRegister(req, res, next) {
-  const {token} = await UserService.findAndSignIn(req.params.address);
-  return res.status(200).json({token});
+  const {token, signedUser} = await UserService
+      .findAndSignIn(req.params.address);
+  return res.status(200).json({
+    token: token,
+    user: signedUser,
+  });
 }
 
 /**
