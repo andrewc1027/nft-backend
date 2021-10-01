@@ -22,21 +22,21 @@ router.get('/collections',
     handlerException(tokenValidator),
     handlerException(collectionController.index));
 
-router.get('/collection/:id',
+router.get('/collections/:id',
     handlerException(tokenValidator),
     handlerException(collectionController.getOne));
 
-router.post('/collection',
+router.post('/collections',
     upload.single('file'),
     handlerException(tokenValidator),
     handlerException(collectionController.insert));
 
-router.patch('/collection/:id',
+router.patch('/collections/:id',
     upload.single('file'),
     handlerException(tokenValidator),
     handlerException(collectionController.update));
 
-router.delete('/collection/:id',
+router.delete('/collections/:id',
     handlerException(tokenValidator),
     handlerException(collectionController.remove));
 

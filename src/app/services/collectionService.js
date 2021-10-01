@@ -19,10 +19,10 @@ async function getAll(query, user, page, limit) {
  * @return {Object}
  */
 async function getOne(id) {
-  const collection = await collection.findById(id).orFail(
+  const item = await collection.findById(id).orFail(
       () => Error('Not Found'),
   );
-  return collection;
+  return item;
 }
 
 /**
