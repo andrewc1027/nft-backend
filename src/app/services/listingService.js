@@ -46,6 +46,7 @@ async function insert(data, files, user) {
     tags: joi.array(),
     longitude: joi.number().required(),
     latitude: joi.number().required(),
+    blockchain: joi.string().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -57,10 +58,11 @@ async function insert(data, files, user) {
       name: data.name,
     },
   }).then(function(result) {
-    if (result.isDuplicate) {
-      fs.unlinkSync(files.raw[0].path);
-      throw new Error('NFT is a duplicate');
-    }
+    console.log(result);
+    // if (result.isDuplicate) {
+    //   fs.unlinkSync(files.raw[0].path);
+    //   throw new Error('NFT is a duplicate');
+    // }
     // Pre Check if user exists
     userSvc.find(user.address);
     const item = listing.create({
@@ -74,7 +76,11 @@ async function insert(data, files, user) {
       },
       collections: data.collections,
       cid: result.IpfsHash,
-      ipfs: result,
+      ipfs: {
+        cid: result.IpfsHash,
+        pinSize: result.PinSize,
+        pinDate: result.Timestamp,
+      },
       fileOriginalName: files.file[0].originalName,
       filePath: files.file[0].path,
       geoLocation: {

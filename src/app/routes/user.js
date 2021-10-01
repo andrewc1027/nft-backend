@@ -10,7 +10,7 @@ const tokenValidator = require('../middleware/tokenValidator');
  */
 router.post('/user/:address', handlerException(userController.findAndRegister));
 
-router.get('/user/:address',
+router.get('/user/:id',
     handlerException(tokenValidator),
     handlerException(userController.find));
 

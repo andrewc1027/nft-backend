@@ -1,4 +1,5 @@
 const UserService = require('../services/userService');
+const {handler} = require('./errHandler');
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -19,8 +20,13 @@ async function findAndRegister(req, res, next) {
  * @param  {Object} next
  */
 async function find(req, res, next) {
-  const user = await UserService.find(req.params.address );
-  return res.json(user);
+  UserService.find(req.params.id)
+      .then(function(user) {
+        return res.json(user);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 /**
@@ -29,8 +35,13 @@ async function find(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  const token = await UserService.update(req.user, req.body);
-  return res.json({token});
+  await UserService.update(req.user, req.body)
+      .then(function(token) {
+        return res.json({token});
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
 }
 
 module.exports = {

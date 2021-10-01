@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 async function findAndSignIn(address) {
   let signedUser = {};
   const exUser = await user.findOne({walletAddress: address});
+  console.log(exUser, address);
   if (!exUser) {
     signedUser = await register(address);
   } else {
@@ -27,10 +28,10 @@ async function findAndSignIn(address) {
 }
 
 /**
- * @param {String} address
+ * @param {String} id
  */
-async function find(address) {
-  const data = await user.findOne({address: address}).orFail(
+async function find(id) {
+  const data = await user.findById(id).orFail(
       () => Error('User not Found'));
   return data;
 }
@@ -43,7 +44,7 @@ async function register(address) {
     walletAddress: address,
     createdAt: Date.now(),
   });
-  const data = await user.findOne({address: address});
+  const data = await user.findOne({walletAddress: address});
   return data;
 }
 
