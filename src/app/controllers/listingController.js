@@ -34,6 +34,36 @@ async function detail(req, res, next) {
 }
 
 /**
+ * @param {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function insert(req, res, next) {
+  listingService.insert(req.body, req.files, req.user)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=> {
+        console.log(err);
+        handler(err, res);
+      });
+}
+
+/**
+ * @param {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function update(req, res, next) {
+  listingService.update(req.body, req.files, req.user)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err)=> {
+        handler(err, res);
+      });
+}
+/**
  *@param {Object} req
  *@param {Object} res
  *@param {Object} next
@@ -59,25 +89,12 @@ async function like(req, res, next) {
   return res.json('ok');
 }
 
-/**
- *@param {Object} req
- *@param {Object} res
- *@param {Object} next
- */
-async function getUserFavourites(req, res, next) {
-  listingService.getUserFavourites(req.params.userID)
-      .then(function(favs) {
-        return res.json(favs);
-      })
-      .catch((err)=>{
-        handler(err, res);
-      });
-}
 
 module.exports = {
   index,
   detail,
   purchase,
   like,
-  getUserFavourites,
+  insert,
+  update,
 };

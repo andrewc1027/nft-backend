@@ -7,27 +7,36 @@ const schema = new mongoose.Schema({
   description: {type: String, required: true},
   location: {type: String, required: true},
   address: {type: String, required: true},
-  creator: {type: String, required: true},
-  owner: {type: String, required: true}, // Creator are the initial owner
-  copies: {type: Number, default: 1},
-  imageID: {type: ObjectId, required: true, ref: 'nftPhotos'},
+  creator: {
+    name: {type: String, required: true},
+    ID: {type: ObjectId, required: true},
+  },
   collections: {type: [String]},
+  fileOriginalName: {type: String, required: true},
+  filePath: {type: String, required: true},
+
+  // Listing Related
+  owner: {type: String}, // Creator are the initial owner
+  copies: {type: Number, default: 1},
   featureImage: {type: String},
   bannerImage: {type: String},
   royalties: {type: Number}, // in percentage
   contactAddress: {type: String}, // Royalties will go to this address,
   blockchain: {type: String},
-  paymentTokens: {type: [String], required: true},
-  price: {type: Number, required: true},
-  tokenID: {type: Number, required: true},
+  paymentTokens: {type: [String]},
+  price: {type: Number},
+  tokenID: {type: Number},
   views: {type: Number},
   likes: {type: Number},
   activeDate: {type: Date},
   buyerAddress: {type: String},
+
   // IPFS Related Schema
-  cid: {type: String, required: true, unique: true, sparse: true},
-  pinDate: {type: Date, required: true},
-  pinSize: {type: Number, required: true},
+  ipfs: {
+    cid: {type: String, required: true, unique: true, sparse: true},
+    pinDate: {type: Date, required: true},
+    pinSize: {type: Number, required: true},
+  },
 });
 
 schema.plugin(paginate);
