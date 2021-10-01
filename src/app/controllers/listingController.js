@@ -63,6 +63,7 @@ async function update(req, res, next) {
         handler(err, res);
       });
 }
+
 /**
  *@param {Object} req
  *@param {Object} res
@@ -70,6 +71,21 @@ async function update(req, res, next) {
  */
 async function purchase(req, res, next) {
   listingService.purchase(req.params.id, req.body, req.user)
+      .then(function(trade) {
+        return res.json(trade);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function publish(req, res, next) {
+  listingService.publish(req.params.id, req.body, req.user)
       .then(function(trade) {
         return res.json(trade);
       })
@@ -97,4 +113,5 @@ module.exports = {
   like,
   insert,
   update,
+  publish,
 };

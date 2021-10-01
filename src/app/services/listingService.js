@@ -184,19 +184,13 @@ async function publish(id, data, user) {
     throw new Error(err);
   }
   const listedItem = await listing.findByIdAndUpdate(id, {
-    owner: item.creatorID,
-    imageID: id,
-    collections: item.collections,
+    owner: user.username,
     price: data.price,
     royalties: data.royalties,
     activeDate: data.activeDate,
     buyerAddress: data.buyerAddress,
-    tokenID: tokenID,
-    cid: result.IpfsHash,
-    pinSize: result.PinSize,
-    pinDate: result.Timestamp,
+    tokenID: data.tokenID,
   });
-
 
   return listedItem;
 }
