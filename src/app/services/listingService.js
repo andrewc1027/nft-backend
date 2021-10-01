@@ -43,6 +43,9 @@ async function insert(data, files, user) {
     location: joi.string().required(),
     address: joi.string().required(),
     collections: joi.array(),
+    tags: joi.array(),
+    longitude: joi.number().required(),
+    latitude: joi.number().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -74,6 +77,10 @@ async function insert(data, files, user) {
       ipfs: result,
       fileOriginalName: files.file[0].originalName,
       filePath: files.file[0].path,
+      geoLocation: {
+        type: 'Point',
+        coordinatest: [data.latitude, data.longitude],
+      },
     });
 
     // TODO: Delete uploaded files once it uploaded to ipfs

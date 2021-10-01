@@ -9,8 +9,7 @@ const collection = require('../models/collection');
  */
 async function getAll(query, user, page, limit) {
   const collections = await collection.paginate({
-    originalOwner: user.username,
-    cid: {$ne: null},
+    owner: user._id,
   }, {page: page, limit: limit});
   return collections;
 }

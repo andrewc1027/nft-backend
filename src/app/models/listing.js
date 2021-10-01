@@ -4,7 +4,7 @@ const paginate = require('mongoose-paginate-v2');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
-  description: {type: String, required: true},
+  description: {type: String},
   location: {type: String, required: true},
   address: {type: String, required: true},
   creator: {
@@ -12,6 +12,11 @@ const schema = new mongoose.Schema({
     ID: {type: ObjectId, required: true},
   },
   collections: {type: [String]},
+  tags: {type: [String]},
+  geoLocation: {
+    type: {type: String},
+    coordinates: [Number],
+  },
   fileOriginalName: {type: String, required: true},
   filePath: {type: String, required: true},
 
