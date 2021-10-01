@@ -38,7 +38,7 @@ const schema = new mongoose.Schema({
 
   // IPFS Related Schema
   ipfs: {
-    cid: {type: String, required: true, unique: true, sparse: true},
+    cid: {type: String, required: true},
     pinDate: {type: Date, required: true},
     pinSize: {type: Number, required: true},
   },

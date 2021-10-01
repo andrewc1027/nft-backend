@@ -81,7 +81,7 @@ async function insert(data, files, user) {
         pinSize: result.PinSize,
         pinDate: result.Timestamp,
       },
-      fileOriginalName: files.file[0].originalName,
+      fileOriginalName: files.file[0].originalname,
       filePath: files.file[0].path,
       geoLocation: {
         type: 'Point',
