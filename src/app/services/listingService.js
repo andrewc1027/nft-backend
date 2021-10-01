@@ -58,13 +58,12 @@ async function insert(data, files, user) {
       name: data.name,
     },
   }).then(function(result) {
-    console.log(result);
     // if (result.isDuplicate) {
     //   fs.unlinkSync(files.raw[0].path);
     //   throw new Error('NFT is a duplicate');
     // }
     // Pre Check if user exists
-    userSvc.find(user.address);
+    userSvc.find(user._id);
     const item = listing.create({
       name: data.name,
       description: data.description,
