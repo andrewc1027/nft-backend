@@ -37,6 +37,15 @@ async function find(id) {
 }
 
 /**
+ * @param {String} self
+ */
+async function me(self) {
+  const data = await user.findById(self._id).orFail(
+      () => Error('User not Found'));
+  return data;
+}
+
+/**
  * @param {String} address
  */
 async function register(address) {
@@ -82,4 +91,5 @@ module.exports = {
   update,
   getUserFavourites,
   addUserFavourites,
+  me,
 };

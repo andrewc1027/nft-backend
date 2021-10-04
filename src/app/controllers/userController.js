@@ -34,6 +34,21 @@ async function find(req, res, next) {
  * @param  {Object} res
  * @param  {Object} next
  */
+async function me(req, res, next) {
+  UserService.me(req.user)
+      .then(function(user) {
+        return res.json(user);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
 async function update(req, res, next) {
   await UserService.update(req.user, req.body)
       .then(function(token) {
@@ -48,4 +63,5 @@ module.exports = {
   findAndRegister,
   find,
   update,
+  me,
 };
