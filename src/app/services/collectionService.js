@@ -1,5 +1,4 @@
 const collection = require('../models/collection');
-
 /**
  * @param {Object} query
  * @param {Object} user
@@ -27,16 +26,31 @@ async function getOne(id) {
 
 /**
  * @param {Object} data
- * @param {File} file
+ * @param {File} files
  * @param {Object} user
  * @return {Object}
  */
-async function insert(data, file, user) {
+async function insert(data, files, user) {
+  let bannerImage = '';
+  if (files.bannerImage.length > 0) {
+    bannerImage = files.bannerImage[0].location;
+  }
+  let featureImage = '';
+  if (files.featureImage.length > 0) {
+    featureImage = files.featureImage[0].location;
+  }
+
   const res = await collection.create({
     name: data.name,
     description: data.description,
-    logo: file.path,
+    bannerImage: bannerImage,
+    featureImage: featureImage,
+    logoImage: files.logoImage[0].location,
     owner: user._id,
+    payoutAddress: data.payoutAddress,
+    blockchain: data.blockchain,
+    royalties: data.royalties,
+    url: data.url,
   });
 
   return res;

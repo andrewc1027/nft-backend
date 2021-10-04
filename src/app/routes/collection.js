@@ -5,19 +5,31 @@ const {handlerException} = require('../exceptions/handler');
 const collectionController = require('../controllers/collectionController');
 const tokenValidator = require('../middleware/tokenValidator');
 const multer = require('multer');
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, 'uploads/img');
-  },
-  filename: function(req, file, cb) {
-    console.log(file);
-    const extArray = file.mimetype.split('/');
-    const extension = extArray[extArray.length - 1];
-    cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
-  },
-});
-const upload = multer({storage: storage});
+const s3 = require('../config/s3');
+const multerS3 = require('multer-s3');
 
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    metadata: function(req, file, cb) {
+      cb(null, {fieldName: file.fieldname});
+    },
+    key: function(req, file, cb) {
+      const extArray = file.mimetype.split('/');
+      const extension = extArray[extArray.length - 1];
+      cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
+    },
+  }),
+});
+
+const multi = upload.fields([
+  {name: 'logoImage', maxCount: 1},
+  {name: 'bannerImage', maxCount: 1},
+  {name: 'featureImage', maxCount: 1},
+]);
 router.get('/collections',
     handlerException(tokenValidator),
     handlerException(collectionController.index));
@@ -27,12 +39,12 @@ router.get('/collections/:id',
     handlerException(collectionController.getOne));
 
 router.post('/collections',
-    upload.single('file'),
+    multi,
     handlerException(tokenValidator),
     handlerException(collectionController.insert));
 
 router.patch('/collections/:id',
-    upload.single('file'),
+    multi,
     handlerException(tokenValidator),
     handlerException(collectionController.update));
 

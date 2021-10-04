@@ -4,6 +4,7 @@ const joi = require('joi');
 const fs = require('fs');
 const pinata = require('../config/pinata');
 const userSvc = require('./userService');
+const s3Utils = require('../utils/s3');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -36,64 +37,50 @@ async function getOne(id) {
  * @return {Array}
  */
 async function insert(data, files, user) {
-  const fileStream = fs.createReadStream(files.raw[0].path);
-  const schema = joi.object({
-    name: joi.string().required(),
-    description: joi.string().required(),
-    location: joi.string().required(),
-    address: joi.string().required(),
-    collections: joi.array(),
-    tags: joi.array(),
-    longitude: joi.number().required(),
-    latitude: joi.number().required(),
-    blockchain: joi.string().required(),
+  // const tags = data.tags.split(',');
+  // const collections = data.collections.split(',');
+  // Uploading Thumbnail NFT to AWS S3
+  const thumbData = await s3Utils.upload(files.file[0]);
+
+  // Pre Check if user exists
+  await userSvc.find(user._id);
+  const item = await listing.create({
+    name: data.name,
+    description: data.description,
+    location: data.location,
+    address: data.address,
+    creator: {
+      name: user.username,
+      ID: user._id,
+    },
+    blockchain: data.blockchain,
+    // collections: collections,
+    // tags: tags,
+    fileOriginalName: files.file[0].originalname,
+    filePath: thumbData.Location,
+    geoLocation: {
+      type: 'Point',
+      coordinatest: [data.latitude, data.longitude],
+    },
   });
-  const {error} = schema.validate(data);
-  if (error) {
-    fs.unlinkSync(files.raw[0].path);
-    throw new Error(error);
-  }
-  await pinata.pinFileToIPFS(fileStream, {
+
+  // Uploading Actual NFT to IPFS
+  const fileStream = fs.createReadStream(files.raw[0].path);
+  pinata.pinFileToIPFS(fileStream, {
     pinataMetadata: {
       name: data.name,
     },
-  }).then(function(result) {
-    // if (result.isDuplicate) {
-    //   fs.unlinkSync(files.raw[0].path);
-    //   throw new Error('NFT is a duplicate');
-    // }
-    // Pre Check if user exists
-    userSvc.find(user._id);
-    const item = listing.create({
-      name: data.name,
-      description: data.description,
-      location: data.location,
-      address: data.address,
-      creator: {
-        name: user.username,
-        ID: user._id,
-      },
-      collections: data.collections,
-      cid: result.IpfsHash,
+  }).then(async function(result) {
+    await listing.findByIdAndUpdate(item._id, {
       ipfs: {
         cid: result.IpfsHash,
         pinSize: result.PinSize,
         pinDate: result.Timestamp,
-      },
-      fileOriginalName: files.file[0].originalname,
-      filePath: files.file[0].path,
-      geoLocation: {
-        type: 'Point',
-        coordinatest: [data.latitude, data.longitude],
+        isDuplicate: result.isDuplicate,
       },
     });
-
-    // TODO: Delete uploaded files once it uploaded to ipfs
-    fs.unlinkSync(files.raw[0].path);
-    return item;
-  }).catch((err)=>{
-    throw new Error(err);
   });
+  return item;
 }
 
 
@@ -105,7 +92,7 @@ async function insert(data, files, user) {
  */
 async function update(id, files, data) {
   // TODO: handles file update
-  const item = await nftPhotos.findByIdAndUpdate(id, data).orFail(
+  const item = await listing.findByIdAndUpdate(id, data).orFail(
       () => Error('Not Found'));
   return item;
 }
@@ -115,7 +102,7 @@ async function update(id, files, data) {
  * @return {Array}
  */
 async function remove(id) {
-  const exs = await nftPhotos.findById(id).orFail(
+  const exs = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
 
@@ -123,8 +110,8 @@ async function remove(id) {
    *  We Can't remove file from IPFS,
    *  but we can unpin it so it'll get removed by IPFS garbage collector
    */
-  pinata.unpin(exs.cid).then((result) => {
-    nftPhotos.findByIdAndDelete(id);
+  pinata.unpin(exs.ipfs.cid).then((result) => {
+    listing.findByIdAndDelete(id);
   });
   return exs;
 }

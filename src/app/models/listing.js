@@ -8,7 +8,7 @@ const schema = new mongoose.Schema({
   location: {type: String, required: true},
   address: {type: String, required: true},
   creator: {
-    name: {type: String, required: true},
+    name: {type: String},
     ID: {type: ObjectId, required: true},
   },
   collections: {type: [String]},
@@ -38,9 +38,10 @@ const schema = new mongoose.Schema({
 
   // IPFS Related Schema
   ipfs: {
-    cid: {type: String, required: true},
-    pinDate: {type: Date, required: true},
-    pinSize: {type: Number, required: true},
+    cid: {type: String},
+    pinDate: {type: Date},
+    pinSize: {type: Number},
+    isDuplicate: {type: Boolean},
   },
 });
 
