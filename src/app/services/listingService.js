@@ -37,7 +37,14 @@ async function getOne(id) {
  * @return {Array}
  */
 async function insert(data, files, user) {
-  // const tags = data.tags.split(',');
+  let tags = [];
+  if (data.tags) {
+    tags = data.tags.split(',');
+  }
+  let collections = [];
+  if (data.collections) {
+    collections = data.collections.split(',');
+  }
   // const collections = data.collections.split(',');
   // Uploading Thumbnail NFT to AWS S3
   const thumbData = await s3Utils.upload(files.file[0]);
@@ -54,8 +61,8 @@ async function insert(data, files, user) {
       ID: user._id,
     },
     blockchain: data.blockchain,
-    // collections: collections,
-    // tags: tags,
+    collections: collections,
+    tags: tags,
     fileOriginalName: files.file[0].originalname,
     filePath: thumbData.Location,
     geoLocation: {
@@ -91,9 +98,37 @@ async function insert(data, files, user) {
  * @return {Array}
  */
 async function update(id, files, data) {
-  // TODO: handles file update
-  const item = await listing.findByIdAndUpdate(id, data).orFail(
+  const item = await listing.findById(id).orFail(
       () => Error('Not Found'));
+  if (files.file.length > 0) {
+    // TODO: handle old file
+    const thumbData = await s3Utils.upload(files.file[0]);
+    item.fileOriginalName = files.file[0].originalname;
+    item.filePath = thumbData.Location;
+  }
+
+  if (files.raw.length > 0) {
+    // TODO: handle old file
+    const fileStream = fs.createReadStream(files.raw[0].path);
+    pinata.pinFileToIPFS(fileStream, {
+      pinataMetadata: {
+        name: data.name,
+        keyvalues: {
+
+        },
+      },
+    }).then(async function(result) {
+      await listing.findByIdAndUpdate(id, {
+        ipfs: {
+          cid: result.IpfsHash,
+          pinSize: result.PinSize,
+          pinDate: result.Timestamp,
+          isDuplicate: result.isDuplicate,
+        },
+      });
+    });
+  }
+
   return item;
 }
 

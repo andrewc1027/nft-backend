@@ -43,13 +43,13 @@ async function getOne(req, res, next) {
  */
 async function insert(req, res, next) {
   const body = req.body;
-  const file = req.file;
-  if (file==undefined) {
+  const files = req.files;
+  if (files.logoImage==undefined) {
     return res.status(402).json({
       message: 'Logo File Required',
     });
   }
-  collectionSvc.insert(body, file, req.user)
+  collectionSvc.insert(body, files, req.user)
       .then(function(data) {
         return res.json(data);
       })

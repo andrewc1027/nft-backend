@@ -31,8 +31,8 @@ const schema = new mongoose.Schema({
   paymentTokens: {type: [String]},
   price: {type: Number},
   tokenID: {type: Number},
-  views: {type: Number},
-  likes: {type: Number},
+  views: {type: Number, default: 0},
+  likes: {type: Number, default: 0},
   activeDate: {type: Date},
   buyerAddress: {type: String},
 

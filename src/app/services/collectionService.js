@@ -32,14 +32,19 @@ async function getOne(id) {
  */
 async function insert(data, files, user) {
   let bannerImage = '';
-  if (files.bannerImage.length > 0) {
+  if (files.bannerImage) {
     bannerImage = files.bannerImage[0].location;
   }
   let featureImage = '';
-  if (files.featureImage.length > 0) {
+  if (files.featureImage) {
     featureImage = files.featureImage[0].location;
   }
-
+  let url = '';
+  if (data.url) {
+    url = data.url;
+  } else {
+    url = `${data.name.toLowerCase().replace(' ', '-')}+${user._id}`;
+  }
   const res = await collection.create({
     name: data.name,
     description: data.description,
@@ -50,7 +55,7 @@ async function insert(data, files, user) {
     payoutAddress: data.payoutAddress,
     blockchain: data.blockchain,
     royalties: data.royalties,
-    url: data.url,
+    url: url,
   });
 
   return res;
