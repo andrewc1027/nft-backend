@@ -9,13 +9,18 @@ const s3Utils = require('../utils/s3');
  * @param {Object} query
  * @param {Number} page
  * @param {Number} limit
+ * @param {Object} user
  * @return {Array}
  */
-async function getAll(query, page, limit) {
-  const listings = await listing.paginate({
-    isPublished: true,
-    isActive: true,
-  }, {page: page, limit: limit});
+async function getAll(query, page, limit, user) {
+  const queries = {};
+  queries.isPublished = true;
+  queries.isActive = true;
+
+  if (query.collection) {
+    queries.collections = query.collection;
+  }
+  const listings = await listing.paginate(queries, {page: page, limit: limit});
   return listings;
 }
 
@@ -45,7 +50,10 @@ async function insert(data, files, user) {
   if (data.collections) {
     collections = data.collections.split(',');
   }
-  // const collections = data.collections.split(',');
+  let geoLocations = [];
+  if (data.longitude) {
+    geoLocations = [data.longitude, data.latitude];
+  }
   // Uploading Thumbnail NFT to AWS S3
   const thumbData = await s3Utils.upload(files.file[0]);
 
@@ -67,7 +75,7 @@ async function insert(data, files, user) {
     filePath: thumbData.Location,
     geoLocation: {
       type: 'Point',
-      coordinatest: [data.latitude, data.longitude],
+      coordinates: geoLocations,
     },
   });
 

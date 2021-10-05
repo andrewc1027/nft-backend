@@ -9,7 +9,8 @@ async function index(req, res, next) {
   const page = req.query.page || 0;
   const limit = req.query.limit || 10;
   const query = req.query;
-  listingService.getAll(query, page, limit)
+  const user = req.user;
+  listingService.getAll(query, page, limit, user)
       .then(function(data) {
         return res.json(data);
       })
