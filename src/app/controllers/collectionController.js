@@ -64,7 +64,11 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  collectionSvc.update(req.params.id, req.body, req.file)
+  let files = {};
+  if (req.files) {
+    files = req.files;
+  }
+  collectionSvc.update(req.params.id, req.body, files)
       .then(function(data) {
         return res.json(data);
       })

@@ -39,13 +39,13 @@ router.get('/collections/:id',
     handlerException(collectionController.getOne));
 
 router.post('/collections',
-    multi,
     handlerException(tokenValidator),
+    multi,
     handlerException(collectionController.insert));
 
 router.patch('/collections/:id',
-    multi,
     handlerException(tokenValidator),
+    multi,
     handlerException(collectionController.update));
 
 router.delete('/collections/:id',

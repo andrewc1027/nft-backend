@@ -39,12 +39,7 @@ async function insert(data, files, user) {
   if (files.featureImage) {
     featureImage = files.featureImage[0].location;
   }
-  let url = '';
-  if (data.url) {
-    url = data.url;
-  } else {
-    url = `${data.name.toLowerCase().replace(' ', '-')}+${user._id}`;
-  }
+
   const res = await collection.create({
     name: data.name,
     description: data.description,
@@ -55,7 +50,7 @@ async function insert(data, files, user) {
     payoutAddress: data.payoutAddress,
     blockchain: data.blockchain,
     royalties: data.royalties,
-    url: url,
+    url: await urlMaker(data.name, user._id),
   });
 
   return res;
@@ -65,21 +60,38 @@ async function insert(data, files, user) {
 /**
  * @param {String} id
  * @param {Object} data
- * @param {Object} file
+ * @param {Object} files
  * @return {Object}
  */
-async function update(id, data, file) {
+async function update(id, data, files) {
   const exs = await collection.findById(id).orFail(
       () => Error('Not Found'),
-  ); ;
-  let filePath = exs.logo;
-  if (file) {
-    filePath = file.path;
+  );
+  let bannerImage = exs.bannerImage;
+  if (files.bannerImage) {
+    bannerImage = files.bannerImage[0].location;
+  }
+  let featureImage = exs.featureImage;
+  if (files.featureImage) {
+    featureImage = files.featureImage[0].location;
+  }
+  let logoImage = exs.logoImage;
+  if (files.logoImage) {
+    logoImage = files.logoImage[0].location;
+  }
+  let url = exs.url;
+  if (data.url) {
+    url = data.url;
   }
   const res = await collection.findByIdAndUpdate(id, {
     name: data.name,
     description: data.description,
-    logo: filePath,
+    logoImage: logoImage,
+    bannerImage: bannerImage,
+    featureImage: featureImage,
+    payoutAddress: data.payoutAddress,
+    blockchain: data.blockchain,
+    url: url,
   });
 
   return res;
@@ -94,6 +106,18 @@ async function remove(id) {
       () => Error('Not Found'),
   );
   return result;
+}
+
+/**
+ * @param {string} name
+ * @param {object} userID
+ */
+async function urlMaker(name, userID) {
+  name = name.replace('/[^a-zA-Z0-9]/g', '-');
+  name = name.split(' ').join('-');
+  name = name.replace(',', '-');
+  const url = `${name.toLowerCase()}-${userID}`;
+  return url;
 }
 
 module.exports = {
