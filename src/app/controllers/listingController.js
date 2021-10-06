@@ -61,7 +61,7 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  listingService.update(req.body, req.files, req.user)
+  listingService.update(req.params.id, req.files, req.body)
       .then(function(data) {
         return res.json(data);
       })
@@ -111,6 +111,16 @@ async function like(req, res, next) {
   return res.json('ok');
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function remove(req, res, next) {
+  listingService
+      .remove(req.params.id, req.user);
+  return res.json('ok');
+}
 
 module.exports = {
   index,
@@ -120,4 +130,5 @@ module.exports = {
   insert,
   update,
   publish,
+  remove,
 };

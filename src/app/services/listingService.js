@@ -82,7 +82,7 @@ async function insert(data, files, user) {
     tags: tags,
     fileOriginalName: files.file[0].originalname,
     filePath: thumbData.Location,
-    rawFileName: files.raw[0].filename,
+    rawFileName: files.raw[0].originalname,
     geoLocation: {
       type: 'Point',
       coordinates: geoLocations,
@@ -116,16 +116,15 @@ async function insert(data, files, user) {
  * @return {Array}
  */
 async function update(id, files, data) {
-  const item = await listing.findById(id).orFail(
+  const item = await listing.findByIdAndUpdate(id, data).orFail(
       () => Error('Not Found'));
-  if (files.file.length > 0) {
+  if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
     item.fileOriginalName = files.file[0].originalname;
     item.filePath = thumbData.Location;
   }
-
-  if (files.raw.length > 0) {
+  if (files.raw) {
     // TODO: handle old file
     const fileStream = fs.createReadStream(files.raw[0].path);
     pinata.pinFileToIPFS(fileStream, {
@@ -152,10 +151,11 @@ async function update(id, files, data) {
 
 /**
  * @param {String} id
+ * @param {Object} user
  * @return {Array}
  */
-async function remove(id) {
-  const exs = await listing.findById(id).orFail(
+async function remove(id, user) {
+  const exs = await listing.findByIdAndDelete(id).orFail(
       () => Error('Not Found'),
   );
 
@@ -163,6 +163,7 @@ async function remove(id) {
    *  We Can't remove file from IPFS,
    *  but we can unpin it so it'll get removed by IPFS garbage collector
    */
+  // TODO: unpin not working, exs empty
   pinata.unpin(exs.ipfs.cid).then((result) => {
     listing.findByIdAndDelete(id);
   });

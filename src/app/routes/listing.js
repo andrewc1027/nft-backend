@@ -11,7 +11,10 @@ const storage = multer.diskStorage({
   },
   filename: function(req, file, cb) {
     const extArray = file.mimetype.split('/');
-    const extension = extArray[extArray.length - 1];
+    let extension = extArray[extArray.length - 1];
+    if (file.fieldname == 'raw') {
+      extension = 'raw';
+    }
     cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
   },
 });
@@ -43,7 +46,11 @@ router.post('/listings/:id/purchase',
     handlerException(tokenValidator),
     handlerException(listingController.purchase));
 
-router.patch('/listing/:id/like',
+router.patch('/listings/:id/like',
     handlerException(tokenValidator),
     handlerException(listingController.like));
+
+router.delete('/listings/:id',
+    handlerException(tokenValidator),
+    handlerException(listingController.remove));
 module.exports = router;
