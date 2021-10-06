@@ -176,18 +176,26 @@ async function remove(id) {
  */
 async function purchase(id, data, user) {
   // What if there's 2 simultaneous purchase ?
-  const item = await listing.findById(id).orFail(
+  const item = await listing.findById(id).where({
+    isPublished: true,
+  }).orFail(
       () => Error('Listing Not Found'),
   );
   const trade = await trading.create({
-    to: user.address,
+    to: user._id,
     from: item.owner,
     price: item.price,
-    date: new Date.Now(),
+    date: Date.now(),
     listingID: id,
-    listingCID: item.cid,
+    listingCID: item.ipfs.cid,
+    quantity: 1,
+    event: 'Purchasing',
   });
 
+  await listing.findByIdAndUpdate(id, {
+    owner: user._id,
+    isPublished: false,
+  });
   return trade;
 }
 
@@ -223,25 +231,24 @@ async function likeCounter(id, user) {
 async function publish(id, data, user) {
   const schema = joi.object({
     price: joi.number().required(),
-    royalties: joi.string().required(),
-    owner: joi.string().required(),
+    royalties: joi.number().required(),
     copies: joi.number().required(),
     tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
-    paymentTokens: joi.array(),
   });
   const {error} = schema.validate(data);
   if (error) {
-    throw new Error(err);
+    throw new Error(error);
   }
   const listedItem = await listing.findByIdAndUpdate(id, {
-    owner: user.username,
+    owner: user._id,
     price: data.price,
     royalties: data.royalties,
     activeDate: data.activeDate,
     buyerAddress: data.buyerAddress,
     tokenID: data.tokenID,
+    isPublished: true,
   });
 
   return listedItem;

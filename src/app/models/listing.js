@@ -36,7 +36,7 @@ const schema = new mongoose.Schema({
   blockchain: {type: String},
   paymentTokens: {type: [String]},
   price: {type: Number},
-  tokenID: {type: Number},
+  tokenID: {type: String},
   views: {type: Number, default: 0},
   likes: {type: Number, default: 0},
   activeDate: {type: Date},
@@ -49,6 +49,8 @@ const schema = new mongoose.Schema({
     pinSize: {type: Number},
     isDuplicate: {type: Boolean},
   },
+
+  isPublished: {type: Boolean, default: false},
 });
 
 schema.plugin(paginate);
