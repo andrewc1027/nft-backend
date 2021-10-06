@@ -1,4 +1,5 @@
 const listing = require('../models/listing');
+const collection = require('../models/collection');
 const trading = require('../models/tradingHistory');
 const joi = require('joi');
 const fs = require('fs');
@@ -46,17 +47,25 @@ async function insert(data, files, user) {
   if (data.tags) {
     tags = data.tags.split(',');
   }
-  let collections = [];
-  if (data.collections) {
-    collections = data.collections.split(',');
-  }
   let geoLocations = [];
   if (data.longitude) {
     geoLocations = [data.longitude, data.latitude];
   }
   // Uploading Thumbnail NFT to AWS S3
   const thumbData = await s3Utils.upload(files.file[0]);
-
+  console.log(files.raw[0]);
+  let dataColl = {};
+  if (data.collection) {
+    const coll = await collection.findById(data.collection);
+    if (coll) {
+      dataColl = {
+        ID: coll._id,
+        name: coll.name,
+        url: coll.url,
+        logoImage: coll.logoImage,
+      };
+    }
+  }
   // Pre Check if user exists
   await userSvc.find(user._id);
   const item = await listing.create({
@@ -69,10 +78,11 @@ async function insert(data, files, user) {
       ID: user._id,
     },
     blockchain: data.blockchain,
-    collections: collections,
+    collections: dataColl,
     tags: tags,
     fileOriginalName: files.file[0].originalname,
     filePath: thumbData.Location,
+    rawFileName: files.raw[0].filename,
     geoLocation: {
       type: 'Point',
       coordinates: geoLocations,

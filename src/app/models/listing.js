@@ -11,13 +11,19 @@ const schema = new mongoose.Schema({
     name: {type: String},
     ID: {type: ObjectId, required: true},
   },
-  collections: {type: [String]},
+  collections: {
+    ID: {type: ObjectId},
+    name: {type: String},
+    url: {type: String},
+    logoImage: {type: String},
+  },
   tags: {type: [String]},
   geoLocation: {
     type: {type: String},
     coordinates: [Number],
   },
   fileOriginalName: {type: String, required: true},
+  rawFileName: {type: String, required: true},
   filePath: {type: String, required: true},
 
   // Listing Related

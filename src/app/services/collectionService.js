@@ -92,6 +92,7 @@ async function update(id, data, files) {
     payoutAddress: data.payoutAddress,
     blockchain: data.blockchain,
     url: url,
+    royalties: data.royalties,
   });
 
   return res;
