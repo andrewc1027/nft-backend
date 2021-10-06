@@ -2,9 +2,9 @@ const express = require('express');
 // eslint-disable-next-line new-cap
 const router = express.Router();
 const {handlerException} = require('../exceptions/handler');
-const tradingController = require('../controllers/tradingHistoryController');
+const trxController = require('../controllers/transactionController');
 
-router.get('/history/:listingID',
-    handlerException(tradingController.index));
+router.get('/transactions',
+    handlerException(trxController.index));
 
 module.exports = router;

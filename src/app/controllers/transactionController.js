@@ -1,4 +1,4 @@
-const tradingService = require('../services/tradingService');
+const trxService = require('../services/transactionService');
 /**
  * @param  {Object} req
  * @param  {Object} res
@@ -8,7 +8,7 @@ async function index(req, res, next) {
   const page = req.query.page || 0;
   const limit = req.query.limit || 10;
   const query = req.query;
-  const data = await tradingService.getAll(query, page, limit);
+  const data = await trxService.getAll(query, page, limit);
   return res.json(data);
 }
 

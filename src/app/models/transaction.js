@@ -10,7 +10,6 @@ const schema = new mongoose.Schema({
   quantity: {type: Number, required: true},
   event: {type: String, required: true},
   listingID: {type: ObjectId, required: true, ref: 'listing'},
-  listingName: {type: String, required: true},
   listingCID: {type: String, required: true},
   remark: {type: String},
 });

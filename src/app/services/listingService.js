@@ -1,6 +1,6 @@
 const listing = require('../models/listing');
 const collection = require('../models/collection');
-const trading = require('../models/tradingHistory');
+const transaction = require('../models/transaction');
 const joi = require('joi');
 const fs = require('fs');
 const pinata = require('../config/pinata');
@@ -181,7 +181,7 @@ async function purchase(id, data, user) {
   }).orFail(
       () => Error('Listing Not Found'),
   );
-  const trade = await trading.create({
+  const trade = await transaction.create({
     to: user._id,
     from: item.owner,
     price: item.price,
