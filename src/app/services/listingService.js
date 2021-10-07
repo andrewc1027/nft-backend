@@ -15,8 +15,7 @@ const s3Utils = require('../utils/s3');
  */
 async function getAll(query, page, limit, user) {
   const queries = {};
-  queries.isPublished = true;
-  queries.isActive = true;
+  // queries.isPublished = true;
 
   if (query.collection) {
     queries.collections = query.collection;
@@ -136,6 +135,7 @@ async function update(id, files, data) {
       },
     }).then(async function(result) {
       await listing.findByIdAndUpdate(id, {
+        rawFileName: files.raw[0].originalname,
         ipfs: {
           cid: result.IpfsHash,
           pinSize: result.PinSize,
@@ -143,6 +143,8 @@ async function update(id, files, data) {
           isDuplicate: result.isDuplicate,
         },
       });
+    }).catch((err)=>{
+      console.log('IPFS Upload Failed', err);
     });
   }
 
