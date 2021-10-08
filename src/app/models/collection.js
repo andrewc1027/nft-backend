@@ -14,6 +14,7 @@ const schema = new mongoose.Schema({
   royalties: {type: String},
   payoutAddress: {type: String},
   paymentToken: {type: [String]},
+  listingCount: {type: Number},
 });
 
 schema.plugin(paginate);

@@ -22,6 +22,9 @@ async function getAll(query, page, limit, user) {
   if (query.creator) {
     queries['creator.name'] = query.creator;
   }
+  if (query.owner) {
+    queries['owner'] = query.creator;
+  }
 
   const listings = await listing
       .paginate(queries,
@@ -107,6 +110,9 @@ async function insert(data, files, user) {
       },
     });
   });
+  if (item.collections) {
+    collectionItemCount(item.collections.ID);
+  }
   return item;
 }
 
@@ -163,12 +169,14 @@ async function update(id, files, data) {
     }
   }
   item.collections = dataColl;
-  let geoLocations = [];
   if (data.longitude) {
-    geoLocations = [data.longitude, data.latitude];
+    const geoLocations = [data.longitude, data.latitude];
+    item.geoLocation.coordinates = geoLocations;
   }
-  item.geoLocation.coordinates = geoLocations;
   await item.save();
+  if (item.collections) {
+    collectionItemCount(item.collections.ID);
+  }
   return item;
 }
 
@@ -287,6 +295,20 @@ async function explore(query, page, limit) {
   const filters = {};
   filters['isPublished'] = true;
   const listings = await listing.paginate(filters, {page: page, limit: limit});
+  return listings;
+}
+
+/**
+ * @param {String} collectionID
+ */
+async function collectionItemCount(collectionID) {
+  const listings = await listing.find({'collections.ID': collectionID});
+  console.log(listings, collectionID);
+  await collection.findByIdAndUpdate(collectionID, {
+    listingCount: listings.length,
+  }).orFail(
+      () => Error('Not Found'),
+  );
   return listings;
 }
 
