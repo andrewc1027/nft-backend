@@ -1,3 +1,4 @@
+const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 const schema = new mongoose.Schema({
@@ -19,6 +20,7 @@ const schema = new mongoose.Schema({
     referralSuccessful: {type: Boolean, default: false},
     successfulPurchase: {type: Boolean, default: false},
   },
+  favorites: [ObjectId],
 });
 schema.plugin(uniqueValidator);
 const user = mongoose.model('user', schema);

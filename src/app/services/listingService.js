@@ -7,6 +7,7 @@ const pinata = require('../config/pinata');
 const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
 const {ObjectId} = require('bson');
+const user = require('../models/user');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -249,15 +250,22 @@ async function viewCounter(id) {
 
 /**
  * @param {String} id
- * @param {Object} user
+ * @param {Object} self
  */
-async function likeCounter(id, user) {
+async function likeCounter(id, self) {
   const item = await listing.findById(id);
-  await listing.findByIdAndUpdate(id, {
-    likes: item.likes+1,
-  });
-
-  // Add Listing to User Favourites List
+  const users = await user.findById(self._id);
+  if (users.favorites.includes(id)) {
+    const index = users.favorites.indexOf(id);
+    users.favorites.splice(index, 1);
+    await users.save();
+    item.likes = item.likes-1;
+  } else {
+    users.favorites.push(id);
+    await users.save();
+    item.likes = item.likes+1;
+  }
+  await item.save();
 }
 
 /**
