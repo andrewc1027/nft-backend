@@ -6,6 +6,7 @@ const fs = require('fs');
 const pinata = require('../config/pinata');
 const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
+const {ObjectId} = require('bson');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -16,14 +17,19 @@ const s3Utils = require('../utils/s3');
 async function getAll(query, page, limit, user) {
   const queries = {};
 
+  // Use Collection ID
   if (query.collection) {
-    queries['collections.name'] = query.collection;
+    queries['collections.ID'] = new ObjectId(query.collection);
   }
+
+  // Use Creator ID
   if (query.creator) {
-    queries['creator.name'] = query.creator;
+    queries['creator.ID'] = new ObjectId(query.creator);
   }
+
+  // Use Owner ID
   if (query.owner) {
-    queries['owner'] = query.creator;
+    queries['owner'] = query.owner;
   }
 
   const listings = await listing
