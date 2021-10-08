@@ -15,15 +15,19 @@ const s3Utils = require('../utils/s3');
  */
 async function getAll(query, page, limit, user) {
   const queries = {};
-  // queries.isPublished = true;
 
   if (query.collection) {
-    queries.collections = query.collection;
+    queries['collections.name'] = query.collection;
   }
-  const listings = await listing.paginate(queries, {page: page, limit: limit});
+  if (query.creator) {
+    queries['creator.name'] = query.creator;
+  }
+
+  const listings = await listing
+      .paginate(queries,
+          {page: page, limit: limit});
   return listings;
 }
-
 /**
  * @param {String} id
  */
@@ -52,7 +56,6 @@ async function insert(data, files, user) {
   }
   // Uploading Thumbnail NFT to AWS S3
   const thumbData = await s3Utils.upload(files.file[0]);
-  console.log(files.raw[0]);
   let dataColl = {};
   if (data.collection) {
     const coll = await collection.findById(data.collection);
@@ -147,7 +150,25 @@ async function update(id, files, data) {
       console.log('IPFS Upload Failed', err);
     });
   }
-
+  let dataColl = {};
+  if (data.collection) {
+    const coll = await collection.findById(data.collection);
+    if (coll) {
+      dataColl = {
+        ID: coll._id,
+        name: coll.name,
+        url: coll.url,
+        logoImage: coll.logoImage,
+      };
+    }
+  }
+  item.collections = dataColl;
+  let geoLocations = [];
+  if (data.longitude) {
+    geoLocations = [data.longitude, data.latitude];
+  }
+  item.geoLocation.coordinates = geoLocations;
+  await item.save();
   return item;
 }
 
@@ -257,6 +278,17 @@ async function publish(id, data, user) {
   return listedItem;
 }
 
+/**
+ * @param {Object} query
+ * @param {Number} page
+ * @param {Number} limit
+ */
+async function explore(query, page, limit) {
+  const filters = {};
+  filters['isPublished'] = true;
+  const listings = await listing.paginate(filters, {page: page, limit: limit});
+  return listings;
+}
 
 module.exports = {
   getAll,
@@ -267,4 +299,5 @@ module.exports = {
   purchase,
   likeCounter,
   publish,
+  explore,
 };

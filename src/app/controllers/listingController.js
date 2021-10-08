@@ -122,6 +122,24 @@ async function remove(req, res, next) {
   return res.json('ok');
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function explore(req, res, next) {
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  const query = req.query;
+  listingService.explore(query, page, limit)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -131,4 +149,5 @@ module.exports = {
   update,
   publish,
   remove,
+  explore,
 };

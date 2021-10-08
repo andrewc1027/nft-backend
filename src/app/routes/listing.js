@@ -53,4 +53,8 @@ router.patch('/listings/:id/like',
 router.delete('/listings/:id',
     handlerException(tokenValidator),
     handlerException(listingController.remove));
+
+router.get('/explore',
+    handlerException(listingController.explore));
+
 module.exports = router;
