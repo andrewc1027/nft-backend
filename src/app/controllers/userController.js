@@ -50,7 +50,7 @@ async function me(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  await UserService.update(req.user, req.body)
+  await UserService.update(req.user, req.body, req.files)
       .then(function(token) {
         return res.json({token});
       })

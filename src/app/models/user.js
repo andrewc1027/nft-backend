@@ -9,6 +9,8 @@ const schema = new mongoose.Schema({
   createdAt: {type: Date, required: true},
   updatedAt: {type: Date},
   lastLoginAt: {type: Date},
+  logoImage: {type: String},
+  bannerImage: {type: String},
   notifications: {
     auctionExpiration: {type: Boolean, default: false},
     bidActivity: {type: Boolean, default: false},

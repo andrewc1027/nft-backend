@@ -4,7 +4,25 @@ const router = express.Router();
 const {handlerException} = require('../exceptions/handler');
 const userController = require('../controllers/userController');
 const tokenValidator = require('../middleware/tokenValidator');
-
+const multer = require('multer');
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function(req, file, cb) {
+    const extArray = file.mimetype.split('/');
+    let extension = extArray[extArray.length - 1];
+    if (file.fieldname == 'raw') {
+      extension = 'raw';
+    }
+    cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
+  },
+});
+const upload = multer({storage: storage});
+const multi = upload.fields([
+  {name: 'logoImage', maxCount: 1},
+  {name: 'bannerImage', maxCount: 1},
+]);
 /**
  * These Routes are for seller page
  */
@@ -19,6 +37,7 @@ router.get('/users/:id',
     handlerException(userController.find));
 
 router.patch('/users',
+    multi,
     handlerException(tokenValidator),
     handlerException(userController.update));
 
