@@ -319,6 +319,9 @@ async function publish(id, data, user) {
 async function explore(query, page, limit) {
   const filters = {};
   filters['isPublished'] = true;
+  if (query.collection) {
+    filters['collections.ID'] = new ObjectId(query.collection);
+  }
   const listings = await listing.paginate(filters, {page: page, limit: limit});
   return listings;
 }
