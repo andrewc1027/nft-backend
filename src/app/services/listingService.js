@@ -186,6 +186,11 @@ async function update(id, files, data) {
     const geoLocations = [data.longitude, data.latitude];
     item.geoLocation.coordinates = geoLocations;
   }
+  let tags = item.tags;
+  if (data.tags) {
+    tags = data.tags.split(',');
+    item.tags = tags;
+  }
   await item.save();
   if (item.collections) {
     collectionItemCount(item.collections.ID);
