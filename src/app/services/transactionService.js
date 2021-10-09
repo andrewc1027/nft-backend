@@ -22,12 +22,11 @@ async function getAll(query) {
  * @param {Number} limit
  */
 async function me(user, page, limit) {
-  const trx = await transaction.paginate(
+  const trx = await transaction.find(
       {
         from: user._id,
         to: user._id,
-      },
-      {page: page, limit: limit});
+      }).populate('listingID', 'name filePath');
   return trx;
 }
 

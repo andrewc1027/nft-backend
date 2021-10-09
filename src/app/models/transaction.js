@@ -1,6 +1,7 @@
 const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
+const listing = require('./listing');
 
 const schema = new mongoose.Schema({
   from: {type: String, required: true},
@@ -9,7 +10,7 @@ const schema = new mongoose.Schema({
   price: {type: Number, required: true},
   quantity: {type: Number, required: true},
   event: {type: String, required: true},
-  listingID: {type: ObjectId, required: true, ref: 'listing'},
+  listingID: {type: ObjectId, required: true, ref: listing},
   listingCID: {type: String, required: true},
   remark: {type: String},
 });

@@ -2,6 +2,7 @@
 require('dotenv').config();
 const user = require('../models/user');
 const jwt = require('jsonwebtoken');
+const s3Utils = require('../utils/s3');
 
 /**
  * @param {String} address
@@ -9,7 +10,6 @@ const jwt = require('jsonwebtoken');
 async function findAndSignIn(address) {
   let signedUser = {};
   const exUser = await user.findOne({walletAddress: address});
-  console.log(exUser, address);
   if (!exUser) {
     signedUser = await register(address);
   } else {
@@ -60,10 +60,22 @@ async function register(address) {
 /**
  * @param {Object} userRequest
  * @param {Object} data
+ * @param {Object} files
  */
-async function update(userRequest, data) {
-  await user.findByIdAndUpdate(userRequest._id, data).orFail(
-      (err) => console.log(err));
+async function update(userRequest, data, files) {
+  if (files.logoImage) {
+    const thumbData = await s3Utils.upload(files.logoImage[0]);
+    data.logoImage = thumbData.Location;
+  }
+  if (files.bannerImage) {
+    const thumbData = await s3Utils.upload(files.bannerImage[0]);
+    data.bannerImage = thumbData.Location;
+  }
+  console.log(data);
+  user.findByIdAndUpdate(userRequest._id, data).then(function() {
+    console.log('2');
+  });
+  console.log('1');
   const {token} = await findAndSignIn(userRequest.walletAddress);
   return token;
 }
