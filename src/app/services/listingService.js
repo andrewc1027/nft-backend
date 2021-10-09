@@ -12,10 +12,10 @@ const user = require('../models/user');
  * @param {Object} query
  * @param {Number} page
  * @param {Number} limit
- * @param {Object} user
+ * @param {Object} self
  * @return {Array}
  */
-async function getAll(query, page, limit, user) {
+async function getAll(query, page, limit, self) {
   const queries = {};
 
   // Use Collection ID
@@ -31,6 +31,12 @@ async function getAll(query, page, limit, user) {
   // Use Owner ID
   if (query.owner) {
     queries['owner'] = query.owner;
+    queries['creator.ID'] = {$ne: query.owner};
+  }
+
+  if (query.liked) {
+    const usr = await user.findById(self._id);
+    queries['_id'] = {$in: usr.favorites};
   }
 
   const listings = await listing
