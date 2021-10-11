@@ -8,6 +8,7 @@ const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
 const {ObjectId} = require('bson');
 const user = require('../models/user');
+const qTransform = require('../utils/queryTransform');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -322,6 +323,27 @@ async function explore(query, page, limit) {
   if (query.collection) {
     filters['collections.ID'] = new ObjectId(query.collection);
   }
+  if (query.search) {
+    const q = query.search;
+    const or = [
+      {'location': qTransform.regexLike(q)},
+      {'name': qTransform.regexLike(q)},
+      {'address': qTransform.regexLike(q)},
+      {'collections.name': qTransform.regexLike(q)},
+    ];
+    filters['$or'] = or;
+  }
+  if (query.price) {
+    const prc = query.price.split(',');
+    filters['price'] = qTransform.rangeNumber(prc[0], prc[1]);
+  }
+  if (query.tags) {
+    filters['tags'] = qTransform.inQuery(query.tags, ',');
+  }
+  if (query.type) {
+    filters['type'] = query.type;
+  }
+  console.log(filters);
   const listings = await listing.paginate(filters, {page: page, limit: limit});
   return listings;
 }
@@ -331,7 +353,6 @@ async function explore(query, page, limit) {
  */
 async function collectionItemCount(collectionID) {
   const listings = await listing.find({'collections.ID': collectionID});
-  console.log(listings, collectionID);
   await collection.findByIdAndUpdate(collectionID, {
     listingCount: listings.length,
   }).orFail(
