@@ -62,7 +62,7 @@ async function register(address) {
  * @param {Object} data
  * @param {Object} files
  */
-async function update(userRequest, data, files) {
+async function update(userRequest, data, files = {}) {
   if (files.logoImage) {
     const thumbData = await s3Utils.upload(files.logoImage[0]);
     data.logoImage = thumbData.Location;
@@ -71,11 +71,9 @@ async function update(userRequest, data, files) {
     const thumbData = await s3Utils.upload(files.bannerImage[0]);
     data.bannerImage = thumbData.Location;
   }
-  console.log(data);
   user.findByIdAndUpdate(userRequest._id, data).then(function() {
-    console.log('2');
+    console.log(`${userRequest.username} data updated`);
   });
-  console.log('1');
   const {token} = await findAndSignIn(userRequest.walletAddress);
   return token;
 }
