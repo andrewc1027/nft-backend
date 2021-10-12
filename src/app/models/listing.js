@@ -53,6 +53,9 @@ const schema = new mongoose.Schema({
 
   isPublished: {type: Boolean, default: false},
   isDeleted: {type: Boolean, default: false},
+
+  //
+  subscribers: {type: [ObjectId]},
 });
 
 schema.plugin(paginate);

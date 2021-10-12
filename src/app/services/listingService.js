@@ -277,10 +277,19 @@ async function likeCounter(id, self = {}) {
       users.favorites.splice(index, 1);
       await users.save();
       item.likes = item.likes-1;
+
+      // Remove User from listing subs list to avoid sending notif to them
+      const usrIdx = item.subscribers.indexOf(self._id);
+      if (usrIdx > -1) {
+        item.subscribers.splice(usrIdx, 1);
+      }
     } else {
       users.favorites.push(id);
       await users.save();
       item.likes = item.likes+1;
+
+      // Add User to listing subs list for notification purpose
+      item.subscribers.push(self._id);
     }
     await item.save();
   }
