@@ -22,11 +22,9 @@ async function getAll(query) {
  * @param {Number} limit
  */
 async function me(user, page, limit) {
-  const trx = await transaction.find(
-      {
-        from: user._id,
-        to: user._id,
-      }).populate('listingID', 'name filePath');
+  const trx = await transaction.find({
+    $or: [{'from': user._id}, {'to': user._id}],
+  }).populate('listingID', 'name filePath');
   return trx;
 }
 

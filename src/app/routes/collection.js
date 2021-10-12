@@ -35,7 +35,6 @@ router.get('/collections',
     handlerException(collectionController.index));
 
 router.get('/collections/:id',
-    handlerException(tokenValidator),
     handlerException(collectionController.getOne));
 
 router.post('/collections',

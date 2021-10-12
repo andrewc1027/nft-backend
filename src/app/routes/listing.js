@@ -47,7 +47,6 @@ router.post('/listings/:id/purchase',
     handlerException(listingController.purchase));
 
 router.patch('/listings/:id/like',
-    handlerException(tokenValidator),
     handlerException(listingController.like));
 
 router.delete('/listings/:id',

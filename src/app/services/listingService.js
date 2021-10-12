@@ -88,6 +88,7 @@ async function insert(data, files, user) {
   // Pre Check if user exists
   await userSvc.find(user._id);
   const item = await listing.create({
+    item: data.type,
     name: data.name,
     description: data.description,
     location: data.location,
@@ -264,20 +265,25 @@ async function viewCounter(id) {
  * @param {String} id
  * @param {Object} self
  */
-async function likeCounter(id, self) {
+async function likeCounter(id, self = {}) {
   const item = await listing.findById(id);
-  const users = await user.findById(self._id);
-  if (users.favorites.includes(id)) {
-    const index = users.favorites.indexOf(id);
-    users.favorites.splice(index, 1);
-    await users.save();
-    item.likes = item.likes-1;
+  if (self._id==undefined) {
+    item.likes++;
+    await item.save();
   } else {
-    users.favorites.push(id);
-    await users.save();
-    item.likes = item.likes+1;
+    const users = await user.findById(self._id);
+    if (users.favorites.includes(id)) {
+      const index = users.favorites.indexOf(id);
+      users.favorites.splice(index, 1);
+      await users.save();
+      item.likes = item.likes-1;
+    } else {
+      users.favorites.push(id);
+      await users.save();
+      item.likes = item.likes+1;
+    }
+    await item.save();
   }
-  await item.save();
 }
 
 /**
@@ -316,8 +322,11 @@ async function publish(id, data, user) {
  * @param {Object} query
  * @param {Number} page
  * @param {Number} limit
+ * @param {String} sort
  */
-async function explore(query, page, limit) {
+async function explore(query, page, limit, sort = 'price:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] == 'asc' ? '1' : '-1';
   const filters = {};
   filters['isPublished'] = true;
   if (query.collection) {
@@ -343,8 +352,10 @@ async function explore(query, page, limit) {
   if (query.type) {
     filters['type'] = query.type;
   }
-  console.log(filters);
-  const listings = await listing.paginate(filters, {page: page, limit: limit});
+  console.log({page, limit, sort: {[field[0]]: orderBy}});
+  const listings = await listing.paginate(filters, {
+    page, limit, sort: {field: orderBy},
+  });
   return listings;
 }
 
