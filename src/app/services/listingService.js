@@ -9,6 +9,7 @@ const s3Utils = require('../utils/s3');
 const {ObjectId} = require('bson');
 const user = require('../models/user');
 const qTransform = require('../utils/queryTransform');
+const notificationSvc = require('./notificationService');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -248,6 +249,7 @@ async function purchase(id, data, user) {
     owner: user._id,
     isPublished: false,
   });
+  await notificationSvc.itemPurchased(user, item);
   return trade;
 }
 
