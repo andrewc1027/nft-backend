@@ -137,11 +137,16 @@ async function insert(data, files, user) {
  * @param {String} id
  * @param {Object} files
  * @param {Object} data
+ * @param {Object} socket
  * @return {Array}
  */
-async function update(id, files, data) {
+async function update(id, files, data, socket) {
   const item = await listing.findByIdAndUpdate(id, data).orFail(
       () => Error('Not Found'));
+  if (data.price != item.price) {
+    await notificationSvc.priceChange(item, socket);
+  }
+
   if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
@@ -226,8 +231,9 @@ async function remove(id, user) {
  * @param {String} id
  * @param {Object} data
  * @param {Object} user
+ * @param {Object} socket
  */
-async function purchase(id, data, user) {
+async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
   const item = await listing.findById(id).where({
     isPublished: true,
@@ -249,7 +255,7 @@ async function purchase(id, data, user) {
     owner: user._id,
     isPublished: false,
   });
-  await notificationSvc.itemPurchased(user, item);
+  await notificationSvc.itemPurchased(user, item, socket);
   return trade;
 }
 

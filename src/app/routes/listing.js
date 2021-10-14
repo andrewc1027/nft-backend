@@ -4,6 +4,7 @@ const router = express.Router();
 const {handlerException} = require('../exceptions/handler');
 const listingController = require('../controllers/listingController');
 const tokenValidator = require('../middleware/tokenValidator');
+const tokenOption = require('../middleware/tokenOption');
 const multer = require('multer');
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -47,6 +48,7 @@ router.post('/listings/:id/purchase',
     handlerException(listingController.purchase));
 
 router.patch('/listings/:id/like',
+    handlerException(tokenOption),
     handlerException(listingController.like));
 
 router.delete('/listings/:id',

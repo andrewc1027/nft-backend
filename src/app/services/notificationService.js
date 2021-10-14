@@ -1,12 +1,12 @@
 const notification = require('../models/notification');
 const user = require('../models/user');
-const socket = require('../config/socket');
 
 /**
  * @param {Object} self
  * @param {Object} listing
+ * @param {Object} socket
  */
-async function itemPurchased(self, listing) {
+async function itemPurchased(self, listing, socket) {
   if (self.notifications.successfulPurchase) {
     await notification.create({
       title: `${listing.name}: Item Purchased`,
@@ -15,17 +15,16 @@ async function itemPurchased(self, listing) {
       userID: self._id,
       createdAt: Date.now(),
     });
-    socket.to(self._id).emit('itemPurchased', {
-
-    });
-    // Send Email Here
+    socket.to(self._id.toString()).emit('itemPurchased', listing);
   }
+  await itemSold(listing, socket);
 }
 
 /** ]
  * @param {Object} listing
+ * @param {Object} socket
  */
-async function itemSold(listing) {
+async function itemSold(listing, socket) {
   for (const usrID of listing.subscribers) {
     const usr = await user.findById(usrID);
     if (usr.notifications.itemSold) {
@@ -36,9 +35,7 @@ async function itemSold(listing) {
         userID: usr._id,
         createdAt: Date.now(),
       });
-      socket.to(self._id).emit('itemSold', {
-
-      });
+      await socket.to(usr._id.toString()).emit('itemSold', listing);
       // Send Email Here
     }
   }
@@ -46,10 +43,12 @@ async function itemSold(listing) {
 
 /**
  * @param {Object} listing
+ * @param {Object} socket
  */
-async function priceChange(listing) {
+async function priceChange(listing, socket) {
   for (const usrID of listing.subscribers) {
     const usr = await user.findById(usrID);
+    console.log(usr.notifications.priceChange);
     if (usr.notifications.priceChange) {
       await notification.create({
         title: `${listing.name}: price has changed`,
@@ -58,9 +57,8 @@ async function priceChange(listing) {
         userID: usr._id,
         createdAt: Date.now(),
       });
-      socket.to(self._id).emit('itemPriceChanged', {
+      await socket.to(usr._id.toString()).emit('priceChange', listing);
 
-      });
       // Send Email Here
     }
   }

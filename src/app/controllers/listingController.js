@@ -61,7 +61,12 @@ async function insert(req, res, next) {
  * @param  {Object} next
  */
 async function update(req, res, next) {
-  listingService.update(req.params.id, req.files, req.body)
+  listingService.update(
+      req.params.id,
+      req.files,
+      req.body,
+      req.app.get('socketio'),
+  )
       .then(function(data) {
         return res.json(data);
       })
@@ -76,7 +81,12 @@ async function update(req, res, next) {
  *@param {Object} next
  */
 async function purchase(req, res, next) {
-  listingService.purchase(req.params.id, req.body, req.user)
+  listingService.purchase(
+      req.params.id,
+      req.body,
+      req.user,
+      req.app.get('socketio'),
+  )
       .then(function(trade) {
         return res.json(trade);
       })

@@ -4,10 +4,11 @@
 /**
  * Module dependencies.
  */
-
+require('dotenv').config();
 const app = require('../app');
 const debug = require('debug')('profile:server');
 const http = require('http');
+const jwt = require('jsonwebtoken');
 
 /**
  * Get port from environment and store in Express.
@@ -25,8 +26,28 @@ const server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
+const JWT_SECRET = process.env.JWT_SECRET || 'putyourrandomstringhere';
 
-server.listen(port);
+const appServer =server.listen(port);
+const io = require('socket.io')(appServer);
+io.use((socket, next) => {
+  try {
+    const payload = jwt.verify(
+        socket.handshake.headers.authorization,
+        JWT_SECRET);
+    socket.payload = payload;
+    next();
+  } catch (err) {
+    console.log('socket auth failed!');
+    next(new AuthFailed());
+  }
+}).on('connection', function(socket) {
+  const clientID = socket.payload.signedUser._id;
+  socket.join(clientID);
+  io.to(clientID).emit('hi!');
+  console.log(clientID + ' new connection');
+});
+app.set('socketio', io);
 server.on('error', onError);
 server.on('listening', onListening);
 
