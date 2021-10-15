@@ -363,6 +363,11 @@ async function explore(query, page, limit, sort = 'price:asc') {
     ];
     filters['$or'] = or;
   }
+
+  if (query.exclude) {
+    filters['_id'] = {$ne: new ObjectId(query.exclude)};
+  }
+
   if (query.price) {
     const prc = query.price.split(',');
     filters['price'] = qTransform.rangeNumber(prc[0], prc[1]);
@@ -373,7 +378,6 @@ async function explore(query, page, limit, sort = 'price:asc') {
   if (query.type) {
     filters['type'] = query.type;
   }
-  console.log({page, limit, sort: {[field[0]]: orderBy}});
   const listings = await listing.paginate(filters, {
     page, limit, sort: {field: orderBy},
   });
