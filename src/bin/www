@@ -29,7 +29,14 @@ const server = http.createServer(app);
 const JWT_SECRET = process.env.JWT_SECRET || 'putyourrandomstringhere';
 
 const appServer =server.listen(port);
-const io = require('socket.io')(appServer);
+const io = require('socket.io')(appServer, {
+  cors: {
+    origin: 'https://nft-homejab.netlify.app',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['authorization'],
+    credentials: true,
+  },
+});
 io.use((socket, next) => {
   try {
     const payload = jwt.verify(
