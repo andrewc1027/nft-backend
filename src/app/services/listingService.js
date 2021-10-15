@@ -25,6 +25,10 @@ async function getAll(query, page, limit, self) {
     queries['collections.ID'] = new ObjectId(query.collection);
   }
 
+  if (query.exclude) {
+    queries['_id'] = {$ne: new ObjectId(query.exclude)};
+  }
+
   // Use Creator ID
   if (query.creator) {
     queries['creator.ID'] = new ObjectId(query.creator);
