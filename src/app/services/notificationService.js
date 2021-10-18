@@ -16,7 +16,13 @@ async function itemPurchased(self, listing, socket) {
       userID: self._id,
       createdAt: Date.now(),
     });
-    socket.to(self._id.toString()).emit('itemPurchased', listing);
+    console.log('sending notifications', self._id.toString());
+    await socket.to(self._id.toString()).emit('itemPurchased', {
+      listing: listing._id,
+      image: listing.filePath,
+      price: listing.price,
+      name: listing.name,
+    });
   }
   await itemSold(listing, socket);
 }
@@ -26,6 +32,12 @@ async function itemPurchased(self, listing, socket) {
  * @param {Object} socket
  */
 async function itemSold(listing, socket) {
+  await socket.to(listing.owner).emit('itemSold', {
+    listing: listing._id,
+    image: listing.filePath,
+    price: listing.price,
+    name: listing.name,
+  });
   for (const usrID of listing.subscribers) {
     const usr = await user.findById(usrID);
     if (usr.notifications.itemSold) {
@@ -36,7 +48,12 @@ async function itemSold(listing, socket) {
         userID: usr._id,
         createdAt: Date.now(),
       });
-      await socket.to(usr._id.toString()).emit('itemSold', listing);
+      await socket.to(usr._id.toString()).emit('itemSold', {
+        listing: listing._id,
+        image: listing.filePath,
+        price: listing.price,
+        name: listing.name,
+      });
       // Send Email Here
     }
   }
@@ -44,9 +61,10 @@ async function itemSold(listing, socket) {
 
 /**
  * @param {Object} listing
+ * @param {Number} newPrice
  * @param {Object} socket
  */
-async function priceChange(listing, socket) {
+async function priceChange(listing, newPrice, socket) {
   const addresses = [];
   const notif = {
     title: `${listing.name}: price has changed`,
@@ -60,7 +78,13 @@ async function priceChange(listing, socket) {
       notif['userID'] = usr._id,
       await notification.create(notif);
       addresses.push(usr.email);
-      await socket.to(usr._id.toString()).emit('priceChange', listing);
+      await socket.to(usr._id.toString()).emit('priceChange', {
+        listing: listing._id,
+        image: listing.filePath,
+        name: listing.name,
+        newPrice: newPrice,
+        oldPrice: listing.price,
+      });
     }
   }
   // Send Email Here

@@ -148,7 +148,7 @@ async function update(id, files, data, socket) {
   const item = await listing.findByIdAndUpdate(id, data).orFail(
       () => Error('Not Found'));
   if (data.price != item.price) {
-    await notificationSvc.priceChange(item, socket);
+    await notificationSvc.priceChange(item, data.price, socket);
   }
 
   if (files.file) {
