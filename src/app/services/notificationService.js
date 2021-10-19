@@ -10,14 +10,13 @@ const mail = require('../config/mail');
 async function itemPurchased(self, listing, socket) {
   if (self.notifications.successfulPurchase) {
     await notification.create({
-      title: `${listing.name}: Item Purchased`,
+      title: `${listing.name}: Successful Purchase`,
       listing: listing._id,
-      event: 'Item Purchased',
+      event: 'Successful Purchase',
       userID: self._id,
       createdAt: Date.now(),
     });
-    console.log('sending notifications', self._id.toString());
-    await socket.to(self._id.toString()).emit('itemPurchased', {
+    await socket.to(self._id.toString()).emit('successfulPurchase', {
       listing: listing._id,
       image: listing.filePath,
       price: listing.price,
