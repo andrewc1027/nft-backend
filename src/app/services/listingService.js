@@ -147,9 +147,7 @@ async function insert(data, files, user) {
 async function update(id, files, data, socket) {
   const item = await listing.findByIdAndUpdate(id, data).orFail(
       () => Error('Not Found'));
-  if (data.price != item.price) {
-    await notificationSvc.priceChange(item, data.price, socket);
-  }
+
 
   if (files.file) {
     // TODO: handle old file
@@ -312,8 +310,9 @@ async function likeCounter(id, self = {}) {
  * @param {String} id
  * @param {Object} data
  * @param {Object} user
+ * @param {Object} socket
  */
-async function publish(id, data, user) {
+async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
     royalties: joi.number().required(),
@@ -335,7 +334,9 @@ async function publish(id, data, user) {
     tokenID: data.tokenID,
     isPublished: true,
   });
-
+  if (data.price != listedItem.price) {
+    await notificationSvc.priceChange(listedItem, data.price, socket);
+  }
   return listedItem;
 }
 

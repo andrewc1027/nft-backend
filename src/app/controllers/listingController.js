@@ -101,7 +101,11 @@ async function purchase(req, res, next) {
  *@param {Object} next
  */
 async function publish(req, res, next) {
-  listingService.publish(req.params.id, req.body, req.user)
+  listingService.publish(
+      req.params.id,
+      req.body,
+      req.user,
+      req.app.get('socketio'))
       .then(function(trade) {
         return res.json(trade);
       })

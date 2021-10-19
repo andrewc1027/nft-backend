@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 const notification = require('../models/notification');
 const user = require('../models/user');
 const mail = require('../config/mail');
@@ -84,28 +85,24 @@ async function priceChange(listing, newPrice, socket) {
         newPrice: newPrice,
         oldPrice: listing.price,
       });
+      // Send Email Here
+      console.log('sending email');
+      mail.sendTemplatedEmail({
+        Template: 'priceChange',
+        TemplateData: JSON.stringify({
+          "username": usr.username,
+          "oldPrice": listing.price,
+          "newPrice": newPrice,
+        }),
+        Destination: {
+          ToAddresses: ['jon@homejab.com'],
+        },
+        Source: 'jon@homejab.com',
+      }).promise().then(function(data) {
+        console.log(data, 'emails sent');
+      });
     }
   }
-  // Send Email Here
-  console.log('sending email');
-  mail.sendEmail({
-    Destination: {
-      ToAddresses: addresses,
-    },
-    Message: {
-      Subject: {
-        Data: notif.title,
-      },
-      Body: {
-        Text: {
-          Data: notif.title,
-        },
-      },
-    },
-    Source: 'fwahyudi17@gmail.com',
-  }).promise().then(function(data) {
-    console.log(data, 'emails sent');
-  });
 }
 
 module.exports = {
