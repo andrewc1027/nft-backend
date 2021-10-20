@@ -51,4 +51,7 @@ router.delete('/collections/:id',
     handlerException(tokenValidator),
     handlerException(collectionController.remove));
 
+router.get('/autocomplete/collections',
+    handlerException(collectionController.getAutocomplete));
+
 module.exports = router;

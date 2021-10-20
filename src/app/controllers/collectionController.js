@@ -93,6 +93,17 @@ async function remove(req, res, next) {
       });
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function getAutocomplete(req, res, next) {
+  const suggestions = await collectionSvc
+      .getAutocomplete(req.query, req.query.limit);
+  return res.json(suggestions);
+}
+
 
 module.exports = {
   index,
@@ -100,4 +111,5 @@ module.exports = {
   getOne,
   update,
   remove,
+  getAutocomplete,
 };

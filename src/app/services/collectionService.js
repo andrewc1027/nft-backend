@@ -1,4 +1,6 @@
 const collection = require('../models/collection');
+const qTransform = require('../utils/queryTransform');
+
 /**
  * @param {Object} query
  * @param {Object} user
@@ -121,10 +123,30 @@ async function urlMaker(name, userID) {
   return url;
 }
 
+/**
+ * @param {Object} query
+ * @param {Number} limit
+ */
+async function getAutocomplete(query, limit = 10) {
+  const filters = {};
+  if (query.search) {
+    console.log(query.search);
+    const q = query.search;
+    filters['name'] = qTransform.regexLike(q);
+  }
+  filters['parent'] = true;
+  const result = await collection.paginate(filters, {
+    limit: limit,
+    select: 'name _id',
+  });
+  return result.docs;
+}
+
 module.exports = {
   getAll,
   getOne,
   insert,
   update,
   remove,
+  getAutocomplete,
 };

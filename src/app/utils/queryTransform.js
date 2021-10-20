@@ -24,7 +24,7 @@ function inQuery(string, separator) {
  * @return {Object}
  */
 function regexLike(searchString) {
-  const rgx = {$regex: `.*${searchString}.*`};
+  const rgx = {$regex: `.*${searchString}.*`, $options: 'i'};
   return rgx;
 }
 

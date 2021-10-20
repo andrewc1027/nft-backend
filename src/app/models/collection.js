@@ -4,7 +4,7 @@ const paginate = require('mongoose-paginate-v2');
 const schema = new mongoose.Schema({
   name: {type: String, required: true, unique: true},
   description: {type: String},
-  logoImage: {type: String, required: true},
+  logoImage: {type: String},
   owner: {type: String, required: true},
   // images: [nFTPhotos],
   featureImage: {type: String},
@@ -15,6 +15,16 @@ const schema = new mongoose.Schema({
   payoutAddress: {type: String},
   paymentToken: {type: [String]},
   listingCount: {type: Number},
+
+  geoLocation: {
+    type: {type: String},
+    coordinates: [Number],
+  },
+  density: {type: Number},
+  population: {type: Number},
+  timezone: {type: String},
+  stateCode: {type: String},
+  parent: {type: Boolean},
 });
 
 schema.plugin(paginate);
