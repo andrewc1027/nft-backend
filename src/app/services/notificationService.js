@@ -23,6 +23,12 @@ async function itemPurchased(self, listing, socket) {
       price: listing.price,
       name: listing.name,
     });
+    const data = JSON.stringify({
+      "username": self.username,
+      "price": listing.price,
+      "filePath": listing.filePath,
+    });
+    sendEmail('successfulPurchase', data, [self.email]);
   }
   await itemSold(listing, socket);
 }
@@ -54,7 +60,12 @@ async function itemSold(listing, socket) {
         price: listing.price,
         name: listing.name,
       });
-      // Send Email Here
+      const data = JSON.stringify({
+        "username": usr.username,
+        "price": listing.price,
+        "filePath": listing.filePath,
+      });
+      sendEmail('itemSold', data, [usr.email]);
     }
   }
 }
@@ -65,7 +76,6 @@ async function itemSold(listing, socket) {
  * @param {Object} socket
  */
 async function priceChange(listing, newPrice, socket) {
-  const addresses = [];
   const notif = {
     title: `${listing.name}: price has changed`,
     event: 'Price Change',
@@ -77,7 +87,14 @@ async function priceChange(listing, newPrice, socket) {
     if (usr.notifications.priceChange) {
       notif['userID'] = usr._id,
       await notification.create(notif);
-      addresses.push(usr.email);
+      if (usr.email != '') {
+        const data = JSON.stringify({
+          "username": usr.username,
+          "oldPrice": listing.price,
+          "newPrice": newPrice,
+        });
+        sendEmail('priceChange', data, [usr.email]);
+      }
       await socket.to(usr._id.toString()).emit('priceChange', {
         listing: listing._id,
         image: listing.filePath,
@@ -85,24 +102,27 @@ async function priceChange(listing, newPrice, socket) {
         newPrice: newPrice,
         oldPrice: listing.price,
       });
-      // Send Email Here
-      console.log('sending email');
-      mail.sendTemplatedEmail({
-        Template: 'priceChange',
-        TemplateData: JSON.stringify({
-          "username": usr.username,
-          "oldPrice": listing.price,
-          "newPrice": newPrice,
-        }),
-        Destination: {
-          ToAddresses: ['jon@homejab.com'],
-        },
-        Source: 'jon@homejab.com',
-      }).promise().then(function(data) {
-        console.log(data, 'emails sent');
-      });
     }
   }
+}
+
+/**
+ * @param {String} template
+ * @param {JSON} data
+ * @param {String} to
+ */
+async function sendEmail(template, data, to) {
+  mail.sendTemplatedEmail({
+    Template: template,
+    TemplateData: data,
+    Destination: {
+      ToAddresses: to,
+    },
+    Source: 'jon@homejab.com',
+  }, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else console.log(data); // successful response
+  });
 }
 
 module.exports = {

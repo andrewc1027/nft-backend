@@ -1,8 +1,0 @@
-{
-	"Template": {
-		"TemplateName": "priceChange",
-		"SubjectPart": "Greetings, {{username}}!",
-		"HtmlPart": "<h1>Hello {{username}},</h1><p>This Item Price has changed from {{oldPrice}} to {{newPrice}}.</p>",
-		"TextPart": "Hello {{username}}, This Item Price has changed from {{oldPrice}} to {{newPrice}}.."
-	}
-}
