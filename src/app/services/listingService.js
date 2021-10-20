@@ -19,7 +19,7 @@ const notificationSvc = require('./notificationService');
  */
 async function getAll(query, page, limit, self) {
   const queries = {};
-
+  queries['deleted'] = {$ne: true};
   // Use Collection ID
   if (query.collection) {
     queries['collections.ID'] = new ObjectId(query.collection);
@@ -56,8 +56,11 @@ async function getAll(query, page, limit, self) {
 async function getOne(id) {
   viewCounter(id);
   const detail = await listing.findById(id).orFail(
-      () => Error('Not Found'),
+      () => Error('NotFound'),
   );
+  if (detail.deleted) {
+    throw new Error('Deleted');
+  }
   return detail;
 }
 
@@ -214,7 +217,7 @@ async function update(id, files, data, socket) {
  * @return {Array}
  */
 async function remove(id, user) {
-  const exs = await listing.findByIdAndDelete(id).orFail(
+  const exs = await listing.deleteById(id).orFail(
       () => Error('Not Found'),
   );
 

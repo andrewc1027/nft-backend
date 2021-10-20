@@ -1,6 +1,7 @@
 const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
+const softDelete = require('mongoose-delete');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
@@ -52,13 +53,13 @@ const schema = new mongoose.Schema({
   },
 
   isPublished: {type: Boolean, default: false},
-  isDeleted: {type: Boolean, default: false},
 
   //
   subscribers: {type: [ObjectId]},
 });
 
 schema.plugin(paginate);
+schema.plugin(softDelete);
 const listing = mongoose.model('listings', schema);
 
 module.exports = listing;

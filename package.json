@@ -26,6 +26,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.1.2",
     "mongoose": "^6.0.6",
+    "mongoose-delete": "^0.5.4",
     "mongoose-paginate-v2": "^1.4.2",
     "mongoose-unique-validator": "^2.0.3",
     "morgan": "~1.9.1",
