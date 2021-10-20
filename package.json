@@ -20,6 +20,7 @@
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "express": "~4.16.1",
+    "fast-csv": "^4.3.6",
     "ipfs-core": "^0.10.8",
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",
