@@ -20,7 +20,11 @@ const notificationSvc = require('./notificationService');
 async function getAll(query, page, limit, self) {
   const queries = {};
   queries['deleted'] = {$ne: true};
-  // Use Collection ID
+
+  if (query.collectionUrl) {
+    queries['collections.url'] = query.collectionUrl;
+  }
+
   if (query.collection) {
     queries['collections.ID'] = new ObjectId(query.collection);
   }

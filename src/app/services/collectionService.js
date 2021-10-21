@@ -8,9 +8,12 @@ const qTransform = require('../utils/queryTransform');
  * @return {Object}
  */
 async function getAll(query, user, page, limit) {
-  const collections = await collection.paginate({
-    owner: user._id,
-  }, {page: page, limit: limit});
+  const queries = {};
+  if (query.url) {
+    queries['url'] = query.url;
+  }
+  const collections = await collection.paginate(
+      queries, {page: page, limit: limit});
   return collections;
 }
 
