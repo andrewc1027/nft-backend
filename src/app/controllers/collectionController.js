@@ -1,3 +1,4 @@
+const Joi = require('joi');
 const collectionSvc = require('../services/collectionService');
 const {handler} = require('./errHandler');
 
@@ -44,6 +45,14 @@ async function getOne(req, res, next) {
 async function insert(req, res, next) {
   const body = req.body;
   const files = req.files;
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    city: Joi.string().required(),
+  });
+  const {error} =schema.validate(body, {allowUnknown: true});
+  if (error) {
+    handler(error, res);
+  }
   if (files.logoImage==undefined) {
     return res.status(402).json({
       message: 'Logo File Required',

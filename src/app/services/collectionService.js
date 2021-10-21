@@ -1,6 +1,5 @@
 const collection = require('../models/collection');
 const qTransform = require('../utils/queryTransform');
-
 /**
  * @param {Object} query
  * @param {Object} user
