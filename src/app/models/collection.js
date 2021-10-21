@@ -1,3 +1,4 @@
+const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
 
@@ -9,7 +10,7 @@ const schema = new mongoose.Schema({
   // images: [nFTPhotos],
   featureImage: {type: String},
   bannerImage: {type: String},
-  url: {type: String},
+  url: {type: String, unique: true},
   blockchain: {type: String},
   royalties: {type: String},
   payoutAddress: {type: String},
@@ -25,6 +26,11 @@ const schema = new mongoose.Schema({
   timezone: {type: String},
   stateCode: {type: String},
   parent: {type: Boolean},
+  city: {
+    name: {type: String},
+    url: {type: String},
+    id: {type: ObjectId},
+  },
 });
 
 schema.plugin(paginate);

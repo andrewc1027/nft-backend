@@ -29,6 +29,7 @@ fs.createReadStream(path.resolve(__dirname, 'uscities.csv'))
         state: row.state_name,
         parent: true,
         owner: 'Admin',
+        url: `${row.city.toLowerCase().split(' ').join('-')}-${row.state_name.toLowerCase().split(' ').join('-')}`,
       });
       if (many.length == 1000) {
         db.collection('collections').insertMany(many).then((data) => {

@@ -41,7 +41,16 @@ async function insert(data, files, user) {
   if (files.featureImage) {
     featureImage = files.featureImage[0].location;
   }
+  const parent = await collection.findById(data.city);
+  data.city = {
+    name: parent.name,
+    url: parent.url,
+    id: parent._id,
+  };
 
+  let check = await collection.find({'city.id': data.city.id})
+      .countDocuments();
+  const url = `${data.city.url}-${user._id}-${check++}`;
   const res = await collection.create({
     name: data.name,
     description: data.description,
@@ -52,7 +61,8 @@ async function insert(data, files, user) {
     payoutAddress: data.payoutAddress,
     blockchain: data.blockchain,
     royalties: data.royalties,
-    url: await urlMaker(data.name, user._id),
+    url: url,
+    city: data.city,
   });
 
   return res;
@@ -81,10 +91,6 @@ async function update(id, data, files) {
   if (files.logoImage) {
     logoImage = files.logoImage[0].location;
   }
-  let url = exs.url;
-  if (data.url) {
-    url = data.url;
-  }
   const res = await collection.findByIdAndUpdate(id, {
     name: data.name,
     description: data.description,
@@ -93,7 +99,6 @@ async function update(id, data, files) {
     featureImage: featureImage,
     payoutAddress: data.payoutAddress,
     blockchain: data.blockchain,
-    url: url,
     royalties: data.royalties,
   });
 
@@ -112,25 +117,12 @@ async function remove(id) {
 }
 
 /**
- * @param {string} name
- * @param {object} userID
- */
-async function urlMaker(name, userID) {
-  name = name.replace('/[^a-zA-Z0-9]/g', '-');
-  name = name.split(' ').join('-');
-  name = name.replace(',', '-');
-  const url = `${name.toLowerCase()}-${userID}`;
-  return url;
-}
-
-/**
  * @param {Object} query
  * @param {Number} limit
  */
 async function getAutocomplete(query, limit = 10) {
   const filters = {};
   if (query.search) {
-    console.log(query.search);
     const q = query.search;
     filters['name'] = qTransform.regexLike(q);
   }
