@@ -1,6 +1,7 @@
 const {
   ValidationError,
   DocumentNotFoundError,
+  CastError,
 } = require('mongoose').Error;
 
 /**
@@ -27,6 +28,11 @@ async function handler(err, res) {
   } else if (err instanceof DocumentNotFoundError) {
     res.status(404).json({
       message: err.message,
+      type: 'NotFound',
+    });
+  } else if (err instanceof CastError) {
+    res.status(404).json({
+      message: 'NotFound',
       type: 'NotFound',
     });
   } else {
