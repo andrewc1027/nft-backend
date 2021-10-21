@@ -19,7 +19,9 @@ async function itemPurchased(self, listing, socket) {
       createdAt: Date.now(),
     });
     const templateFile = fs.readFileSync(
-        path.resolve(__dirname, '../../../email-template/purchaseSuccessful.json'),
+        path.resolve(
+            __dirname, '../../../email-template/purchaseSuccessful.json',
+        ),
     );
     if (self.email != '') {
       const template = JSON.parse(templateFile);

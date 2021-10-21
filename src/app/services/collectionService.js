@@ -139,7 +139,12 @@ async function getAutocomplete(query, limit = 10) {
     limit: limit,
     select: 'name _id',
   });
-  return result.docs;
+  const x = [];
+  result.docs.forEach((coll) => {
+    const {_id, name} = coll;
+    x.push({value: _id, label: name});
+  });
+  return x;
 }
 
 module.exports = {
