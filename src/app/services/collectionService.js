@@ -12,6 +12,9 @@ async function getAll(query, user, page, limit) {
   if (query.url) {
     queries['url'] = query.url;
   }
+  if (query.owner) {
+    queries['owner'] = query.owner;
+  }
   queries['parent'] = {$ne: true};
   const collections = await collection.paginate(
       queries, {page: page, limit: limit});
