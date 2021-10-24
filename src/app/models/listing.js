@@ -18,7 +18,7 @@ const schema = new mongoose.Schema({
     url: {type: String},
     logoImage: {type: String},
   },
-  tags: {type: [String]},
+  tags: {type: String},
   geoLocation: {
     type: {type: String},
     coordinates: [Number],

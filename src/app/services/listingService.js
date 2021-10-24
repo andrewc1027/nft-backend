@@ -75,10 +75,6 @@ async function getOne(id) {
  * @return {Array}
  */
 async function insert(data, files, user) {
-  let tags = [];
-  if (data.tags) {
-    tags = data.tags.split(',');
-  }
   let geoLocations = [];
   if (data.longitude) {
     geoLocations = [data.longitude, data.latitude];
@@ -111,7 +107,7 @@ async function insert(data, files, user) {
     },
     blockchain: data.blockchain,
     collections: dataColl,
-    tags: tags,
+    tags: data.tags,
     fileOriginalName: files.file[0].originalname,
     filePath: thumbData.Location,
     rawFileName: files.raw[0].originalname,
@@ -202,11 +198,6 @@ async function update(id, files, data, socket) {
   if (data.longitude) {
     const geoLocations = [data.longitude, data.latitude];
     item.geoLocation.coordinates = geoLocations;
-  }
-  let tags = item.tags;
-  if (data.tags) {
-    tags = data.tags.split(',');
-    item.tags = tags;
   }
   await item.save();
   if (item.collections) {
@@ -354,6 +345,7 @@ async function publish(id, data, user, socket) {
  * @param {String} sort
  */
 async function explore(query, page, limit, sort = 'price:asc') {
+  console.log(query);
   const field = sort.split(':');
   const orderBy = field[1] == 'asc' ? '1' : '-1';
   const filters = {};
@@ -385,6 +377,13 @@ async function explore(query, page, limit, sort = 'price:asc') {
   }
   if (query.type) {
     filters['type'] = query.type;
+  }
+  if (query.bound) {
+    filters['geoLocation'] = {
+      $geoWithin: {
+        $box: [[0, 0], [0, 0]],
+      },
+    };
   }
   const listings = await listing.paginate(filters, {
     page, limit, sort: {field: orderBy},
