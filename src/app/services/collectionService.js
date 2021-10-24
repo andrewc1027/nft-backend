@@ -10,6 +10,7 @@ const qTransform = require('../utils/queryTransform');
  */
 async function getAll(query, user, page, limit) {
   const queries = {};
+  let sort = {name: -1};
   if (query.url) {
     queries['url'] = query.url;
   }
@@ -18,11 +19,13 @@ async function getAll(query, user, page, limit) {
   }
   if (query.parent == 'true') {
     queries['parent'] = true;
+    sort = {population: -1};
   } else if (query.parent != true && query.parent) {
     queries['city.id'] = new ObjectId(query.parent);
   }
+  console.log(sort);
   const collections = await collection.paginate(
-      queries, {page: page, limit: limit});
+      queries, {page: page, limit: limit, sort: sort});
   return collections;
 }
 
@@ -139,14 +142,15 @@ async function getAutocomplete(query, limit = 10) {
   }
   filters['parent'] = true;
   const result = await collection.paginate(filters, {
+    select: 'name _id population',
+    sort: {population: -1},
     limit: limit,
-    select: 'name _id',
-    sort: {},
   });
   const x = [];
   result.docs.forEach((coll) => {
-    const {_id, name} = coll;
-    x.push({value: _id, label: name});
+    const {_id, name, population} = coll;
+    console.log(population);
+    x.push({value: _id, label: name, pop: population});
   });
   return x;
 }
