@@ -25,7 +25,11 @@ async function getAll(query, user, page, limit) {
   }
   console.log(sort);
   const collections = await collection.paginate(
-      queries, {page: page, limit: limit, sort: sort});
+      queries, {
+        page: page,
+        limit: limit,
+        sort: sort,
+        collation: {locale: 'en_US', numericOrdering: true}});
   return collections;
 }
 
@@ -142,15 +146,17 @@ async function getAutocomplete(query, limit = 10) {
   }
   filters['parent'] = true;
   const result = await collection.paginate(filters, {
-    select: 'name _id population',
+    select: 'name _id',
     sort: {population: -1},
     limit: limit,
+    collation: {
+      locale: 'en_US',
+      numericOrdering: true}, // collation needed to sort string as number
   });
   const x = [];
   result.docs.forEach((coll) => {
-    const {_id, name, population} = coll;
-    console.log(population);
-    x.push({value: _id, label: name, pop: population});
+    const {_id, name} = coll;
+    x.push({value: _id, label: name});
   });
   return x;
 }
