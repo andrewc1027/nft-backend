@@ -16,10 +16,11 @@ async function getAll(query, user, page, limit) {
   if (query.owner) {
     queries['owner'] = query.owner;
   }
-  if (query.parent) {
+  if (query.parent == 'true') {
+    queries['parent'] = true;
+  } else if (query.parent != true && query.parent) {
     queries['city.id'] = new ObjectId(query.parent);
   }
-  queries['parent'] = {$ne: true};
   const collections = await collection.paginate(
       queries, {page: page, limit: limit});
   return collections;
