@@ -31,7 +31,6 @@ const multi = upload.fields([
   {name: 'featureImage', maxCount: 1},
 ]);
 router.get('/collections',
-    handlerException(tokenValidator),
     handlerException(collectionController.index));
 
 router.get('/collections/:id',

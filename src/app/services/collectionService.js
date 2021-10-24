@@ -1,3 +1,4 @@
+const {ObjectId} = require('bson');
 const collection = require('../models/collection');
 const qTransform = require('../utils/queryTransform');
 /**
@@ -14,6 +15,9 @@ async function getAll(query, user, page, limit) {
   }
   if (query.owner) {
     queries['owner'] = query.owner;
+  }
+  if (query.parent) {
+    queries['city.id'] = new ObjectId(query.parent);
   }
   queries['parent'] = {$ne: true};
   const collections = await collection.paginate(
@@ -136,6 +140,7 @@ async function getAutocomplete(query, limit = 10) {
   const result = await collection.paginate(filters, {
     limit: limit,
     select: 'name _id',
+    sort: {},
   });
   const x = [];
   result.docs.forEach((coll) => {
