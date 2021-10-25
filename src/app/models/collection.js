@@ -31,6 +31,10 @@ const schema = new mongoose.Schema({
     url: {type: String},
     id: {type: ObjectId},
   },
+  creator: {
+    username: {type: String},
+    id: {type: ObjectId},
+  },
 });
 
 schema.plugin(paginate);

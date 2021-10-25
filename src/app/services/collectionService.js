@@ -81,6 +81,10 @@ async function insert(data, files, user) {
     royalties: data.royalties,
     url: url,
     city: data.city,
+    creator: {
+      username: user.username || '',
+      id: user._id,
+    },
   });
 
   return res;

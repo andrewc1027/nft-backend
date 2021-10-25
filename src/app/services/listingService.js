@@ -353,6 +353,9 @@ async function explore(query, page, limit, sort = 'price:asc') {
   if (query.collection) {
     filters['collections.ID'] = new ObjectId(query.collection);
   }
+  if (query.collectionUrl) {
+    filters['collections.url'] = query.collectionUrl;
+  }
   if (query.search) {
     const q = query.search;
     const or = [
