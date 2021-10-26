@@ -32,7 +32,7 @@ fs.createReadStream(path.resolve(__dirname, 'uscities.csv'))
         url: `${row.city.toLowerCase().split(' ').join('-')}-${row.state_name.toLowerCase().split(' ').join('-')}`,
       });
       if (many.length == 1000) {
-        db.collection('collections').insertMany(many).then((data) => {
+        db.collection('cities').insertMany(many).then((data) => {
           console.log(data, 'inserted');
         }).catch((e)=>{
           console.log(e);
@@ -41,7 +41,7 @@ fs.createReadStream(path.resolve(__dirname, 'uscities.csv'))
       }
     })
     .on('end', (rowCount) => {
-      db.collection('collections').insertMany(many).then((data) => {
+      db.collection('cities').insertMany(many).then((data) => {
         console.log(data, 'inserted');
       }).catch((e)=>{
         console.log(e);

@@ -2,8 +2,17 @@ const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 const schema = new mongoose.Schema({
-  username: {type: String, unique: true, sparse: true},
-  email: {type: String, unique: true, sparse: true},
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    uniqueCaseInsensitive: true,
+  },
+  email: {
+    type: String,
+    unique: true,
+    sparse: true,
+    uniqueCaseInsensitive: true},
   bio: {type: String},
   walletAddress: {type: String, unique: true, required: true},
   createdAt: {type: Date, required: true},
@@ -24,7 +33,7 @@ const schema = new mongoose.Schema({
   },
   favorites: [ObjectId],
 });
-schema.plugin(uniqueValidator);
+schema.plugin(uniqueValidator, {message: '{PATH}AlreadyExists'});
 const user = mongoose.model('user', schema);
 
 module.exports = user;

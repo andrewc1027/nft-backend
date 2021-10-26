@@ -71,8 +71,8 @@ async function update(userRequest, data, files = {}) {
     const thumbData = await s3Utils.upload(files.bannerImage[0]);
     data.bannerImage = thumbData.Location;
   }
-  user.findByIdAndUpdate(userRequest._id, data).then(function() {
-    console.log(`${userRequest.username} data updated`);
+  await user.findByIdAndUpdate(userRequest._id, data, {
+    runValidators: true, context: 'query',
   });
   const {token} = await findAndSignIn(userRequest.walletAddress);
   return token;
