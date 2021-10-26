@@ -345,7 +345,6 @@ async function publish(id, data, user, socket) {
  * @param {String} sort
  */
 async function explore(query, page, limit, sort = 'price:asc') {
-  console.log(query);
   const field = sort.split(':');
   const orderBy = field[1] == 'asc' ? '1' : '-1';
   const filters = {};
@@ -381,10 +380,37 @@ async function explore(query, page, limit, sort = 'price:asc') {
   if (query.type) {
     filters['type'] = query.type;
   }
-  if (query.bound) {
+  if (query.bounds) {
+    const [south, west, north, east] = query.bounds.split(',');
     filters['geoLocation'] = {
       $geoWithin: {
-        $box: [[0, 0], [0, 0]],
+        $geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [
+                west,
+                south,
+              ],
+              [
+                west,
+                north,
+              ],
+              [
+                east,
+                north,
+              ],
+              [
+                east,
+                south,
+              ],
+              [
+                west,
+                south,
+              ],
+            ],
+          ],
+        },
       },
     };
   }

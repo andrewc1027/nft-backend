@@ -57,7 +57,7 @@ const schema = new mongoose.Schema({
   //
   subscribers: {type: [ObjectId]},
 });
-
+schema.index({'geoLocation': '2dsphere'});
 schema.plugin(paginate);
 schema.plugin(softDelete);
 const listing = mongoose.model('listings', schema);
