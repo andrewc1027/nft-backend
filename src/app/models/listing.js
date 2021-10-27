@@ -6,17 +6,15 @@ const softDelete = require('mongoose-delete');
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
   description: {type: String},
-  location: {type: String, required: true},
   address: {type: String, required: true},
   creator: {
     name: {type: String},
     ID: {type: ObjectId, required: true},
   },
-  collections: {
+  city: {
     ID: {type: ObjectId},
     name: {type: String},
     url: {type: String},
-    logoImage: {type: String},
   },
   tags: {type: String},
   geoLocation: {

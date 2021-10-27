@@ -1,5 +1,5 @@
 const listing = require('../models/listing');
-const collection = require('../models/collection');
+const city = require('../models/city');
 const transaction = require('../models/transaction');
 const joi = require('joi');
 const fs = require('fs');
@@ -21,12 +21,12 @@ async function getAll(query, page, limit, self) {
   const queries = {};
   queries['deleted'] = {$ne: true};
 
-  if (query.collectionUrl) {
-    queries['collections.url'] = query.collectionUrl;
+  if (query.cityUrl) {
+    queries['city.url'] = query.cityUrl;
   }
 
-  if (query.collection) {
-    queries['collections.ID'] = new ObjectId(query.collection);
+  if (query.city) {
+    queries['city.ID'] = new ObjectId(query.city);
   }
 
   if (query.exclude) {
@@ -81,15 +81,15 @@ async function insert(data, files, user) {
   }
   // Uploading Thumbnail NFT to AWS S3
   const thumbData = await s3Utils.upload(files.file[0]);
-  let dataColl = {};
-  if (data.collection) {
-    const coll = await collection.findById(data.collection);
-    if (coll) {
-      dataColl = {
-        ID: coll._id,
-        name: coll.name,
-        url: coll.url,
-        logoImage: coll.logoImage,
+  let datacity = {};
+  if (data.city) {
+    const cityData = await city.findById(data.city);
+    if (cityData) {
+      datacity = {
+        ID: cityData._id,
+        name: cityData.name,
+        url: cityData.url,
+        logoImage: cityData.logoImage,
       };
     }
   }
@@ -106,7 +106,7 @@ async function insert(data, files, user) {
       ID: user._id,
     },
     blockchain: data.blockchain,
-    collections: dataColl,
+    city: datacity,
     tags: data.tags,
     fileOriginalName: files.file[0].originalname,
     filePath: thumbData.Location,
@@ -133,9 +133,9 @@ async function insert(data, files, user) {
       },
     });
   });
-  if (item.collections) {
-    collectionItemCount(item.collections.ID);
-  }
+  // if (item.collections) {
+  //   collectionItemCount(item.collections.ID);
+  // }
   return item;
 }
 
@@ -182,27 +182,26 @@ async function update(id, files, data, socket) {
       console.log('IPFS Upload Failed', err);
     });
   }
-  let dataColl = {};
-  if (data.collection) {
-    const coll = await collection.findById(data.collection);
-    if (coll) {
-      dataColl = {
-        ID: coll._id,
-        name: coll.name,
-        url: coll.url,
-        logoImage: coll.logoImage,
+  let dataCity = item.city;
+  if (data.city) {
+    const cityData = await city.findById(data.city);
+    if (cityData) {
+      dataCity = {
+        ID: cityData._id,
+        name: cityData.name,
+        url: cityData.url,
       };
     }
   }
-  item.collections = dataColl;
+  item.city = dataCity;
   if (data.longitude) {
     const geoLocations = [data.longitude, data.latitude];
     item.geoLocation.coordinates = geoLocations;
   }
   await item.save();
-  if (item.collections) {
-    collectionItemCount(item.collections.ID);
-  }
+  // if (item.collections) {
+  //   collectionItemCount(item.collections.ID);
+  // }
   return item;
 }
 
@@ -349,11 +348,11 @@ async function explore(query, page, limit, sort = 'price:asc') {
   const orderBy = field[1] == 'asc' ? '1' : '-1';
   const filters = {};
   filters['isPublished'] = true;
-  if (query.collection) {
-    filters['collections.ID'] = new ObjectId(query.collection);
+  if (query.city) {
+    filters['city.ID'] = new ObjectId(query.city);
   }
-  if (query.collectionUrl) {
-    filters['collections.url'] = query.collectionUrl;
+  if (query.cityUrl) {
+    filters['city.url'] = query.cityUrl;
   }
   if (query.search) {
     const q = query.search;
@@ -361,7 +360,7 @@ async function explore(query, page, limit, sort = 'price:asc') {
       {'location': qTransform.regexLike(q)},
       {'name': qTransform.regexLike(q)},
       {'address': qTransform.regexLike(q)},
-      {'collections.name': qTransform.regexLike(q)},
+      {'city.name': qTransform.regexLike(q)},
     ];
     filters['$or'] = or;
   }
@@ -420,18 +419,18 @@ async function explore(query, page, limit, sort = 'price:asc') {
   return listings;
 }
 
-/**
- * @param {String} collectionID
- */
-async function collectionItemCount(collectionID) {
-  const listings = await listing.find({'collections.ID': collectionID});
-  await collection.findByIdAndUpdate(collectionID, {
-    listingCount: listings.length,
-  }).orFail(
-      () => Error('Not Found'),
-  );
-  return listings;
-}
+// /**
+//  * @param {String} collectionID
+//  */
+// async function collectionItemCount(collectionID) {
+//   const listings = await listing.find({'collections.ID': collectionID});
+//   await city.findByIdAndUpdate(collectionID, {
+//     listingCount: listings.length,
+//   }).orFail(
+//       () => Error('Not Found'),
+//   );
+//   return listings;
+// }
 
 module.exports = {
   getAll,
