@@ -348,6 +348,7 @@ async function explore(query, page, limit, sort = 'price:asc') {
   const orderBy = field[1] == 'asc' ? '1' : '-1';
   const filters = {};
   filters['isPublished'] = true;
+  filters['deleted'] = false;
   if (query.city) {
     filters['city.ID'] = new ObjectId(query.city);
   }
@@ -374,7 +375,7 @@ async function explore(query, page, limit, sort = 'price:asc') {
     filters['price'] = qTransform.rangeNumber(prc[0], prc[1]);
   }
   if (query.tags) {
-    filters['tags'] = qTransform.inQuery(query.tags, ',');
+    filters['tags'] = qTransform.regexLike(query.tags);
   }
   if (query.type) {
     filters['type'] = query.type;
