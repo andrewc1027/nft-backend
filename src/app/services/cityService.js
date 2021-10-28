@@ -10,7 +10,7 @@ const qTransform = require('../utils/queryTransform');
  */
 async function getAll(query, user, page, limit) {
   const queries = {};
-  const sort = {name: -1};
+  const sort = {population: -1};
   if (query.url) {
     queries['url'] = query.url;
   }
