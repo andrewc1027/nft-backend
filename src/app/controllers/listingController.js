@@ -154,6 +154,17 @@ async function explore(req, res, next) {
       });
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function getTags(req, res, next) {
+  const tags = await listingService
+      .getTags();
+  return res.json(tags);
+}
+
 module.exports = {
   index,
   detail,
@@ -164,4 +175,5 @@ module.exports = {
   publish,
   remove,
   explore,
+  getTags,
 };

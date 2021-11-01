@@ -58,4 +58,7 @@ router.delete('/listings/:id',
 router.get('/explore',
     handlerException(listingController.explore));
 
+router.get('/tags',
+    handlerException(listingController.getTags));
+
 module.exports = router;

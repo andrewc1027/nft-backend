@@ -10,6 +10,7 @@ const {ObjectId} = require('bson');
 const user = require('../models/user');
 const qTransform = require('../utils/queryTransform');
 const notificationSvc = require('./notificationService');
+const agenda = require('../config/agenda');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -116,6 +117,10 @@ async function insert(data, files, user) {
       coordinates: geoLocations,
     },
   });
+  if (item.activeDate) {
+    console.log('adding agenda schedule');
+    agenda.schedule(item.activeDate, '', {listingID: item._id});
+  }
 
   // Uploading Actual NFT to IPFS
   const fileStream = fs.createReadStream(files.raw[0].path);
@@ -152,6 +157,7 @@ async function update(id, files = {}, data, socket) {
       () => Error('Not Found'));
 
   item.address = data.address;
+  item.name = data.name;
   if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
@@ -199,6 +205,9 @@ async function update(id, files = {}, data, socket) {
     item.geoLocation.coordinates = geoLocations;
   }
   await item.save();
+  if (data.activeDate) {
+    agenda.schedule(data.activeDate, '', {listingID: item._id});
+  }
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
@@ -358,7 +367,6 @@ async function explore(query, page, limit, sort = 'price:asc') {
   if (query.search) {
     const q = query.search;
     const or = [
-      {'location': qTransform.regexLike(q)},
       {'name': qTransform.regexLike(q)},
       {'address': qTransform.regexLike(q)},
       {'city.name': qTransform.regexLike(q)},
@@ -433,6 +441,23 @@ async function explore(query, page, limit, sort = 'price:asc') {
 //   return listings;
 // }
 
+/**
+ *
+ */
+async function getTags() {
+  const list = await listing.find({isPublished: true});
+  let tags = [];
+  list.forEach((row) => {
+    const tag = row.tags.split(',');
+    tags = tags.concat(tag);
+  });
+  const index = tags.indexOf('');
+  console.log(index);
+  tags = tags.splice(index);
+  const unique = tags.filter((v, i, a) => a.indexOf(v) === i);
+  return unique;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -443,4 +468,5 @@ module.exports = {
   likeCounter,
   publish,
   explore,
+  getTags,
 };
