@@ -156,8 +156,8 @@ async function update(id, files = {}, data, socket) {
   const item = await listing.findById(id).orFail(
       () => Error('Not Found'));
 
-  item.address = data.address;
-  item.name = data.name;
+  item.address = data.address || item.address;
+  item.name = data.name || item.name;
   if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
