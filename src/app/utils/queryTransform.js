@@ -1,3 +1,5 @@
+const {ObjectId} = require('bson');
+
 /**
  * @param {Number} gte
  * @param {Number} lte
@@ -20,6 +22,22 @@ function inQuery(string, separator) {
 }
 
 /**
+ * @param {String} string
+ * @param {String} separator
+ * @return {Object}
+ */
+function inObjectIDQuery(string, separator) {
+  const arr = string.split(separator);
+  const ids = [];
+  arr.forEach((id)=>{
+    ids.push(new ObjectId(id));
+  });
+  console.log(ids);
+  const inQuery = {$in: ids};
+  return inQuery;
+}
+
+/**
  * @param {String} searchString
  * @return {Object}
  */
@@ -32,4 +50,5 @@ module.exports = {
   rangeNumber,
   inQuery,
   regexLike,
+  inObjectIDQuery,
 };

@@ -359,7 +359,7 @@ async function explore(query, page, limit, sort = 'price:asc') {
   filters['isPublished'] = true;
   filters['deleted'] = false;
   if (query.city) {
-    filters['city.ID'] = new ObjectId(query.city);
+    filters['city.ID'] = qTransform.inObjectIDQuery(query.city, ',');
   }
   if (query.cityUrl) {
     filters['city.url'] = query.cityUrl;
@@ -454,7 +454,8 @@ async function getTags() {
   const index = tags.indexOf('');
   console.log(index);
   tags = tags.splice(index);
-  const unique = tags.filter((v, i, a) => a.indexOf(v) === i);
+  // Filter unique item
+  const unique = tags.filter((n) => n);
   return unique;
 }
 
