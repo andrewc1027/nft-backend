@@ -5,12 +5,15 @@ const {handlerException} = require('../exceptions/handler');
 const bidController = require('../controllers/bidController');
 const tokenValidator = require('../middleware/tokenValidator');
 
-router.get('/listings/:listingID/bids',
-    handlerException(tokenValidator),
+router.get('/bids',
     handlerException(bidController.index));
 
-router.post('/listings/:listingID/bids',
+router.post('/bids',
     handlerException(tokenValidator),
     handlerException(bidController.add));
+
+router.delete('/bids/:id',
+    handlerException(tokenValidator),
+    handlerException(bidController.remove));
 
 module.exports = router;
