@@ -145,7 +145,7 @@ async function explore(req, res, next) {
   const page = req.query.page || 0;
   const limit = req.query.limit || 10;
   const query = req.query;
-  listingService.explore(query, page, limit)
+  listingService.explore(query, page, limit, req.query.sort)
       .then(function(data) {
         return res.json(data);
       })
