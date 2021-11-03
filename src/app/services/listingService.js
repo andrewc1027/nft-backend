@@ -116,6 +116,7 @@ async function insert(data, files, user) {
       type: 'Point',
       coordinates: geoLocations,
     },
+    activeDate: data.activeDate || null,
   });
   if (item.activeDate) {
     console.log('adding agenda schedule');
@@ -354,7 +355,7 @@ async function publish(id, data, user, socket) {
  */
 async function explore(query, page, limit, sort = 'price:asc') {
   const field = sort.split(':');
-  const orderBy = field[1] == 'asc' ? '1' : '-1';
+  const orderBy = field[1] == 'asc' ? '-1' : '1';
   const filters = {};
   filters['isPublished'] = true;
   filters['deleted'] = false;
@@ -423,7 +424,7 @@ async function explore(query, page, limit, sort = 'price:asc') {
     };
   }
   const listings = await listing.paginate(filters, {
-    page, limit, sort: {field: orderBy},
+    page, limit, sort: {[field[0]]: orderBy},
   });
   return listings;
 }
