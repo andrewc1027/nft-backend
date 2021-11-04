@@ -159,6 +159,9 @@ async function update(id, files = {}, data, socket) {
 
   item.address = data.address || item.address;
   item.name = data.name || item.name;
+  item.description = data.description || item.description;
+  item.blockchain = data.blockchain || item.blockchain;
+  item.tags = data.tags || item.tags;
   if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
