@@ -1,11 +1,28 @@
+const {ObjectId} = require('bson');
 const bidModel = require('../models/bid');
 const listingModel = require('../models/listing');
 /**
- * @param {ObjectID} listingID
- * @return {Array}
+ * @param {Object} query
+ * @param {Number} page
+ * @param {Number} limit
+ * @param {String} sort
+ * * @return {Array}
  */
-async function getListingBid(listingID) {
-  const bids = await bidModel.paginate();
+async function getListingBid(query, page, limit, sort = 'price:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] == 'asc' ? '-1': '1';
+  const filters = {};
+  if (query.listingID) {
+    filters['listing.id'] = new ObjectId(listingID);
+  }
+  if (query.bidderID) {
+    filters['bidder.id'] = new ObjectId(bidderID);
+  }
+  const bids = await bidModel.paginate(filters, {
+    page: page,
+    limit: limit,
+    sort: {[field[0]]: orderBy},
+  });
   return bids;
 }
 

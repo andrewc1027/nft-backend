@@ -6,7 +6,11 @@ const {handler} = require('./errHandler');
  * @param  {Object} next
  */
 async function index(req, res, next) {
-  const bids = await bidService.getListingBid(req.params.listingID);
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  const sort = req.query.sort;
+  const query = req.query;
+  const bids = await bidService.getListingBid(query, page, limit, sort);
   return res.json(bids);
 }
 
