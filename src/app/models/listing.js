@@ -23,7 +23,8 @@ const schema = new mongoose.Schema({
   },
   fileOriginalName: {type: String, required: true},
   rawFileName: {type: String, required: true},
-  filePath: {type: String, required: true},
+  filePath: {type: String},
+  rawFilePath: {type: String},
 
   // Listing Related
   owner: {type: String}, // Creator are the initial owner

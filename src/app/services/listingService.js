@@ -81,7 +81,7 @@ async function insert(data, files, user) {
     geoLocations = [data.longitude, data.latitude];
   }
   // Uploading Thumbnail NFT to AWS S3
-  const thumbData = await s3Utils.upload(files.file[0]);
+  const thumbData = await s3Utils.upload(files.raw[0]);
   let datacity = {};
   if (data.city) {
     const cityData = await city.findById(data.city);
@@ -110,8 +110,8 @@ async function insert(data, files, user) {
     city: datacity,
     tags: data.tags,
     fileOriginalName: files.file[0].originalname,
-    filePath: thumbData.Location,
     rawFileName: files.raw[0].originalname,
+    rawFilePath: thumbData.Location,
     geoLocation: {
       type: 'Point',
       coordinates: geoLocations,
@@ -124,7 +124,7 @@ async function insert(data, files, user) {
   }
 
   // Uploading Actual NFT to IPFS
-  const fileStream = fs.createReadStream(files.raw[0].path);
+  const fileStream = fs.createReadStream(files.file[0].path);
   pinata.pinFileToIPFS(fileStream, {
     pinataMetadata: {
       name: data.name,
@@ -137,6 +137,7 @@ async function insert(data, files, user) {
         pinDate: result.Timestamp,
         isDuplicate: result.isDuplicate,
       },
+      filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
     });
   });
   // if (item.collections) {
@@ -159,6 +160,8 @@ async function update(id, files = {}, data, socket) {
 
   item.address = data.address || item.address;
   item.name = data.name || item.name;
+  item.description = data.description || item.description;
+  item.blockchain = data.blockchain || item.blockchain;
   if (files.file) {
     // TODO: handle old file
     const thumbData = await s3Utils.upload(files.file[0]);
