@@ -12,6 +12,7 @@ async function getListingBid(query, page, limit, sort = 'price:asc') {
   const field = sort.split(':');
   const orderBy = field[1] == 'asc' ? '-1': '1';
   const filters = {};
+  filters['deleted'] = {$ne: true};
   if (query.listingID) {
     filters['listing.id'] = new ObjectId(listingID);
   }
@@ -53,7 +54,9 @@ async function add(data, user) {
  * @param {ObjectId} id
  */
 async function remove(id) {
-  return await bidModel.findByIdAndDelete(id);
+  return await bidModel.deleteById(id).orFail(
+      () => Error('Not Found'),
+  );
 }
 
 module.exports = {

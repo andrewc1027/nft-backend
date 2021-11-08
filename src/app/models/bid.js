@@ -1,6 +1,7 @@
 const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
+const softDelete = require('mongoose-delete');
 
 const schema = new mongoose.Schema({
   listing: {
@@ -16,6 +17,7 @@ const schema = new mongoose.Schema({
 });
 
 schema.plugin(paginate);
+schema.plugin(softDelete);
 const bids = mongoose.model('bids', schema);
 
 module.exports = bids;
