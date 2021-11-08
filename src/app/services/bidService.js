@@ -14,10 +14,10 @@ async function getListingBid(query, page, limit, sort = 'price:asc') {
   const filters = {};
   filters['deleted'] = {$ne: true};
   if (query.listingID) {
-    filters['listing.id'] = new ObjectId(listingID);
+    filters['listing.id'] = new ObjectId(query.listingID);
   }
   if (query.bidderID) {
-    filters['bidder.id'] = new ObjectId(bidderID);
+    filters['bidder.id'] = new ObjectId(query.bidderID);
   }
   const bids = await bidModel.paginate(filters, {
     page: page,
@@ -36,6 +36,7 @@ async function add(data, user) {
       .select('_id name').where({'isPublished': true}).orFail(
           () => Error('Listing Not Found'),
       );
+  console.log(user);
   return await bidModel.create({
     listing: {
       id: listing._id,
@@ -44,6 +45,7 @@ async function add(data, user) {
     bidder: {
       id: user._id,
       name: user.username,
+      address: user.walletAddress,
     },
     price: data.price,
     createdAt: Date.now(),

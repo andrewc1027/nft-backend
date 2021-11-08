@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
   bidder: {
     name: {type: String},
     id: {type: ObjectId, ref: 'users'},
+    address: {type: String},
   },
   price: {type: Number},
   createdAt: {type: Date},
