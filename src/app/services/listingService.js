@@ -105,6 +105,7 @@ async function insert(data, files, user) {
       name: user.username,
       ID: user._id,
     },
+    owner: user._id,
     blockchain: data.blockchain,
     city: datacity,
     tags: data.tags,
@@ -155,11 +156,11 @@ async function insert(data, files, user) {
  * @param {String} id
  * @param {Object} files
  * @param {Object} data
- * @param {Object} socket
+ * @param {Object} user
  * @return {Array}
  */
-async function update(id, files = {}, data, socket) {
-  const item = await listing.findById(id).orFail(
+async function update(id, files = {}, data, user) {
+  const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
 
   item.address = data.address || item.address;
@@ -334,7 +335,10 @@ async function publish(id, data, user, socket) {
   if (error) {
     throw new Error(error);
   }
-  const listedItem = await listing.findByIdAndUpdate(id, {
+  const listedItem = await listing.findOneAndUpdate({
+    _id: id,
+    owner: user._id,
+  }, {
     owner: user._id,
     price: data.price,
     royalties: data.royalties,

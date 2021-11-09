@@ -65,7 +65,7 @@ async function update(req, res, next) {
       req.params.id,
       req.files,
       req.body,
-      req.app.get('socketio'),
+      req.user,
   )
       .then(function(data) {
         return res.json(data);
