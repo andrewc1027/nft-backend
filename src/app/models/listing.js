@@ -25,6 +25,7 @@ const schema = new mongoose.Schema({
   rawFileName: {type: String, required: true},
   filePath: {type: String},
   rawFilePath: {type: String},
+  thumbnail: {type: String},
 
   // Listing Related
   owner: {type: String}, // Creator are the initial owner
@@ -46,6 +47,7 @@ const schema = new mongoose.Schema({
   // IPFS Related Schema
   ipfs: {
     cid: {type: String},
+    rawCid: {type: String},
     pinDate: {type: Date},
     pinSize: {type: Number},
     isDuplicate: {type: Boolean},

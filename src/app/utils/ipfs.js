@@ -8,9 +8,7 @@ const pinata = require('../config/pinata');
 async function uploadToIPFS(imgPath, metadata) {
   const fileStream = fs.createReadStream(imgPath);
   const result = pinata.pinFileToIPFS(fileStream, {
-    pinataMetadata: {
-      name: data.name,
-    },
+    pinataMetadata: metadata,
   });
   return result;
 }

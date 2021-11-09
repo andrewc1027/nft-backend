@@ -79,8 +79,7 @@ async function insert(data, files, user) {
   if (data.longitude) {
     geoLocations = [data.longitude, data.latitude];
   }
-  // Uploading Thumbnail NFT to AWS S3
-  const thumbData = await s3Utils.upload(files.file[0]);
+
   let datacity = {};
   if (data.city) {
     const cityData = await city.findById(data.city);
@@ -111,7 +110,6 @@ async function insert(data, files, user) {
     tags: data.tags,
     fileOriginalName: files.file[0].originalname,
     rawFileName: files.raw[0].originalname,
-    rawFilePath: thumbData.Location,
     geoLocation: {
       type: 'Point',
       coordinates: geoLocations,
@@ -127,6 +125,8 @@ async function insert(data, files, user) {
   ipfsUtils.uploadToIPFS(files.file[0].path, {
     name: data.name,
   }).then(async function(result) {
+    // Uploading Thumbnail NFT to AWS S3
+    const thumbData = await s3Utils.upload(files.file[0]);
     await listing.findByIdAndUpdate(item._id, {
       ipfs: {
         cid: result.IpfsHash,
@@ -135,6 +135,7 @@ async function insert(data, files, user) {
         isDuplicate: result.isDuplicate,
       },
       filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
+      thumbnail: thumbData.Location,
     });
   });
 
@@ -143,6 +144,9 @@ async function insert(data, files, user) {
     name: data.name,
   }).then(async function(result) {
     await listing.findByIdAndUpdate(item._id, {
+      ipfs: {
+        rawCid: result.IpfsHash,
+      },
       rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
     });
   });
@@ -169,27 +173,36 @@ async function update(id, files = {}, data, user) {
   item.blockchain = data.blockchain || item.blockchain;
   item.tags = data.tags || item.tags;
   if (files.file) {
-    // TODO: handle old file
-    const thumbData = await s3Utils.upload(files.file[0]);
-    item.fileOriginalName = files.file[0].originalname;
-    item.filePath = thumbData.Location;
-  }
-  if (files.raw) {
-    // TODO: handle old file
-    ipfsUtils.uploadToIPFS(files.raw[0].path, {
+    // Uploading Jpg NFT to IPFS
+    ipfsUtils.uploadToIPFS(files.file[0].path, {
       name: data.name,
     }).then(async function(result) {
-      await listing.findByIdAndUpdate(id, {
-        rawFileName: files.raw[0].originalname,
+    // TODO: Delete old thumbnail from S3 and ipfs
+      ipfsUtils.unpin(item.ipfs.cid);
+      // Uploading Thumbnail NFT to AWS S3
+      const thumbData = await s3Utils.upload(files.file[0]);
+      await listing.findByIdAndUpdate(item._id, {
         ipfs: {
           cid: result.IpfsHash,
           pinSize: result.PinSize,
           pinDate: result.Timestamp,
           isDuplicate: result.isDuplicate,
         },
+        filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
+        thumbnail: thumbData.Location,
       });
-    }).catch((err)=>{
-      console.log('IPFS Upload Failed', err);
+    });
+  }
+  if (files.raw) {
+    // handle old file
+    ipfsUtils.unpin(item.ipfs.rawCid);
+    // Uploading RAW to IPFS
+    ipfsUtils.uploadToIPFS(files.raw[0].path, {
+      name: data.name,
+    }).then(async function(result) {
+      await listing.findByIdAndUpdate(item._id, {
+        rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
+      });
     });
   }
   let dataCity = item.city;
