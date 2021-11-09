@@ -2,10 +2,9 @@ const listing = require('../models/listing');
 const city = require('../models/city');
 const transaction = require('../models/transaction');
 const joi = require('joi');
-const fs = require('fs');
-const pinata = require('../config/pinata');
 const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
+const ipfsUtils = require('../utils/ipfs');
 const {ObjectId} = require('bson');
 const user = require('../models/user');
 const qTransform = require('../utils/queryTransform');
@@ -81,7 +80,7 @@ async function insert(data, files, user) {
     geoLocations = [data.longitude, data.latitude];
   }
   // Uploading Thumbnail NFT to AWS S3
-  const thumbData = await s3Utils.upload(files.raw[0]);
+  const thumbData = await s3Utils.upload(files.file[0]);
   let datacity = {};
   if (data.city) {
     const cityData = await city.findById(data.city);
@@ -123,12 +122,9 @@ async function insert(data, files, user) {
     agenda.schedule(item.activeDate, '', {listingID: item._id});
   }
 
-  // Uploading Actual NFT to IPFS
-  const fileStream = fs.createReadStream(files.file[0].path);
-  pinata.pinFileToIPFS(fileStream, {
-    pinataMetadata: {
-      name: data.name,
-    },
+  // Uploading Jpg NFT to IPFS
+  ipfsUtils.uploadToIPFS(files.file[0].path, {
+    name: data.name,
   }).then(async function(result) {
     await listing.findByIdAndUpdate(item._id, {
       ipfs: {
@@ -140,12 +136,20 @@ async function insert(data, files, user) {
       filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
     });
   });
+
+  // Uploading RAW to IPFS
+  ipfsUtils.uploadToIPFS(files.raw[0].path, {
+    name: data.name,
+  }).then(async function(result) {
+    await listing.findByIdAndUpdate(item._id, {
+      rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
+    });
+  });
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
   return item;
 }
-
 
 /**
  * @param {String} id
@@ -171,14 +175,8 @@ async function update(id, files = {}, data, socket) {
   }
   if (files.raw) {
     // TODO: handle old file
-    const fileStream = fs.createReadStream(files.raw[0].path);
-    pinata.pinFileToIPFS(fileStream, {
-      pinataMetadata: {
-        name: data.name,
-        keyvalues: {
-
-        },
-      },
+    ipfsUtils.uploadToIPFS(files.raw[0].path, {
+      name: data.name,
     }).then(async function(result) {
       await listing.findByIdAndUpdate(id, {
         rawFileName: files.raw[0].originalname,
@@ -234,8 +232,8 @@ async function remove(id, user) {
    *  but we can unpin it so it'll get removed by IPFS garbage collector
    */
   // TODO: unpin not working, exs empty
-  pinata.unpin(exs.ipfs.cid).then((result) => {
-    listing.findByIdAndDelete(id);
+  ipfsUtils.unpin(exs.ipfs.cid).then(() => {
+    listing.deleteById(id);
   });
   return exs;
 }
