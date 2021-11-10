@@ -52,6 +52,11 @@ const schema = new mongoose.Schema({
     pinSize: {type: Number},
     isDuplicate: {type: Boolean},
   },
+  bid: {
+    highest: {type: Number}, // Bid Amount
+    highestBidder: {type: String}, // Bidder Address
+    bidCount: {type: Number}, // Total Bid for this listing
+  },
 
   isPublished: {type: Boolean, default: false},
 

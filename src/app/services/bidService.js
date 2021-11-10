@@ -1,5 +1,6 @@
 const {ObjectId} = require('bson');
 const bidModel = require('../models/bid');
+const listing = require('../models/listing');
 const listingModel = require('../models/listing');
 /**
  * @param {Object} query
@@ -37,7 +38,8 @@ async function add(data, user) {
           () => Error('Listing Not Found'),
       );
   console.log(user);
-  return await bidModel.create({
+
+  const bid = await bidModel.create({
     listing: {
       id: listing._id,
       name: listing.name,
@@ -50,15 +52,40 @@ async function add(data, user) {
     price: data.price,
     createdAt: Date.now(),
   });
+  updateListingBid(bid);
+  return bid;
+}
+
+/**
+ * @param {*} bid
+ */
+async function updateListingBid(bid) {
+  const listID = new ObjectId(bid.listing.id);
+  const bids = await bidModel.find({
+    'listing.id': listID,
+    'deleted': false,
+  }).sort('-price');
+  const bidListing = {
+    highest: bids[0].price,
+    highestBidder: bids[0].bidder.id,
+    bidCount: bids.length,
+  };
+  await listing.findByIdAndUpdate(listID, {
+    bid: bidListing,
+  });
+  return bidListing;
 }
 
 /**
  * @param {ObjectId} id
  */
 async function remove(id) {
-  return await bidModel.deleteById(id).orFail(
+  await bidModel.deleteById(id).orFail(
       () => Error('Not Found'),
   );
+  const bid = await bidModel.findById(id);
+  updateListingBid(bid);
+  return 'ok';
 }
 
 module.exports = {
