@@ -1,6 +1,7 @@
 const listing = require('../models/listing');
 const city = require('../models/city');
 const transaction = require('../models/transaction');
+const bid = require('../models/bid');
 const joi = require('joi');
 const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
@@ -144,9 +145,6 @@ async function insert(data, files, user) {
     name: data.name,
   }).then(async function(result) {
     await listing.findByIdAndUpdate(item._id, {
-      ipfs: {
-        rawCid: result.IpfsHash,
-      },
       rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
     });
   });
@@ -479,6 +477,33 @@ async function getTags() {
   return unique;
 }
 
+/**
+ * @param {String} id
+ */
+async function finishAuction(id) {
+  const bids = await bid.findOne({
+    'deleted': false,
+    'listing.id': new ObjectId(id),
+  }).sort('-price').orFail(
+      () => Error('Bids Not Found for this listing'),
+  );
+  const soldPrice = bids.price;
+  const item = await listing.findByIdAndUpdate(id, {
+    isPublished: false,
+  });
+  const trade = await transaction.create({
+    to: item.owner,
+    from: item.bid.highestBidder,
+    price: soldPrice,
+    date: Date.now(),
+    listingID: id,
+    listingCID: item.ipfs.cid,
+    quantity: 1,
+    event: 'Auction',
+  });
+  return trade;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -490,4 +515,5 @@ module.exports = {
   publish,
   explore,
   getTags,
+  finishAuction,
 };

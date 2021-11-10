@@ -165,6 +165,21 @@ async function getTags(req, res, next) {
   return res.json(tags);
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function finishAuction(req, res, next) {
+  listingService.finishAuction(req.params.id)
+      .then(function(trx) {
+        return res.json(trx);
+      })
+      .catch((e) => {
+        handler(e, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -176,4 +191,5 @@ module.exports = {
   remove,
   explore,
   getTags,
+  finishAuction,
 };

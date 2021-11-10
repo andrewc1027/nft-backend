@@ -61,4 +61,7 @@ router.get('/explore',
 router.get('/tags',
     handlerException(listingController.getTags));
 
+router.post('/listings/:id/auction',
+    handlerException(tokenValidator),
+    handlerException(listingController.finishAuction));
 module.exports = router;
