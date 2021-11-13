@@ -7,18 +7,14 @@ const s3 = require('../config/s3');
  * @param {File} file
  */
 async function upload(file) {
-  // Code dynamic compress here
-  // const image = sharp(file.path);
-  // const meta = await sharp.metadata();
-  // const {format} = meta;
+  // Convert all file to jpeg as thumbnails
+  const image = await sharp(file.path)
+      .resize({width: 320, length: 180})
+      .jpeg({mozjpeg: true})
+      .toBuffer();
+  console.log(image);
 
-  // const config = {
-  //   jpeg: {quality: 80},
-  //   png: {compressionLevel: 8},
-  // };
-
-  // await image[format](config[format]);
-  const fileContent = await fs.readFileSync(file.path);
+  const fileContent = await fs.readFileSync(image);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: `${file.filename}`,
