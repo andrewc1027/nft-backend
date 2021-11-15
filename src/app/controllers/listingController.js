@@ -25,7 +25,7 @@ async function index(req, res, next) {
  * @param  {Object} next
  */
 async function detail(req, res, next) {
-  listingService.getOne(req.params.id)
+  listingService.getOne(req.params.id, req.user)
       .then(function(listing) {
         return res.json(listing);
       })

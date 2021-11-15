@@ -28,7 +28,9 @@ const multi = upload.fields([
 router.get('/listings',
     handlerException(tokenValidator),
     handlerException(listingController.index));
-router.get('/listings/:id', handlerException(listingController.detail));
+router.get('/listings/:id',
+    handlerException(tokenOption),
+    handlerException(listingController.detail));
 router.post('/listings',
     multi,
     handlerException(tokenValidator),
