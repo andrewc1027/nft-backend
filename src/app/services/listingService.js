@@ -60,7 +60,6 @@ async function getAll(query, page, limit, self) {
  * @param {Object} user
  */
 async function getOne(id, user = {}) {
-  console.log(user);
   viewCounter(id);
   const detail = await listing.findById(id).orFail(
       () => Error('NotFound'),
@@ -68,8 +67,8 @@ async function getOne(id, user = {}) {
   if (detail.deleted) {
     throw new Error('Deleted');
   }
-  console.log(user, detail.isPublished);
-  if (detail.isPublished == false && user._id == undefined) {
+  if ((detail.isPublished == false && user._id == undefined) ||
+  (detail.isPublished == false && user._id != detail.owner)) {
     throw new Error('NotFound');
   }
   return detail;
