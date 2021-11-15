@@ -336,7 +336,7 @@ async function likeCounter(id, self = {}) {
 async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
-    royalties: joi.number().required(),
+    royalties: joi.number().max(50).required(),
     copies: joi.number().required(),
     tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
