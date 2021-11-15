@@ -8,7 +8,7 @@ const sharp = require('sharp');
 async function upload(file) {
   // Convert all file to jpeg as thumbnails
   const image = await sharp(file.path)
-      .resize({width: 320, length: 180})
+      .resize({width: 640})
       .jpeg({mozjpeg: true})
       .toBuffer();
   console.log(image);
