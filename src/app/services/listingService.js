@@ -336,7 +336,7 @@ async function likeCounter(id, self = {}) {
 async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
-    royalties: joi.number().max(50).required(),
+    royalties: joi.number().max(10).required(),
     copies: joi.number().required(),
     tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
@@ -469,11 +469,8 @@ async function getTags() {
     const tag = row.tags.split(',');
     tags = tags.concat(tag);
   });
-  const index = tags.indexOf('');
-  console.log(index);
-  tags = tags.splice(index);
   // Filter unique item
-  const unique = tags.filter((n) => n);
+  const unique = [...new Set(tags)];
   return unique;
 }
 
