@@ -2,6 +2,7 @@ const {ObjectId} = require('bson');
 const bidModel = require('../models/bid');
 const listing = require('../models/listing');
 const listingModel = require('../models/listing');
+const {ValidationError} = require('mongoose').Error;
 /**
  * @param {Object} query
  * @param {Number} page
@@ -37,7 +38,13 @@ async function add(data, user) {
       .select('_id name').where({'isPublished': true}).orFail(
           () => Error('Listing Not Found'),
       );
-  console.log(user);
+
+  const bids = await bidModel.find({'listing.id': new ObjectId(data.listingID)})
+      .sort('-price');
+
+  if (bids.length > 0 && bids[0].price > data.price) {
+    return new ValidationError('Your bid is below current highest bid');
+  }
 
   const bid = await bidModel.create({
     listing: {
