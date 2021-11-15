@@ -1,7 +1,6 @@
 require('dotenv').config();
-const fs = require('fs');
 const s3 = require('../config/s3');
-// const sharp = require('sharp');
+const sharp = require('sharp');
 
 /**
  * @param {File} file
@@ -14,11 +13,10 @@ async function upload(file) {
       .toBuffer();
   console.log(image);
 
-  const fileContent = await fs.readFileSync(image);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: `${file.filename}`,
-    Body: fileContent,
+    Body: image,
     ContentType: file.mimetype,
     ACL: 'public-read',
   };
