@@ -98,6 +98,9 @@ async function insert(data, files, user) {
       };
     }
   }
+  const tags = data.tags.split(',');
+  const uniqueTags = [...new Set(tags)];
+  const tagStr = uniqueTags.join(',');
   // Pre Check if user exists
   await userSvc.find(user._id);
   const item = await listing.create({
@@ -113,7 +116,7 @@ async function insert(data, files, user) {
     owner: user._id,
     blockchain: data.blockchain,
     city: datacity,
-    tags: data.tags,
+    tags: tagStr,
     fileOriginalName: files.file[0].originalname,
     rawFileName: files.raw[0].originalname,
     geoLocation: {
@@ -170,11 +173,14 @@ async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
 
+  const tags = data.tags.split(',');
+  const uniqueTags = [...new Set(tags)];
+  const tagStr = uniqueTags.join(',');
   item.address = data.address || item.address;
   item.name = data.name || item.name;
   item.description = data.description || item.description;
   item.blockchain = data.blockchain || item.blockchain;
-  item.tags = data.tags || item.tags;
+  item.tags = tagStr || item.tags;
   if (files.file) {
     // Uploading Jpg NFT to IPFS
     ipfsUtils.uploadToIPFS(files.file[0].path, {
