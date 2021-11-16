@@ -98,9 +98,12 @@ async function insert(data, files, user) {
       };
     }
   }
-  const tags = data.tags.split(',');
-  const uniqueTags = [...new Set(tags)];
-  const tagStr = uniqueTags.join(',');
+  let tagStr = '';
+  if (data.tags) {
+    const tags = data.tags.split(',');
+    const uniqueTags = [...new Set(tags)];
+    tagStr = uniqueTags.join(',');
+  }
   // Pre Check if user exists
   await userSvc.find(user._id);
   const item = await listing.create({
@@ -135,7 +138,12 @@ async function insert(data, files, user) {
     name: data.name,
   }).then(async function(result) {
     // Uploading Thumbnail NFT to AWS S3
-    const thumbData = await s3Utils.upload(files.file[0]);
+    let thumbData = {};
+    if (files.file[0].mimetype.includes('video')) {
+      thumbData = await s3Utils.upload(files.file[0]);
+    } else {
+      thumbData = await s3Utils.upload(files.file[0]);
+    }
     await listing.findByIdAndUpdate(item._id, {
       ipfs: {
         cid: result.IpfsHash,
@@ -172,15 +180,18 @@ async function insert(data, files, user) {
 async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
+  let tagStr = item.tags;
+  if (data.tags) {
+    const tags = data.tags.split(',');
+    const uniqueTags = [...new Set(tags)];
+    tagStr = uniqueTags.join(',');
+  }
 
-  const tags = data.tags.split(',');
-  const uniqueTags = [...new Set(tags)];
-  const tagStr = uniqueTags.join(',');
   item.address = data.address || item.address;
   item.name = data.name || item.name;
   item.description = data.description || item.description;
   item.blockchain = data.blockchain || item.blockchain;
-  item.tags = tagStr || item.tags;
+  item.tags = tagStr;
   if (files.file) {
     // Uploading Jpg NFT to IPFS
     ipfsUtils.uploadToIPFS(files.file[0].path, {
@@ -381,7 +392,7 @@ async function publish(id, data, user, socket) {
  * @param {Number} limit
  * @param {String} sort
  */
-async function explore(query, page, limit, sort = 'price:asc') {
+async function explore(query, page, limit, sort = 'bid.highest:asc') {
   const field = sort.split(':');
   const orderBy = field[1] == 'asc' ? '-1' : '1';
   const filters = {};
