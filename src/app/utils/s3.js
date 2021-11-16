@@ -1,6 +1,7 @@
 require('dotenv').config();
 const s3 = require('../config/s3');
 const sharp = require('sharp');
+const Mpeg = require('ffmpeg');
 
 /**
  * @param {File} file
@@ -25,6 +26,20 @@ async function upload(file) {
   return result;
 }
 
+/**
+ * @param {File} videoFile
+ */
+async function uploadVid(videoFile) {
+  const process = new Mpeg(videoFile.path);
+  process.then(function(video) {
+    video.setVideoSize('640x?', true, true, '#fff');
+    video.setVideoDuration('00:00:15');
+    video.setVideoFormat('avi');
+    video.setVideoFrameRate(25);
+    video.save(__dirname+'../../../uploads'+videoFile.filename+'_thumbs.avi');
+  });
+}
 module.exports = {
   upload,
+  uploadVid,
 };
