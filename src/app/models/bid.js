@@ -14,6 +14,8 @@ const schema = new mongoose.Schema({
     address: {type: String},
   },
   price: {type: Number},
+  floorDifference: {type: String},
+  expireAt: {type: Date},
   createdAt: {type: Date},
 });
 

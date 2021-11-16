@@ -56,6 +56,8 @@ async function add(data, user) {
       name: user.username,
       address: user.walletAddress,
     },
+    expireAt: data.expireAt,
+    floorDifference: data.floorDifference,
     price: data.price,
     createdAt: Date.now(),
   });
