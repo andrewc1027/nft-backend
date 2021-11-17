@@ -22,7 +22,7 @@
     "dotenv": "^8.2.0",
     "express": "~4.16.1",
     "fast-csv": "^4.3.6",
-    "ffmpeg": "0.0.4",
+    "handbrake-js": "^6.0.0",
     "ipfs-core": "^0.10.8",
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",

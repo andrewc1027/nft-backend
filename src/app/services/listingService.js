@@ -138,22 +138,11 @@ async function insert(data, files, user) {
     name: data.name,
   }).then(async function(result) {
     // Uploading Thumbnail NFT to AWS S3
-    let thumbData = {};
     if (files.file[0].mimetype.includes('video')) {
-      thumbData = await s3Utils.upload(files.file[0]);
+      thumbData = await s3Utils.uploadVid(item._id, result, files.file[0]);
     } else {
-      thumbData = await s3Utils.upload(files.file[0]);
+      thumbData = await s3Utils.upload(item._id, result, files.file[0]);
     }
-    await listing.findByIdAndUpdate(item._id, {
-      ipfs: {
-        cid: result.IpfsHash,
-        pinSize: result.PinSize,
-        pinDate: result.Timestamp,
-        isDuplicate: result.isDuplicate,
-      },
-      filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
-      thumbnail: thumbData.Location,
-    });
   });
 
   // Uploading RAW to IPFS
