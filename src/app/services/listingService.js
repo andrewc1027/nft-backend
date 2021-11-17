@@ -368,6 +368,9 @@ async function publish(id, data, user, socket) {
     buyerAddress: data.buyerAddress,
     tokenID: data.tokenID,
     isPublished: true,
+    bid: {
+      highest: data.price,
+    },
   });
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
