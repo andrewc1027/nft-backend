@@ -47,9 +47,22 @@ async function getAutocomplete(req, res, next) {
   return res.json(suggestions);
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function add(req, res, next) {
+  citySvc.add(req.body).then(function(city) {
+    return res.json(city);
+  }).catch((e)=> {
+    handler(e, res);
+  });
+}
 
 module.exports = {
   index,
   getOne,
   getAutocomplete,
+  add,
 };

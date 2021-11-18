@@ -7,6 +7,9 @@ const cityController = require('../controllers/cityController');
 router.get('/cities',
     handlerException(cityController.index));
 
+router.post('/cities',
+    handlerException(cityController.add));
+
 router.get('/cities/:id',
     handlerException(cityController.getOne));
 

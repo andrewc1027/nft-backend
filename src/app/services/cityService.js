@@ -1,6 +1,7 @@
 const {ObjectId} = require('bson');
 const city = require('../models/city');
 const qTransform = require('../utils/queryTransform');
+const joi = require('joi');
 /**
  * @param {Object} query
  * @param {Object} user
@@ -65,8 +66,29 @@ async function getAutocomplete(query, limit = 10) {
   return x;
 }
 
+/**
+ * @param {Object} data
+ */
+async function add(data) {
+  const schema = joi.object({
+    name: joi.string().required(),
+    geoLocation: {
+      type: joi.string(),
+      coordinates: joi.array(),
+    },
+    population: joi.string().required(),
+  });
+  const {error} = schema.validate(data, {allowUnknown: true});
+  if (error) {
+    throw new Error(error.details[0].message);
+  }
+  const res = await city.create(data);
+  return res;
+}
+
 module.exports = {
   getAll,
   getOne,
   getAutocomplete,
+  add,
 };
