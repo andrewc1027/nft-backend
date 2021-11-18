@@ -76,7 +76,6 @@ async function add(data) {
       type: joi.string(),
       coordinates: joi.array(),
     },
-    population: joi.number().required(),
   });
   const {error} = schema.validate(data, {allowUnknown: true});
   if (error) {
