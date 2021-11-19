@@ -42,7 +42,7 @@ const schema = new mongoose.Schema({
   likes: {type: Number, default: 0},
   activeDate: {type: Date},
   buyerAddress: {type: String},
-  type: {type: String}, // Image / Video / Gif
+  resource: {type: String}, // Image / Video / Gif
 
   // IPFS Related Schema
   ipfs: {

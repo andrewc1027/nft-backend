@@ -26,6 +26,10 @@ async function getAll(query, page, limit, self) {
     queries['city.url'] = query.cityUrl;
   }
 
+  if (query.name) {
+    queries['name'] = qTransform.regexLike(query.name);
+  }
+
   if (query.city) {
     queries['city.ID'] = new ObjectId(query.city);
   }
@@ -106,6 +110,13 @@ async function insert(data, files, user) {
   }
   // Pre Check if user exists
   await userSvc.find(user._id);
+
+  let resource = '';
+  if (files.file[0].mimetype.includes('video')) {
+    resource = 'Video';
+  } else {
+    resource = 'Image';
+  }
   const item = await listing.create({
     item: data.type,
     name: data.name,
@@ -127,6 +138,7 @@ async function insert(data, files, user) {
       coordinates: geoLocations,
     },
     activeDate: data.activeDate || null,
+    resource: resource,
   });
   if (item.activeDate) {
     console.log('adding agenda schedule');
@@ -417,8 +429,8 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   if (query.tags) {
     filters['tags'] = qTransform.regexLike(query.tags);
   }
-  if (query.type) {
-    filters['type'] = query.type;
+  if (query.resource) {
+    filters['resource'] = query.resource;
   }
   if (query.bounds) {
     const [south, west, north, east] = query.bounds.split(',');
