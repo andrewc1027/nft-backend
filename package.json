@@ -11,6 +11,7 @@
     "lint": "npx eslint src/**"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@pinata/ipfs-gateway-tools": "^1.1.6",
     "@pinata/sdk": "^1.1.23",
     "agenda": "^4.2.1",
@@ -22,7 +23,8 @@
     "dotenv": "^8.2.0",
     "express": "~4.16.1",
     "fast-csv": "^4.3.6",
-    "handbrake-js": "^6.0.0",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
     "ipfs-core": "^0.10.8",
     "joi": "^17.4.2",
     "jsonwebtoken": "^8.5.1",

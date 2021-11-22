@@ -1,11 +1,13 @@
 require('dotenv').config();
 const s3 = require('../config/s3');
 const sharp = require('sharp');
-// const Mpeg = require('ffmpeg');
-const hbjs = require('handbrake-js');
 const path = require('path');
 const fs = require('fs');
 const listing = require('../models/listing');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 /**
  * @param {String} id
  * @param {Object} ipfs
@@ -37,28 +39,37 @@ async function upload(id, ipfs, file) {
  * @param {File} videoFile
  */
 async function uploadVid(id, ipfs, videoFile) {
+  console.log('Processing Video...', videoFile);
   const newVidPath = path.resolve(__dirname,
-      `../../../uploads/${videoFile.filename}_thumbs.mp4`);
-  hbjs.spawn({
-    input: path.resolve(__dirname, '../../../'+videoFile.path),
-    output: newVidPath,
-  })
-      .on('complete', async function() {
+      `../../../uploads/${id}.gif`);
+  ffmpeg(path.resolve(__dirname, '../../../'+videoFile.path))
+      .duration(5)
+      .fps(10)
+      .size('300x?')
+      .on('start', function(cli) {
+        console.log('Running: ', cli);
+      })
+      .on('progress', function(progress) {
+        console.log('Processing: ', progress.percent);
+      })
+      .on('error', function(err, stdout, stderr) {
+        console.log('Cannot process video: ' + err.message);
+      })
+      .on('end', async function(stdout, stderr) {
+        console.log('Compress Done For: ', newVidPath, stdout);
         const vidBuffer = fs.readFileSync(newVidPath);
         const param = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `${videoFile.filename}`,
+          Key: `${id}.gif`,
           Body: vidBuffer,
-          ContentType: videoFile.mimetype,
+          ContentType: 'image/gif',
           ACL: 'public-read',
         };
-        console.log('completed, uploading..');
+        console.log('completed, uploading..', param);
         const result = await s3.upload(param).promise();
         updateListing(id, ipfs, result);
       })
-      .on('error', function(err) {
-        console.error(err);
-      });
+      .save(newVidPath);
 }
 
 /**
