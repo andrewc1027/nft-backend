@@ -21,10 +21,12 @@ const schema = new mongoose.Schema({
     type: {type: String},
     coordinates: [Number],
   },
-  fileOriginalName: {type: String, required: true},
-  rawFileName: {type: String, required: true},
-  filePath: {type: String},
-  rawFilePath: {type: String},
+  files: [{
+    fileOriginalName: {type: String, required: true},
+    rawFileName: {type: String, required: true},
+    filePath: {type: String},
+    rawFilePath: {type: String},
+  }],
   thumbnail: {type: String},
 
   // Listing Related
@@ -42,16 +44,16 @@ const schema = new mongoose.Schema({
   likes: {type: Number, default: 0},
   activeDate: {type: Date},
   buyerAddress: {type: String},
-  resource: {type: String}, // Image / Video / Gif
-
+  resource: {type: String}, // Image / Video / Gif / 360
+  link360: {type: String},
   // IPFS Related Schema
-  ipfs: {
+  ipfs: [{
     cid: {type: String},
     rawCid: {type: String},
     pinDate: {type: Date},
     pinSize: {type: Number},
     isDuplicate: {type: Boolean},
-  },
+  }],
   bid: {
     highest: {type: Number}, // Bid Amount
     highestBidder: {type: String}, // Bidder Address

@@ -112,8 +112,12 @@ async function insert(data, files, user) {
   await userSvc.find(user._id);
 
   let resource = '';
+  let link360 = '';
   if (files.file[0].mimetype.includes('video')) {
     resource = 'Video';
+  } else if (files.file[0].mimetype.includes('zip')) {
+    resource = '360';
+    link360 = data.link360;
   } else {
     resource = 'Image';
   }
@@ -139,6 +143,7 @@ async function insert(data, files, user) {
     },
     activeDate: data.activeDate || null,
     resource: resource,
+    link360: link360,
   });
   if (item.activeDate) {
     console.log('adding agenda schedule');
@@ -146,16 +151,21 @@ async function insert(data, files, user) {
   }
 
   // Uploading Jpg NFT to IPFS
-  ipfsUtils.uploadToIPFS(files.file[0].path, {
-    name: data.name,
-  }).then(async function(result) {
-    // Uploading Thumbnail NFT to AWS S3
-    if (files.file[0].mimetype.includes('video')) {
-      thumbData = await s3Utils.uploadVid(item._id, result, files.file[0]);
-    } else {
-      thumbData = await s3Utils.upload(item._id, result, files.file[0]);
-    }
-  });
+  for (let i = 0; i < files.file.length; i++) {
+    ipfsUtils.uploadToIPFS(files.file[i].path, {
+      name: data.name,
+    }).then(async function(result) {
+      // Uploading Thumbnail NFT to AWS S3
+      if (files.file[i].mimetype.includes('video')) {
+        thumbData = await s3Utils.uploadVid(item._id, result, files.file[i]);
+      } else if (files.file[i].mimetype.includes('zip')) {
+
+      } else {
+        thumbData = await s3Utils.upload(item._id, result, files.file[i]);
+      }
+    });
+  }
+
 
   // Uploading RAW to IPFS
   ipfsUtils.uploadToIPFS(files.raw[0].path, {
@@ -430,7 +440,7 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
     filters['tags'] = qTransform.regexLike(query.tags);
   }
   if (query.resource) {
-    filters['resource'] = query.resource;
+    filters['resource'] = qTransform.inQuery(query.resource, ',');
   }
   if (query.bounds) {
     const [south, west, north, east] = query.bounds.split(',');
