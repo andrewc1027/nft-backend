@@ -11,6 +11,7 @@ const user = require('../models/user');
 const qTransform = require('../utils/queryTransform');
 const notificationSvc = require('./notificationService');
 const agenda = require('../config/agenda');
+const nftService = require('../services/nftService');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -135,8 +136,6 @@ async function insert(data, files, user) {
     blockchain: data.blockchain,
     city: datacity,
     tags: tagStr,
-    fileOriginalName: files.file[0].originalname,
-    rawFileName: files.raw[0].originalname,
     geoLocation: {
       type: 'Point',
       coordinates: geoLocations,
@@ -151,30 +150,7 @@ async function insert(data, files, user) {
   }
 
   // Uploading Jpg NFT to IPFS
-  for (let i = 0; i < files.file.length; i++) {
-    ipfsUtils.uploadToIPFS(files.file[i].path, {
-      name: data.name,
-    }).then(async function(result) {
-      // Uploading Thumbnail NFT to AWS S3
-      if (files.file[i].mimetype.includes('video')) {
-        thumbData = await s3Utils.uploadVid(item._id, result, files.file[i]);
-      } else if (files.file[i].mimetype.includes('zip')) {
-
-      } else {
-        thumbData = await s3Utils.upload(item._id, result, files.file[i]);
-      }
-    });
-  }
-
-
-  // Uploading RAW to IPFS
-  ipfsUtils.uploadToIPFS(files.raw[0].path, {
-    name: data.name,
-  }).then(async function(result) {
-    await listing.findByIdAndUpdate(item._id, {
-      rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
-    });
-  });
+  nftService.multipleCreate(item._id, files.file, files.raw);
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }

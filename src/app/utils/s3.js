@@ -10,10 +10,9 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 /**
  * @param {String} id
- * @param {Object} ipfs
  * @param {File} file
  */
-async function upload(id, ipfs, file) {
+async function upload(id, file) {
   // Convert all file to jpeg as thumbnails
   const image = await sharp(file.path)
       .resize({width: 640})
@@ -29,16 +28,15 @@ async function upload(id, ipfs, file) {
   };
 
   const result = await s3.upload(param).promise();
-  updateListing(id, ipfs, result);
+  // updateListing(id, ipfs, result);
   return result;
 }
 
 /**
  * @param {String} id
- * @param {Object} ipfs
  * @param {File} videoFile
  */
-async function uploadVid(id, ipfs, videoFile) {
+async function uploadVid(id, videoFile) {
   console.log('Processing Video...', videoFile);
   const newVidPath = path.resolve(__dirname,
       `../../../uploads/${id}.gif`);
@@ -65,9 +63,9 @@ async function uploadVid(id, ipfs, videoFile) {
           ContentType: 'image/gif',
           ACL: 'public-read',
         };
-        console.log('completed, uploading..', param);
+        console.log('completed, uploading video..', param);
         const result = await s3.upload(param).promise();
-        updateListing(id, ipfs, result);
+        // updateListing(id, ipfs, result);
       })
       .save(newVidPath);
 }
@@ -89,7 +87,28 @@ async function updateListing(id, ipfs, s3data) {
     thumbnail: s3data.Location,
   });
 }
+
+/**
+ * @param {String} id
+ * @param {Object} ipfs
+ * @param {Object} file
+ */
+async function uploadFile(id, ipfs, file) {
+  const fileBuffer = fs.readFileSync(file.path);
+  const param = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${id}.gif`,
+    Body: fileBuffer,
+    ContentType: file.mimetype,
+    ACL: 'public-read',
+  };
+  console.log('completed, uploading file..', param);
+  const result = await s3.upload(param).promise();
+  updateListing(id, ipfs, result);
+}
+
 module.exports = {
   upload,
   uploadVid,
+  uploadFile,
 };
