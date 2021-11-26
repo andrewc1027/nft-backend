@@ -1,6 +1,5 @@
 const nft = require('../models/nft');
 const ipfsUtils = require('../utils/ipfs');
-const s3Utils = require('../utils/s3');
 /**
  * @param {Object} query
  * @param {Object} user
@@ -33,40 +32,45 @@ async function add(data) {
 }
 
 /**
- * @param {String} listingId
+ * @param {ObjectId} listingId
  * @param {Array} files
  * @param {Array} raws
  */
 async function multipleCreate(listingId, files, raws) {
-  console.log(files, raws);
   for (let i = 0; i < files.length; i++) {
-    console.log(i);
     ipfsUtils.uploadToIPFS(files[i].path, {
-      keyvalues: listingId,
+      listingID: listingId.toString(),
+      name: files[i].originalname,
     }).then(async function(result) {
       // Uploading RAW to IPFS
-      ipfsUtils.uploadToIPFS(raws[i].path, {
-        keyvalues: listingId,
-      }).then(async function(rawResult) {
-        // Uploading Thumbnail NFT to AWS S3
-        await nft.create({
-          listingID: listingId,
-          ipfs: {
-            raw: rawResult,
-            file: result,
-          },
-          originalName: files[i].originalname,
-          rawName: files[i].originalname,
-        });
+      const rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
+        listingID: listingId.toString(),
+        name: files[i].originalname,
       });
+      await nft.create({
+        listingID: listingId,
+        ipfs: {
+          raw: {
+            originalName: raws[i].originalname,
+            cid: rawResult.IpfsHash,
+            pinDate: rawResult.Timestamp,
+            pinSize: rawResult.PinSize,
+            isDuplicate: rawResult.isDuplicate,
+            path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
+          },
+          file: {
+            originalName: files[i].originalname,
+            cid: result.IpfsHash,
+            pinDate: result.Timestamp,
+            pinSize: result.PinSize,
+            isDuplicate: result.isDuplicate,
+            path: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
+          },
+        },
+      });
+    }).catch((e) => {
+      console.log(e);
     });
-  }
-
-  // Upload first nft on array as thumbnail
-  if (files[0].mimetype.includes('video')) {
-    thumbData = await s3Utils.uploadVid(listingId, files[0]);
-  } else {
-    thumbData = await s3Utils.upload(listingId, files[0]);
   }
 }
 

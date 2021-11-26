@@ -150,7 +150,18 @@ async function insert(data, files, user) {
   }
 
   // Uploading Jpg NFT to IPFS
-  nftService.multipleCreate(item._id, files.file, files.raw);
+  nftService.multipleCreate(item._id, files.file, files.raw)
+      .then(function(ipfs) {
+        console.log('IPFS Upload Completed..');
+      });
+
+  // Upload first nft on array as thumbnail
+  // if (files.file[0].mimetype.includes('video')) {
+  //   s3Utils.uploadVid(item._id, files.file[0]);
+  // } else {
+  //   console.log(files.file[0]);
+  //   s3Utils.upload(item._id. files.file[0]);
+  // }
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }

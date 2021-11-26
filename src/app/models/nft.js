@@ -3,24 +3,23 @@ const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
   listingID: {type: ObjectId, required: true, ref: 'listings'},
-  originalName: {type: String, required: true},
-  rawName: {type: String, required: true},
-  filePath: {type: String},
-  rawPath: {type: String},
-  thumbnail: {type: String},
   // IPFS Related Schema
   ipfs: {
-    nft: {
+    file: {
       cid: {type: String},
       pinDate: {type: Date},
       pinSize: {type: Number},
       isDuplicate: {type: Boolean},
+      originalName: {type: String, required: true},
+      path: {type: String},
     },
     raw: {
+      originalName: {type: String, required: true},
       cid: {type: String},
       pinDate: {type: Date},
       pinSize: {type: Number},
       isDuplicate: {type: Boolean},
+      path: {type: String},
     },
   },
 });

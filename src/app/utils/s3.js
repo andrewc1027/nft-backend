@@ -28,7 +28,7 @@ async function upload(id, file) {
   };
 
   const result = await s3.upload(param).promise();
-  // updateListing(id, ipfs, result);
+  updateListing(id, result);
   return result;
 }
 
@@ -65,35 +65,26 @@ async function uploadVid(id, videoFile) {
         };
         console.log('completed, uploading video..', param);
         const result = await s3.upload(param).promise();
-        // updateListing(id, ipfs, result);
+        updateListing(id, result);
       })
       .save(newVidPath);
 }
 
 /**
  * @param {String} id
- * @param {Object} ipfs
  * @param {Object} s3data
  */
-async function updateListing(id, ipfs, s3data) {
+async function updateListing(id, s3data) {
   await listing.findByIdAndUpdate(id, {
-    ipfs: {
-      cid: ipfs.IpfsHash,
-      pinSize: ipfs.PinSize,
-      pinDate: ipfs.Timestamp,
-      isDuplicate: ipfs.isDuplicate,
-    },
-    filePath: `https://homejab-dev.mypinata.cloud/ipfs/${ipfs.IpfsHash}`,
     thumbnail: s3data.Location,
   });
 }
 
 /**
  * @param {String} id
- * @param {Object} ipfs
  * @param {Object} file
  */
-async function uploadFile(id, ipfs, file) {
+async function uploadFile(id, file) {
   const fileBuffer = fs.readFileSync(file.path);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
@@ -104,7 +95,7 @@ async function uploadFile(id, ipfs, file) {
   };
   console.log('completed, uploading file..', param);
   const result = await s3.upload(param).promise();
-  updateListing(id, ipfs, result);
+  updateListing(id, result);
 }
 
 module.exports = {
