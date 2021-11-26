@@ -1,3 +1,4 @@
+const listing = require('../models/nft');
 const nft = require('../models/nft');
 const ipfsUtils = require('../utils/ipfs');
 /**
@@ -37,17 +38,19 @@ async function add(data) {
  * @param {Array} raws
  */
 async function multipleCreate(listingId, files, raws) {
-  for (let i = 0; i < files.length; i++) {
-    ipfsUtils.uploadToIPFS(files[i].path, {
+  const nfts = [];
+  let i = 0;
+  for await (const file of files) {
+    ipfsUtils.uploadToIPFS(file.path, {
       listingID: listingId.toString(),
-      name: files[i].originalname,
+      name: file.originalname,
     }).then(async function(result) {
       // Uploading RAW to IPFS
       const rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
         listingID: listingId.toString(),
-        name: files[i].originalname,
+        name: file.originalname,
       });
-      await nft.create({
+      const resNft = await nft.create({
         listingID: listingId,
         ipfs: {
           raw: {
@@ -59,7 +62,7 @@ async function multipleCreate(listingId, files, raws) {
             path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
           },
           file: {
-            originalName: files[i].originalname,
+            originalName: file.originalname,
             cid: result.IpfsHash,
             pinDate: result.Timestamp,
             pinSize: result.PinSize,
@@ -68,6 +71,16 @@ async function multipleCreate(listingId, files, raws) {
           },
         },
       });
+      console.log(resNft._id, i);
+      nfts.push({
+        id: resNft._id,
+      });
+      if (i === files.length - 1) {
+        console.log('updating listing nft list', nfts);
+        const upd = await listing.findByIdAndUpdate(listingId, {nfts: nfts});
+        console.log(upd);
+      }
+      i++;
     }).catch((e) => {
       console.log(e);
     });

@@ -21,8 +21,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({storage: storage});
 const multi = upload.fields([
-  {name: 'file', maxCount: 1},
-  {name: 'raw', maxCount: 1},
+  {name: 'file', maxCount: 20},
+  {name: 'raw', maxCount: 20},
 ]);
 
 router.get('/listings',

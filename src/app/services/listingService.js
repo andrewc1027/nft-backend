@@ -68,7 +68,7 @@ async function getOne(id, user = {}) {
   viewCounter(id);
   const detail = await listing.findById(id).orFail(
       () => Error('NotFound'),
-  );
+  ).populate('nfts', 'ipfs.file.path');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -116,7 +116,7 @@ async function insert(data, files, user) {
   let link360 = '';
   if (files.file[0].mimetype.includes('video')) {
     resource = 'Video';
-  } else if (files.file[0].mimetype.includes('zip')) {
+  } else if (files.file.length > 1) {
     resource = '360';
     link360 = data.link360;
   } else {
@@ -156,12 +156,11 @@ async function insert(data, files, user) {
       });
 
   // Upload first nft on array as thumbnail
-  // if (files.file[0].mimetype.includes('video')) {
-  //   s3Utils.uploadVid(item._id, files.file[0]);
-  // } else {
-  //   console.log(files.file[0]);
-  //   s3Utils.upload(item._id. files.file[0]);
-  // }
+  if (files.file[0].mimetype.includes('video')) {
+    s3Utils.uploadVid(item._id, files.file[0]);
+  } else {
+    s3Utils.upload(item._id, files.file[0]);
+  }
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }

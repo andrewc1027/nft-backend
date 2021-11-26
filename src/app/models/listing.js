@@ -2,6 +2,7 @@ const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
 const softDelete = require('mongoose-delete');
+const nft = require('./nft');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
@@ -21,6 +22,9 @@ const schema = new mongoose.Schema({
     type: {type: String},
     coordinates: [Number],
   },
+  nfts: [{
+    id: {type: ObjectId, ref: nft},
+  }],
   thumbnail: {type: String},
 
   // Listing Related
