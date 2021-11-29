@@ -39,7 +39,10 @@ async function add(data, user) {
           () => Error('Listing Not Found'),
       );
 
-  const bids = await bidModel.find({'listing.id': new ObjectId(data.listingID)})
+  const bids = await bidModel.find({
+    'listing.id': new ObjectId(data.listingID),
+    'deleted': false,
+  })
       .sort('-price');
 
   if (bids.length > 0 && bids[0].price > data.price) {
