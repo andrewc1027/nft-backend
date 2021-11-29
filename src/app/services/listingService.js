@@ -12,6 +12,7 @@ const qTransform = require('../utils/queryTransform');
 const notificationSvc = require('./notificationService');
 const agenda = require('../config/agenda');
 const nftService = require('../services/nftService');
+const ValidationError = require('joi').ValidationError;
 /**
  * @param {Object} query
  * @param {Number} page
@@ -117,6 +118,11 @@ async function insert(data, files, user) {
   if (files.file[0].mimetype.includes('video')) {
     resource = 'Video';
   } else if (files.file.length > 1) {
+    if (files.file.length != files.raw.length) {
+      // eslint-disable-next-line max-len
+      throw new ValidationError(`Every Nft have to be validated with a raw file, you sent ${files.file.length} 
+      nfts but only sent ${files.raw.length} of raw file`);
+    }
     resource = '360';
     link360 = data.link360;
   } else {
@@ -150,13 +156,13 @@ async function insert(data, files, user) {
   }
 
   // Uploading Jpg NFT to IPFS
-  nftService.multipleCreate(item._id, files.file, files.raw)
+  nftService.handle(item._id, files.file, files.raw)
       .then(function(ipfs) {
         console.log('IPFS Upload Completed..');
       });
 
   // Upload first nft on array as thumbnail
-  if (files.file[0].mimetype.includes('video')) {
+  if (resource == 'Video') {
     s3Utils.uploadVid(item._id, files.file[0]);
   } else {
     s3Utils.upload(item._id, files.file[0]);
