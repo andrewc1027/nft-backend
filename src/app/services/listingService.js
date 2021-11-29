@@ -371,6 +371,10 @@ async function publish(id, data, user, socket) {
   if (error) {
     throw new Error(error);
   }
+  const check = await listing.findOne({tokenID: data.tokenID});
+  if (check) {
+    throw new ValidationError('Token ID already used by another listing.');
+  }
   const listedItem = await listing.findOneAndUpdate({
     _id: id,
     owner: user._id,
