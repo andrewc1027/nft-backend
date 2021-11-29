@@ -22,9 +22,7 @@ const schema = new mongoose.Schema({
     type: {type: String},
     coordinates: [Number],
   },
-  nfts: [{
-    id: {type: ObjectId, ref: nft},
-  }],
+  nfts: [{type: ObjectId, ref: nft}],
   thumbnail: {type: String},
 
   // Listing Related

@@ -1,4 +1,4 @@
-const listing = require('../models/nft');
+const listing = require('../models/listing');
 const nft = require('../models/nft');
 const ipfsUtils = require('../utils/ipfs');
 /**
@@ -37,7 +37,7 @@ async function add(data) {
  * @param {Array} files
  * @param {Array} raws
  */
-async function multipleCreate(listingId, files, raws) {
+async function handle(listingId, files, raws) {
   const nfts = [];
   let i = 0;
   for await (const file of files) {
@@ -72,9 +72,7 @@ async function multipleCreate(listingId, files, raws) {
         },
       });
       console.log(resNft._id, i);
-      nfts.push({
-        id: resNft._id,
-      });
+      nfts.push(resNft._id);
       if (i === files.length - 1) {
         console.log('updating listing nft list', nfts);
         const upd = await listing.findByIdAndUpdate(listingId, {nfts: nfts});
@@ -91,5 +89,5 @@ module.exports = {
   getAll,
   getOne,
   add,
-  multipleCreate,
+  handle,
 };
