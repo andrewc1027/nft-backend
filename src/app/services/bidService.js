@@ -80,7 +80,7 @@ async function updateListingBid(bid) {
     'deleted': false,
   }).sort('-price');
   const bidListing = {
-    highest: bids[0].price,
+    highest: bids[0].price || 0,
     highestBidder: bids[0].bidder.id,
     bidCount: bids.length,
   };
