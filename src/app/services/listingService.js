@@ -119,11 +119,6 @@ async function insert(data, files, user) {
   if (files.file[0].mimetype.includes('video')) {
     resource = 'Video';
   } else if (files.file.length > 1) {
-    if (files.file.length != files.raw.length) {
-      // eslint-disable-next-line max-len
-      throw new ValidationError(`Every Nft have to be validated with a raw file, you sent ${files.file.length} 
-      nfts but only sent ${files.raw.length} of raw file`);
-    }
     resource = '360';
     link360 = data.link360;
   } else {
@@ -161,7 +156,7 @@ async function insert(data, files, user) {
   }
 
   // Uploading Jpg NFT to IPFS
-  nftService.handle(item._id, files.file, files.raw)
+  nftService.handle(item._id, files.file, files.raw, resource)
       .then(function(ipfs) {
         console.log('IPFS Upload Completed..');
       });
@@ -169,8 +164,10 @@ async function insert(data, files, user) {
   // Upload first nft on array as thumbnail
   if (resource == 'Video') {
     s3Utils.uploadVid(item._id, files.file[0]);
-  } else {
+  } else if (resource == 'Image') {
     s3Utils.upload(item._id, files.file[0]);
+  } else if (resource == '360' && files.thumbnail.length > 0) {
+    s3Utils.upload(item._id, files.thumbnail[0]);
   }
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);

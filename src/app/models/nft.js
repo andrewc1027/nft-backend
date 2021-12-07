@@ -14,7 +14,7 @@ const schema = new mongoose.Schema({
       path: {type: String},
     },
     raw: {
-      originalName: {type: String, required: true},
+      originalName: {type: String},
       cid: {type: String},
       pinDate: {type: Date},
       pinSize: {type: Number},

@@ -23,6 +23,7 @@ const upload = multer({storage: storage});
 const multi = upload.fields([
   {name: 'file', maxCount: 20},
   {name: 'raw', maxCount: 20},
+  {name: 'thumbnail', maxCount: 1},
 ]);
 
 router.get('/listings',

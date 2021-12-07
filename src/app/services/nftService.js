@@ -36,8 +36,9 @@ async function add(data) {
  * @param {ObjectId} listingId
  * @param {Array} files
  * @param {Array} raws
+ * @param {String} resource
  */
-async function handle(listingId, files, raws) {
+async function handle(listingId, files, raws, resource) {
   const nfts = [];
   let i = 0;
   for await (const file of files) {
@@ -46,21 +47,26 @@ async function handle(listingId, files, raws) {
       name: file.originalname,
     }).then(async function(result) {
       // Uploading RAW to IPFS
-      const rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
-        listingID: listingId.toString(),
-        name: file.originalname,
-      });
+      const raw = {};
+      if (resource != '360') {
+        rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
+          listingID: listingId.toString(),
+          name: file.originalname,
+        });
+        raw = {
+          originalName: raws[i].originalname,
+          cid: rawResult.IpfsHash,
+          pinDate: rawResult.Timestamp,
+          pinSize: rawResult.PinSize,
+          isDuplicate: rawResult.isDuplicate,
+          path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
+        };
+      }
+
       const resNft = await nft.create({
         listingID: listingId,
         ipfs: {
-          raw: {
-            originalName: raws[i].originalname,
-            cid: rawResult.IpfsHash,
-            pinDate: rawResult.Timestamp,
-            pinSize: rawResult.PinSize,
-            isDuplicate: rawResult.isDuplicate,
-            path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
-          },
+          raw: raw,
           file: {
             originalName: file.originalname,
             cid: result.IpfsHash,
