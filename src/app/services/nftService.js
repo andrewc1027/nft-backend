@@ -47,7 +47,7 @@ async function handle(listingId, files, raws, resource) {
       name: file.originalname,
     }).then(async function(result) {
       // Uploading RAW to IPFS
-      const raw = {};
+      let raw = {};
       if (resource != '360') {
         rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
           listingID: listingId.toString(),
@@ -77,12 +77,9 @@ async function handle(listingId, files, raws, resource) {
           },
         },
       });
-      console.log(resNft._id, i);
       nfts.push(resNft._id);
       if (i === files.length - 1) {
-        console.log('updating listing nft list', nfts);
-        const upd = await listing.findByIdAndUpdate(listingId, {nfts: nfts});
-        console.log(upd);
+        await listing.findByIdAndUpdate(listingId, {nfts: nfts});
       }
       i++;
     }).catch((e) => {

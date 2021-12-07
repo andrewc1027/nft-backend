@@ -150,7 +150,6 @@ async function insert(data, files, user) {
     activeDate: data.activeDate || null,
     resource: resource,
     link360: link360,
-    sellMethod: data.sellMethod,
   });
   if (item.activeDate) {
     console.log('adding agenda schedule');
@@ -393,6 +392,7 @@ async function publish(id, data, user, socket) {
     bid: {
       highest: data.price,
     },
+    sellMethod: data.sellMethod,
   });
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
