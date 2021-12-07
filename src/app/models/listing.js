@@ -34,7 +34,7 @@ const schema = new mongoose.Schema({
   contactAddress: {type: String}, // Royalties will go to this address,
   blockchain: {type: String},
   paymentTokens: {type: [String]},
-  price: {type: Number},
+  price: {type: Number}, // Price / Starting Price
   tokenID: {type: String},
   views: {type: Number, default: 0},
   likes: {type: Number, default: 0},
@@ -42,13 +42,12 @@ const schema = new mongoose.Schema({
   buyerAddress: {type: String},
   resource: {type: String}, // Image / Video / Gif / 360
   link360: {type: String},
-
+  sellMethod: {type: String, default: 'Fixed Price'}, // Fixed Price / Auction
   bid: {
     highest: {type: Number}, // Bid Amount
     highestBidder: {type: String}, // Bidder Address
     bidCount: {type: Number}, // Total Bid for this listing
   },
-
   isPublished: {type: Boolean, default: false},
 
   //

@@ -128,6 +128,7 @@ async function insert(data, files, user) {
   if (resource != '360' && !files.raw) {
     throw new Error('Raw file needed for verification purpose');
   }
+
   const item = await listing.create({
     item: data.type,
     name: data.name,
@@ -149,6 +150,7 @@ async function insert(data, files, user) {
     activeDate: data.activeDate || null,
     resource: resource,
     link360: link360,
+    sellMethod: data.sellMethod,
   });
   if (item.activeDate) {
     console.log('adding agenda schedule');
@@ -290,13 +292,13 @@ async function purchase(id, data, user, socket) {
   }).orFail(
       () => Error('Listing Not Found'),
   );
+
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
     price: item.price,
     date: Date.now(),
     listingID: id,
-    listingCID: item.ipfs.cid,
     quantity: 1,
     event: 'Purchasing',
   });
