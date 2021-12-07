@@ -40,9 +40,9 @@ async function detail(req, res, next) {
  * @param  {Object} next
  */
 async function insert(req, res, next) {
-  if (!req.files.file || !req.files.raw) {
+  if (!req.files.file) {
     return res.status(402).json({
-      message: 'Nft file/raw needed',
+      message: 'Nft file needed',
     });
   }
   listingService.insert(req.body, req.files, req.user)

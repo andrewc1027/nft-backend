@@ -69,7 +69,8 @@ async function getOne(id, user = {}) {
   viewCounter(id);
   const detail = await listing.findById(id).orFail(
       () => Error('NotFound'),
-  ).populate('nfts', 'ipfs.file.path');
+  ).populate('nfts',
+      'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -127,6 +128,10 @@ async function insert(data, files, user) {
     link360 = data.link360;
   } else {
     resource = 'Image';
+  }
+
+  if (resource != '360' && !files.raw) {
+    throw new Error('Raw file needed for verification purpose');
   }
   const item = await listing.create({
     item: data.type,
