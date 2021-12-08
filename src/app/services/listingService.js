@@ -369,6 +369,8 @@ async function publish(id, data, user, socket) {
     tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
+    sellMethod: joi.string(),
+    endDate: joi.date(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -391,11 +393,17 @@ async function publish(id, data, user, socket) {
     isPublished: true,
     bid: {
       highest: data.price,
+      endDate: data.endDate,
     },
     sellMethod: data.sellMethod,
   });
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
+  }
+  if (listedItem.sellMethod == 'Auction') {
+    await agenda.schedule(listedItem.bid.endDate, 'auction timer', {
+      _id: listedItem._id,
+    });
   }
   return listedItem;
 }

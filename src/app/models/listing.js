@@ -47,6 +47,8 @@ const schema = new mongoose.Schema({
     highest: {type: Number}, // Bid Amount
     highestBidder: {type: String}, // Bidder Address
     bidCount: {type: Number}, // Total Bid for this listing
+    endDate: {type: Date},
+    activeAuction: {type: Boolean},
   },
   isPublished: {type: Boolean, default: false},
 
