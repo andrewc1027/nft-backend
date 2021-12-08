@@ -11,10 +11,16 @@ agenda.on('ready', async () => {
   console.log('agenda ready'); await agenda.start();
 });
 
-agenda.define('auction timer', async (job) => {
+agenda.define('Auction Timer', async (job) => {
   await listing.findByIdAndUpdate(job.attrs.data._id, {
     'bid.activeAuction': false,
   });
   console.log(`Listing ${job.attrs.data._id} auction has been disabled`);
+});
+
+agenda.define('Scheduled Publish', async (job) => {
+  await listing.findByIdAndUpdate(job.attrs.data._id, {
+    isPublished: true,
+  });
 });
 module.exports = agenda;

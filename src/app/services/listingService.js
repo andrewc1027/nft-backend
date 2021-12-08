@@ -151,10 +151,6 @@ async function insert(data, files, user) {
     resource: resource,
     link360: link360,
   });
-  if (item.activeDate) {
-    console.log('adding agenda schedule');
-    agenda.schedule(item.activeDate, '', {listingID: item._id});
-  }
 
   // Uploading Jpg NFT to IPFS
   nftService.handle(item._id, files.file, files.raw, resource)
@@ -376,9 +372,16 @@ async function publish(id, data, user, socket) {
   if (error) {
     throw new Error(error);
   }
-  const check = await listing.findOne({tokenID: data.tokenID});
+  const check = await listing.findOne({
+    tokenID: data.tokenID,
+    _id: {$ne: new ObjectId(id)},
+  });
   if (check) {
     throw new ValidationError('Token ID already used by another listing.');
+  }
+  let published = false;
+  if (!data.activeDate) {
+    published = true;
   }
   const listedItem = await listing.findOneAndUpdate({
     _id: id,
@@ -390,7 +393,7 @@ async function publish(id, data, user, socket) {
     activeDate: data.activeDate,
     buyerAddress: data.buyerAddress,
     tokenID: data.tokenID,
-    isPublished: true,
+    isPublished: published,
     bid: {
       highest: data.price,
       endDate: data.endDate,
@@ -401,9 +404,16 @@ async function publish(id, data, user, socket) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
   }
   if (listedItem.sellMethod == 'Auction') {
-    await agenda.schedule(listedItem.bid.endDate, 'auction timer', {
+    console.log('adding agenda schedule Auction');
+    await agenda.schedule(listedItem.bid.endDate, 'Auction Timer', {
       _id: listedItem._id,
     });
+  }
+  if (listedItem.activeDate) {
+    console.log('adding agenda schedule');
+    agenda.schedule(listedItem.activeDate, 'Scheduled Publish',
+        {_id: listedItem._id},
+    );
   }
   return listedItem;
 }
