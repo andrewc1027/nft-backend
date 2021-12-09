@@ -18,7 +18,11 @@ async function uploadToIPFS(imgPath, metadata) {
  * @param {String} cid
  */
 async function unpin(cid) {
-  pinata.unpin(cid);
+  pinata.unpin(cid).then((result) => {
+    console.log('result', result);
+  }).catch((err) => {
+    console.log('Unpin Err:', err);
+  });
 }
 
 module.exports = {

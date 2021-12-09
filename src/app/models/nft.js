@@ -1,6 +1,6 @@
 const {ObjectId} = require('mongodb');
 const mongoose = require('mongoose');
-
+const softDelete = require('mongoose-delete');
 const schema = new mongoose.Schema({
   listingID: {type: ObjectId, required: true, ref: 'listings'},
   // IPFS Related Schema
@@ -23,6 +23,7 @@ const schema = new mongoose.Schema({
     },
   },
 });
+schema.plugin(softDelete);
 const listing = mongoose.model('nfts', schema);
 
 module.exports = listing;

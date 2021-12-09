@@ -119,14 +119,18 @@ async function insert(data, files, user) {
   if (files.file[0].mimetype.includes('video')) {
     resource = 'Video';
   } else if (files.file.length > 1) {
-    resource = '360';
+    resource = '360 Tour';
     link360 = data.link360;
   } else {
     resource = 'Image';
   }
 
-  if (resource != '360' && !files.raw) {
+  if (resource != '360 Tour' && !files.raw) {
     throw new Error('Raw file needed for verification purpose');
+  }
+
+  if (resource == '360 Tour' && !files.thumbnail) {
+    throw new Error('Please provide thumbnail file');
   }
 
   const item = await listing.create({
@@ -153,23 +157,35 @@ async function insert(data, files, user) {
   });
 
   // Uploading Jpg NFT to IPFS
-  nftService.handle(item._id, files.file, files.raw, resource)
+  handleNfts(item._id, files.file, files.raw, files.thumbnail, resource);
+  // if (item.collections) {
+  //   collectionItemCount(item.collections.ID);
+  // }
+  return item;
+}
+
+/**
+ * @param {ObjectId} id
+ * @param {Array} files
+ * @param {Array} raws
+ * @param {Array} thumbnail
+ * @param {String} resources
+ */
+async function handleNfts(id, files, raws, thumbnail, resources) {
+  nftService.handle(id, files, raws, resources)
       .then(function(ipfs) {
         console.log('IPFS Upload Completed..');
       });
 
   // Upload first nft on array as thumbnail
-  if (resource == 'Video') {
-    s3Utils.uploadVid(item._id, files.file[0]);
-  } else if (resource == 'Image') {
-    s3Utils.upload(item._id, files.file[0]);
-  } else if (resource == '360' && files.thumbnail.length > 0) {
-    s3Utils.upload(item._id, files.thumbnail[0]);
+  if (resources == 'Video') {
+    s3Utils.uploadVid(id, files[0]);
+  } else if (resources == 'Image') {
+    s3Utils.upload(id, files[0]);
+  } else if (resources == '360 Tour' && thumbnail) {
+    console.log(thumbnail);
+    s3Utils.upload(id, thumbnail[0]);
   }
-  // if (item.collections) {
-  //   collectionItemCount(item.collections.ID);
-  // }
-  return item;
 }
 
 /**
@@ -180,8 +196,14 @@ async function insert(data, files, user) {
  * @return {Array}
  */
 async function update(id, files = {}, data, user) {
+  if (data.filesForDelete) {
+    const ids = data.filesForDelete.split(',');
+    nftService.remove(ids);
+  }
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
+
+
   let tagStr = item.tags;
   if (data.tags) {
     const tags = data.tags.split(',');
@@ -195,25 +217,7 @@ async function update(id, files = {}, data, user) {
   item.blockchain = data.blockchain || item.blockchain;
   item.tags = tagStr;
   if (files.file) {
-    // Uploading Jpg NFT to IPFS
-    ipfsUtils.uploadToIPFS(files.file[0].path, {
-      name: data.name,
-    }).then(async function(result) {
-    // TODO: Delete old thumbnail from S3 and ipfs
-      ipfsUtils.unpin(item.ipfs.cid);
-      // Uploading Thumbnail NFT to AWS S3
-      const thumbData = await s3Utils.upload(files.file[0]);
-      await listing.findByIdAndUpdate(item._id, {
-        ipfs: {
-          cid: result.IpfsHash,
-          pinSize: result.PinSize,
-          pinDate: result.Timestamp,
-          isDuplicate: result.isDuplicate,
-        },
-        filePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
-        thumbnail: thumbData.Location,
-      });
-    });
+    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
   }
   if (files.raw) {
     // handle old file

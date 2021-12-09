@@ -48,7 +48,7 @@ async function handle(listingId, files, raws, resource) {
     }).then(async function(result) {
       // Uploading RAW to IPFS
       let raw = {};
-      if (resource != '360') {
+      if (resource != '360 Tour') {
         rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
           listingID: listingId.toString(),
           name: file.originalname,
@@ -88,9 +88,24 @@ async function handle(listingId, files, raws, resource) {
   }
 }
 
+/**
+ * @param {Array} ids
+ */
+async function remove(ids) {
+  await Promise.all(ids.map(async (id) => {
+    console.log(id);
+    const item = await nft.findById(id);
+    console.log(item);
+    ipfsUtils.unpin(item.ipfs.raw.cid);
+    ipfsUtils.unpin(item.ipfs.file.cid);
+    // const item = await nft.findById(id);
+  }));
+}
+
 module.exports = {
   getAll,
   getOne,
   add,
   handle,
+  remove,
 };
