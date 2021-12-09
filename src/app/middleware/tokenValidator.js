@@ -1,17 +1,21 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 module.exports = async (req, res, next) => {
+  console.log('11111');
   const token = req.header('Authorization');
   if (token==undefined) {
     return res.status(403).json({
       message: 'Unauthorized',
     });
   }
-  jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
-    if (err || decoded.signedUser == undefined) {
-      return res.status(500).json({msg: 'Token Decode Failed'});
-    }
+  try {
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded.signedUser;
-  });
-  next();
+
+    next();
+  } catch (err) {
+    return res.status(402).json({
+      name: err.name,
+      msg: err.message});
+  }
 };
