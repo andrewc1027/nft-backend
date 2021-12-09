@@ -42,7 +42,7 @@ const schema = new mongoose.Schema({
   buyerAddress: {type: String},
   resource: {type: String}, // Image / Video / Gif / 360
   link360: {type: String},
-  sellMethod: {type: String, default: 'Fixed Price'}, // Fixed Price / Auction
+  sellMethod: {type: String}, // Fixed Price / Auction
   bid: {
     highest: {type: Number}, // Bid Amount
     highestBidder: {type: String}, // Bidder Address
