@@ -13,6 +13,13 @@ async function getAll(query, user, page, limit) {
 }
 
 /**
+ * @param {String} listingId
+ */
+async function getByListingId(listingId) {
+  return await nft.find({listingID: listingId});
+}
+
+/**
  * @param {String} id
  * @return {Object}
  */
@@ -103,6 +110,7 @@ async function remove(ids) {
 module.exports = {
   getAll,
   getOne,
+  getByListingId,
   add,
   handle,
   remove,

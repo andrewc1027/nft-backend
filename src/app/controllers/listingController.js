@@ -180,6 +180,21 @@ async function finishAuction(req, res, next) {
       });
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function downloadNfts(req, res, next) {
+  listingService.downloadNfts(req.params.id)
+      .then(function(path) {
+        return res.download(path);
+      })
+      .catch((e) => {
+        handler(e, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -192,4 +207,5 @@ module.exports = {
   explore,
   getTags,
   finishAuction,
+  downloadNfts,
 };

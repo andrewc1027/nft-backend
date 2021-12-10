@@ -13,6 +13,11 @@ const notificationSvc = require('./notificationService');
 const agenda = require('../config/agenda');
 const nftService = require('../services/nftService');
 const ValidationError = require('joi').ValidationError;
+const {default: axios} = require('axios');
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
+
 /**
  * @param {Object} query
  * @param {Number} page
@@ -559,6 +564,39 @@ async function finishAuction(id) {
   return trade;
 }
 
+/**
+ * @param {String} id
+ */
+async function downloadNfts(id) {
+  const nfts = await nftService.getByListingId(id);
+  const archive = archiver('zip', {zlib: {level: 9}});
+  archive.on('error', function(err) {
+    console.log(err);
+  });
+  const zipFile = [];
+  const zipPath = path.resolve(__dirname, `../../../uploads/${id}.zip`);
+  archive.pipe(fs.createWriteStream(zipPath));
+  for await (const nft of nfts) {
+    const response = await axios({
+      url: nft.ipfs.file.path,
+      method: 'GET',
+      responseType: 'stream',
+    });
+    const outPath = path.resolve(__dirname, '../../../uploads/',
+        nft.ipfs.file.originalName);
+    console.log(response, nft.ipfs.file.path);
+    const writer = response.data.pipe(fs.createWriteStream(outPath));
+    writer.on('finish', () => {
+      console.log(nft.ipfs.file.path, ' Downloaded');
+      zipFile.push(outPath);
+    });
+  }
+  for await (const file of zipFile) {
+    archive.file(file);
+  }
+  archive.finalize();
+  return zipPath;
+}
 module.exports = {
   getAll,
   getOne,
@@ -571,4 +609,5 @@ module.exports = {
   explore,
   getTags,
   finishAuction,
+  downloadNfts,
 };
