@@ -7,7 +7,7 @@ const listing = require('../models/listing');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
-
+const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 /**
  * @param {String} id
  * @param {File} file
@@ -27,9 +27,8 @@ async function upload(id, file) {
     ACL: 'public-read',
   };
 
-  const result = await s3.upload(param).promise();
-  updateListing(id, result);
-  return result;
+  await s3.send(new PutObjectCommand(param));
+  updateListing(id, param.Key);
 }
 
 /**
@@ -64,19 +63,19 @@ async function uploadVid(id, videoFile) {
           ACL: 'public-read',
         };
         console.log('completed, uploading video..', param);
-        const result = await s3.upload(param).promise();
-        updateListing(id, result);
+        await s3.send(new PutObjectCommand(param));
+        updateListing(id, param.Key);
       })
       .save(newVidPath);
 }
 
 /**
  * @param {String} id
- * @param {Object} s3data
+ * @param {String} key
  */
-async function updateListing(id, s3data) {
+async function updateListing(id, key) {
   await listing.findByIdAndUpdate(id, {
-    thumbnail: s3data.Location,
+    thumbnail: `${process.env.AWS_BUCKET_URL}${key}`,
   });
 }
 
@@ -94,12 +93,22 @@ async function uploadFile(id, file) {
     ACL: 'public-read',
   };
   console.log('completed, uploading file..', param);
-  const result = await s3.upload(param).promise();
-  updateListing(id, result);
+  await s3.send(new PutObjectCommand(param));
+  updateListing(id, param.Key);
 }
 
+/**
+ * @param {String} key
+ */
+async function removeFile(key) {
+  await s3.send(new DeleteObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key,
+  }));
+}
 module.exports = {
   upload,
   uploadVid,
   uploadFile,
+  removeFile,
 };

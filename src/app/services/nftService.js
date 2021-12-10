@@ -93,12 +93,10 @@ async function handle(listingId, files, raws, resource) {
  */
 async function remove(ids) {
   await Promise.all(ids.map(async (id) => {
-    console.log(id);
     const item = await nft.findById(id);
-    console.log(item);
+    await nft.deleteById(id);
     ipfsUtils.unpin(item.ipfs.raw.cid);
     ipfsUtils.unpin(item.ipfs.file.cid);
-    // const item = await nft.findById(id);
   }));
 }
 
