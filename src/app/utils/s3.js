@@ -80,21 +80,20 @@ async function updateListing(id, key) {
 }
 
 /**
- * @param {String} id
  * @param {Object} file
  */
-async function uploadFile(id, file) {
+async function uploadFile(file) {
   const fileBuffer = fs.readFileSync(file.path);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${id}.gif`,
+    Key: `${file.name}`,
     Body: fileBuffer,
     ContentType: file.mimetype,
     ACL: 'public-read',
   };
-  console.log('completed, uploading file..', param);
-  await s3.send(new PutObjectCommand(param));
-  updateListing(id, param.Key);
+  const item = await s3.send(new PutObjectCommand(param));
+  console.log(item);
+  return item;
 }
 
 /**

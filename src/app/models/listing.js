@@ -51,7 +51,7 @@ const schema = new mongoose.Schema({
     activeAuction: {type: Boolean},
   },
   isPublished: {type: Boolean, default: false},
-
+  downloadLink: {type: String},
   //
   subscribers: {type: [ObjectId]},
 });

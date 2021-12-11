@@ -67,8 +67,4 @@ router.get('/tags',
 router.post('/listings/:id/auction',
     handlerException(tokenValidator),
     handlerException(listingController.finishAuction));
-
-router.get('/listings/:id/nfts/download',
-    handlerException(tokenValidator),
-    handlerException(listingController.downloadNfts));
 module.exports = router;

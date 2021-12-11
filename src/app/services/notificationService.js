@@ -164,8 +164,21 @@ async function sendEmail(template, to) {
   });
 }
 
+/**
+ * @param {Object} user
+ * @param {Object} socket
+ * @param {string} path
+ */
+async function downloadReady(user, socket, path) {
+  await socket.to(user._id.toString()).emit('downloadReady', {
+    msg: 'Your Download is Ready',
+    path: path,
+  });
+  console.log('Notification sent:', user._id.toString(), path);
+}
 module.exports = {
   itemPurchased,
   itemSold,
   priceChange,
+  downloadReady,
 };

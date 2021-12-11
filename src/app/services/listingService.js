@@ -409,6 +409,7 @@ async function publish(id, data, user, socket) {
     },
     sellMethod: data.sellMethod,
   });
+  makeZip(id);
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
   }
@@ -567,15 +568,9 @@ async function finishAuction(id) {
 /**
  * @param {String} id
  */
-async function downloadNfts(id) {
+async function makeZip(id) {
   const nfts = await nftService.getByListingId(id);
-  const archive = archiver('zip', {zlib: {level: 9}});
-  archive.on('error', function(err) {
-    console.log(err);
-  });
   const zipFile = [];
-  const zipPath = path.resolve(__dirname, `../../../uploads/${id}.zip`);
-  archive.pipe(fs.createWriteStream(zipPath));
   for await (const nft of nfts) {
     const response = await axios({
       url: nft.ipfs.file.path,
@@ -584,19 +579,54 @@ async function downloadNfts(id) {
     });
     const outPath = path.resolve(__dirname, '../../../uploads/',
         nft.ipfs.file.originalName);
-    console.log(response, nft.ipfs.file.path);
     const writer = response.data.pipe(fs.createWriteStream(outPath));
     writer.on('finish', () => {
-      console.log(nft.ipfs.file.path, ' Downloaded');
-      zipFile.push(outPath);
+      const file = {
+        name: nft.ipfs.file.originalName,
+        path: outPath,
+      };
+      zipFile.push(file);
+      if (zipFile.length == nfts.length) {
+        zip(id, zipFile);
+      }
     });
   }
-  for await (const file of zipFile) {
-    archive.file(file);
-  }
-  archive.finalize();
-  return zipPath;
 }
+
+/**
+ * @param {String} id
+ * @param {Array} files
+ * @param {Object} user
+ * @param {Object} socket
+ */
+async function zip(id, files) {
+  const archive = archiver('zip', {zlib: {level: 9}});
+  archive.on('error', function(err) {
+    console.log(err);
+  });
+  const zipName = `${id}_${Date.now()}.zip`;
+  const zipPath = path.resolve(
+      __dirname, `../../../uploads/${zipName}`);
+  const pipe = fs.createWriteStream(zipPath);
+  archive.pipe(pipe);
+  for await (const file of files) {
+    archive.file(file.path, {name: file.name});
+  }
+  pipe.on('close', async function() {
+    await s3Utils.uploadFile({
+      name: zipName,
+      ext: 'zip',
+      mimetype: 'application/zip',
+      path: zipPath,
+    });
+  });
+  archive.finalize();
+
+  await listing.findByIdAndUpdate(id, {
+    downloadLink: `${process.env.AWS_BUCKET_URL}${zipName}`,
+  });
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -609,5 +639,4 @@ module.exports = {
   explore,
   getTags,
   finishAuction,
-  downloadNfts,
 };
