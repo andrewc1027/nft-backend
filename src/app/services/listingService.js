@@ -560,8 +560,8 @@ async function finishAuction(id, user) {
     owner: bids.bidder.id,
   }).orFail((e) => Error('Cannot find your listing'));
   const trade = await transaction.create({
-    to: item.owner,
-    from: item.bid.highestBidder,
+    from: item.owner,
+    to: item.bid.highestBidder,
     price: soldPrice,
     date: Date.now(),
     listingID: id,
