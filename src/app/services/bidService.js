@@ -52,6 +52,7 @@ async function add(data, user) {
   }
 
   const bid = await bidModel.create({
+    bidIndex: data.bidIndex,
     listing: {
       id: listing._id,
       name: listing.name,
@@ -79,10 +80,13 @@ async function updateListingBid(bid) {
     'listing.id': listID,
     'deleted': false,
   }).sort('-price');
+  const item = await listing.findById(listID);
   const bidListing = {
     highest: bids[0].price || 0,
     highestBidder: bids[0].bidder.id,
     bidCount: bids.length,
+    endDate: item.bid.endDate,
+    activeAuction: item.bid.activeAuction,
   };
   await listing.findByIdAndUpdate(listID, {
     bid: bidListing,

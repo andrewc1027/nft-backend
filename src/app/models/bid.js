@@ -15,6 +15,7 @@ const schema = new mongoose.Schema({
   },
   price: {type: Number},
   floorDifference: {type: String},
+  bidIndex: {type: String, required: true},
   expireAt: {type: Date},
   createdAt: {type: Date},
 });
