@@ -310,6 +310,7 @@ async function purchase(id, data, user, socket) {
   await listing.findByIdAndUpdate(id, {
     owner: user._id,
     isPublished: false,
+    bid: {},
   });
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
@@ -551,6 +552,7 @@ async function finishAuction(id) {
   const soldPrice = bids.price;
   const item = await listing.findByIdAndUpdate(id, {
     isPublished: false,
+    bid: {},
   });
   const trade = await transaction.create({
     to: item.owner,
@@ -558,10 +560,10 @@ async function finishAuction(id) {
     price: soldPrice,
     date: Date.now(),
     listingID: id,
-    listingCID: item.ipfs.cid,
     quantity: 1,
     event: 'Auction',
   });
+  await bid.delete({'listing.id': new ObjectId(id)});
   return trade;
 }
 
