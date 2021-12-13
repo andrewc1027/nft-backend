@@ -1,4 +1,5 @@
 const listingService = require('../services/listingService');
+const http = require('https');
 const {handler} = require('./errHandler');
 /**
  * @param  {Object} req
@@ -180,6 +181,24 @@ async function finishAuction(req, res, next) {
       });
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function download(req, res, next) {
+  listingService.download(req.params.id, req.user)
+      .then(function(path) {
+        http.get(path, function(file) {
+          // res.header('Content-Disposition', `attachment; filename="${id}"`);
+          file.pipe(res);
+        });
+      })
+      .catch((e) => {
+        handler(e, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -192,4 +211,5 @@ module.exports = {
   explore,
   getTags,
   finishAuction,
+  download,
 };

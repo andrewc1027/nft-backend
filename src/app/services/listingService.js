@@ -633,6 +633,25 @@ async function zip(id, files) {
   });
 }
 
+/**
+ * @param {String} id
+ * @param {Object} user
+ */
+async function download(id, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  let nftPath = '';
+  if (item.resource == '360 Tour' && !item.downloadLink) {
+    throw new Error('Downloadable Resources are not found');
+  }
+  if (item.resource == '360 Tour') {
+    nftPath = item.downloadLink;
+  } else {
+    const gem = await nftService.getByListingId(id);
+    nftPath = `${process.env.PINATA_GATEWAY}/ipfs/${gem[0].ipfs.file.cid}`;
+  }
+  return nftPath;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -645,4 +664,5 @@ module.exports = {
   explore,
   getTags,
   finishAuction,
+  download,
 };
