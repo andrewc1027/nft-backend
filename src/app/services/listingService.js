@@ -541,8 +541,9 @@ async function getTags() {
 
 /**
  * @param {String} id
+ * @param {object} user
  */
-async function finishAuction(id) {
+async function finishAuction(id, user) {
   const bids = await bid.findOne({
     'deleted': false,
     'listing.id': new ObjectId(id),
@@ -550,10 +551,13 @@ async function finishAuction(id) {
       () => Error('Bids Not Found for this listing'),
   );
   const soldPrice = bids.price;
-  const item = await listing.findByIdAndUpdate(id, {
+  const item = await listing.findOneAndUpdate({
+    '_id': id,
+    'owner': user._id,
+  }, {
     isPublished: false,
     bid: {},
-  });
+  }).orFail((e) => Error('Cannot find your listing'));
   const trade = await transaction.create({
     to: item.owner,
     from: item.bid.highestBidder,

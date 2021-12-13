@@ -171,7 +171,7 @@ async function getTags(req, res, next) {
  *@param {Object} next
  */
 async function finishAuction(req, res, next) {
-  listingService.finishAuction(req.params.id)
+  listingService.finishAuction(req.params.id, req.user)
       .then(function(trx) {
         return res.json(trx);
       })
