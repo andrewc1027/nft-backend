@@ -557,6 +557,7 @@ async function finishAuction(id, user) {
   }, {
     isPublished: false,
     bid: {},
+    owner: bids.bidder.id,
   }).orFail((e) => Error('Cannot find your listing'));
   const trade = await transaction.create({
     to: item.owner,
