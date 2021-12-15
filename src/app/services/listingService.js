@@ -188,7 +188,6 @@ async function handleNfts(id, files, raws, thumbnail, resources) {
   } else if (resources == 'Image') {
     s3Utils.upload(id, files[0]);
   } else if (resources == '360 Tour' && thumbnail) {
-    console.log(thumbnail);
     s3Utils.upload(id, thumbnail[0]);
   }
 }

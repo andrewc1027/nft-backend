@@ -85,8 +85,12 @@ async function handle(listingId, files, raws, resource) {
         },
       });
       nfts.push(resNft._id);
-      if (i === files.length - 1) {
+      if (i === files.length - 1 && resource != '360 Tour') {
         await listing.findByIdAndUpdate(listingId, {nfts: nfts});
+      } else {
+        const item = await listing.findById(listingId);
+        item.nfts.push(nfts);
+        item.save();
       }
       i++;
     }).catch((e) => {
