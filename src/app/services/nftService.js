@@ -87,10 +87,10 @@ async function handle(listingId, files, raws, resource) {
       nfts.push(resNft._id);
       if (i === files.length - 1 && resource != '360 Tour') {
         await listing.findByIdAndUpdate(listingId, {nfts: nfts});
-      } else {
+      } else if (i === files.length -1 && resource == '360 Tour') {
         const item = await listing.findById(listingId);
-        item.nfts.push(nfts);
-        item.save();
+        item.nfts = [...item.nfts, ...nfts];
+        await item.save();
       }
       i++;
     }).catch((e) => {
