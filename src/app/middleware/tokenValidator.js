@@ -1,7 +1,6 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 module.exports = async (req, res, next) => {
-  console.log('11111');
   const token = req.header('Authorization');
   if (token==undefined) {
     return res.status(403).json({
