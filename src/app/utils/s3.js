@@ -62,7 +62,6 @@ async function uploadVid(id, videoFile) {
           ContentType: 'image/gif',
           ACL: 'public-read',
         };
-        console.log('completed, uploading video..', param);
         await s3.send(new PutObjectCommand(param));
         updateListing(id, param.Key);
       })

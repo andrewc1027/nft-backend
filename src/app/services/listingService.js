@@ -200,14 +200,17 @@ async function handleNfts(id, files, raws, thumbnail, resources) {
  * @return {Array}
  */
 async function update(id, files = {}, data, user) {
-  if (data.filesForDelete) {
-    const ids = data.filesForDelete.split(',');
-    nftService.remove(ids);
-  }
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
 
-
+  if (data.filesForDelete) {
+    const ids = data.filesForDelete.split(',');
+    nftService.remove(ids);
+    for await (const i of data.filesForDelete) {
+      const idx = data.filesForDelete.indexOf(i);
+      item.nfts.splice(idx, i);
+    };
+  }
   let tagStr = item.tags;
   if (data.tags) {
     const tags = data.tags.split(',');
@@ -223,18 +226,7 @@ async function update(id, files = {}, data, user) {
   if (files.file) {
     handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
   }
-  if (files.raw) {
-    // handle old file
-    ipfsUtils.unpin(item.ipfs.rawCid);
-    // Uploading RAW to IPFS
-    ipfsUtils.uploadToIPFS(files.raw[0].path, {
-      name: data.name,
-    }).then(async function(result) {
-      await listing.findByIdAndUpdate(item._id, {
-        rawFilePath: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
-      });
-    });
-  }
+
   let dataCity = item.city;
   if (data.city) {
     const cityData = await city.findById(data.city);

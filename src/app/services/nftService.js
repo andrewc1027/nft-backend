@@ -68,8 +68,9 @@ async function handle(listingId, files, raws, resource) {
           isDuplicate: rawResult.isDuplicate,
           path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
         };
+        console.log('1', raw);
       }
-
+      console.log('2', raw);
       const resNft = await nft.create({
         listingID: listingId,
         ipfs: {
