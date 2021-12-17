@@ -75,7 +75,8 @@ async function getOne(id, user = {}) {
   const detail = await listing.findById(id).orFail(
       () => Error('NotFound'),
   ).populate('nfts',
-      'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName');
+      // eslint-disable-next-line max-len
+      'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName ipfs.raw.path');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
