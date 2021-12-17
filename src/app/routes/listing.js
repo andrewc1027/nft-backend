@@ -41,6 +41,10 @@ router.patch('/listings/:id/publish',
     handlerException(tokenValidator),
     handlerException(listingController.publish));
 
+router.patch('/listings/:id/depublish',
+    handlerException(tokenValidator),
+    handlerException(listingController.depublish));
+
 router.patch('/listings/:id',
     multi,
     handlerException(tokenValidator),

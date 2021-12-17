@@ -381,7 +381,7 @@ async function publish(id, data, user, socket) {
     throw new ValidationError('Token ID already used by another listing.');
   }
   let published = false;
-  if (!data.activeDate) {
+  if (data.activeDate == undefined) {
     published = true;
   }
   const listedItem = await listing.findOneAndUpdate({
@@ -405,7 +405,7 @@ async function publish(id, data, user, socket) {
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
   }
-  if (listedItem.sellMethod == 'Auction') {
+  if (listedItem.bid.endDate) {
     console.log('adding agenda schedule Auction');
     await agenda.schedule(listedItem.bid.endDate, 'Auction Timer', {
       _id: listedItem._id,
@@ -413,11 +413,18 @@ async function publish(id, data, user, socket) {
   }
   if (listedItem.activeDate) {
     console.log('adding agenda schedule');
-    agenda.schedule(listedItem.activeDate, 'Scheduled Publish',
+    await agenda.schedule(listedItem.activeDate, 'Scheduled Publish',
         {_id: listedItem._id},
     );
   }
   return listedItem;
+}
+
+/**
+ * @param {String} id
+ */
+async function depublish(id) {
+  return await listing.findByIdAndUpdate(id, {isPublished: false});
 }
 
 /**
@@ -653,6 +660,7 @@ module.exports = {
   purchase,
   likeCounter,
   publish,
+  depublish,
   explore,
   getTags,
   finishAuction,

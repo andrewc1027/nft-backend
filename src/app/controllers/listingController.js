@@ -120,6 +120,23 @@ async function publish(req, res, next) {
  *@param {Object} res
  *@param {Object} next
  */
+async function depublish(req, res, next) {
+  listingService.depublish(
+      req.params.id)
+      .then(function(item) {
+        return res.json(item);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
 async function like(req, res, next) {
   listingService
       .likeCounter(req.params.id, req.user);
@@ -207,6 +224,7 @@ module.exports = {
   insert,
   update,
   publish,
+  depublish,
   remove,
   explore,
   getTags,
