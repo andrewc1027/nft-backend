@@ -91,7 +91,6 @@ async function uploadFile(file) {
     ACL: 'public-read',
   };
   const item = await s3.send(new PutObjectCommand(param));
-  console.log(item);
   return item;
 }
 

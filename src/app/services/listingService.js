@@ -360,7 +360,6 @@ async function likeCounter(id, self = {}) {
  * @param {Object} socket
  */
 async function publish(id, data, user, socket) {
-  console.log(data);
   const schema = joi.object({
     price: joi.number().required(),
     royalties: joi.number().max(10).required(),
