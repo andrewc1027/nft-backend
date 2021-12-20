@@ -1,5 +1,6 @@
 const Agenda = require('agenda');
 const Listing = require('../models/listing');
+const {close} = require('../services/bidService');
 console.log('agenda config');
 // set the collection where the jobs will be save
 // the collection can be name anything
@@ -33,6 +34,8 @@ agenda.define('Auction Timer', async (job, done) => {
     'isPublished': false,
   }).orFail( (e) => new Error(e));
   console.log(`Listing ${job.attrs.data._id} auction has been disabled`);
+  // Close all bid from this listing, and set highest price as the winning bid.
+  await close(job.attrs.data._id);
   done();
 });
 
