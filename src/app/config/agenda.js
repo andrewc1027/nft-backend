@@ -1,9 +1,39 @@
 const Agenda = require('agenda');
+const Listing = require('../models/listing');
 console.log('agenda config');
 // set the collection where the jobs will be save
 // the collection can be name anything
 const agenda = new Agenda({
   db: {address: process.env.MONGO_CONN, collection: 'jobs'},
+});
+
+agenda.on('ready', async () => {
+  console.log('Agenda Ready');
+  await agenda.start();
+},
+);
+
+const graceful = () => {
+  agenda.stop(() => process.exit(0));
+};
+
+process.on('SIGTERM', graceful);
+process.on('SIGINT', graceful);
+
+agenda.define('Scheduled Publish', async (job, done) => {
+  console.log('Activating Listing: ', job.attrs.data._id);
+  await Listing.findByIdAndUpdate(job.attrs.data._id, {
+    isPublished: true,
+  }).orFail( (e) => new Error(e));
+  done();
+});
+
+agenda.define('Auction Timer', async (job, done) => {
+  await Listing.findByIdAndUpdate(job.attrs.data._id, {
+    'isPublished': false,
+  }).orFail( (e) => new Error(e));
+  console.log(`Listing ${job.attrs.data._id} auction has been disabled`);
+  done();
 });
 
 module.exports = agenda;

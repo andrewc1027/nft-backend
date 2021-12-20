@@ -360,6 +360,7 @@ async function likeCounter(id, self = {}) {
  * @param {Object} socket
  */
 async function publish(id, data, user, socket) {
+  console.log(data);
   const schema = joi.object({
     price: joi.number().required(),
     royalties: joi.number().max(10).required(),
@@ -401,20 +402,22 @@ async function publish(id, data, user, socket) {
       endDate: data.endDate,
     },
     sellMethod: data.sellMethod,
-  });
+  }).orFail(
+      () => Error('Not Found'),
+  );
   makeZip(id);
   if (data.price != listedItem.price) {
     await notificationSvc.priceChange(listedItem, data.price, socket);
   }
-  if (listedItem.bid.endDate) {
+  if (data.endDate) {
     console.log('adding agenda schedule Auction');
-    await agenda.schedule(listedItem.bid.endDate, 'Auction Timer', {
+    await agenda.schedule(data.endDate, 'Auction Timer', {
       _id: listedItem._id,
     });
   }
-  if (listedItem.activeDate) {
+  if (data.activeDate) {
     console.log('adding agenda schedule');
-    await agenda.schedule(listedItem.activeDate, 'Scheduled Publish',
+    await agenda.schedule(data.activeDate, 'Scheduled Publish',
         {_id: listedItem._id},
     );
   }
