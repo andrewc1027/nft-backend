@@ -48,10 +48,10 @@ async function getListingBid(query, page, limit, sort = 'price:asc') {
  */
 async function add(data, user) {
   const listing = await listingModel.findById(data.listingID)
-      .select('_id name owner').where({'isPublished': true}).orFail(
+      .select('_id name owner thumbnail').where({'isPublished': true}).orFail(
           () => Error('Listing Not Found'),
       );
-
+  console.log(listing);
   if (listing.owner == user._id) {
     throw new Error('You cannot bid on your own listing');
   }
@@ -70,6 +70,7 @@ async function add(data, user) {
     listing: {
       id: listing._id,
       name: listing.name,
+      thumbnail: listing.thumbnail,
     },
     bidder: {
       id: user._id,

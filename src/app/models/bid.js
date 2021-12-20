@@ -7,6 +7,7 @@ const schema = new mongoose.Schema({
   listing: {
     name: {type: String},
     id: {type: ObjectId, ref: 'listings'},
+    thumbnail: {type: String},
   },
   bidder: {
     name: {type: String},
