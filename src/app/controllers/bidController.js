@@ -19,6 +19,18 @@ async function index(req, res, next) {
  * @param  {Object} res
  * @param  {Object} next
  */
+async function myBid(req, res, next) {
+  const query = req.query;
+  const user = req.user;
+  const bids = await bidService.myBid(query, user);
+  return res.json(bids);
+}
+
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
 async function add(req, res, next) {
   bidService.add(req.body, req.user)
       .then(function(bid) {
@@ -43,4 +55,5 @@ module.exports = {
   index,
   add,
   remove,
+  myBid,
 };

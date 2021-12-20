@@ -16,6 +16,7 @@ const schema = new mongoose.Schema({
   price: {type: Number},
   floorDifference: {type: String},
   bidIndex: {type: String, required: true},
+  status: {type: String, default: 'Submitted'},
   expireAt: {type: Date},
   createdAt: {type: Date},
 });

@@ -8,6 +8,9 @@ const tokenValidator = require('../middleware/tokenValidator');
 router.get('/bids',
     handlerException(bidController.index));
 
+router.get('/bids/me',
+    handlerException(tokenValidator),
+    handlerException(bidController.myBid));
 router.post('/bids',
     handlerException(tokenValidator),
     handlerException(bidController.add));

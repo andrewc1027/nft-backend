@@ -2,6 +2,20 @@ const {ObjectId} = require('bson');
 const bidModel = require('../models/bid');
 const listing = require('../models/listing');
 const listingModel = require('../models/listing');
+
+/**
+ * @param {Object} query
+ * @param {Object} user
+ */
+async function myBid(query, user) {
+  const filters = {};
+  filters['bidder.id'] = new ObjectId(user._id);
+  if (query.status) {
+    filters['status'] = query.status;
+  }
+  const bids = await bidModel.paginate(filters);
+  return bids;
+}
 /**
  * @param {Object} query
  * @param {Number} page
@@ -106,8 +120,27 @@ async function remove(id) {
   return 'ok';
 }
 
+/**
+ * @param {String} listingId
+ */
+async function close(listingId) {
+  console.log('closgin bids');
+  let bids = await bidModel.find({'listing.id': new ObjectId(listingId)})
+      .sort('-price');
+  await bidModel.findByIdAndUpdate(bids[0]._id, {
+    status: 'Closed Won',
+  });
+  bids = bids.shift();
+  console.log(bids.length, ' bids left');
+  for await (const bid of bids) {
+    await bidModel.findByIdAndUpdate(bid._id, {status: 'Closed Lose'});
+  }
+}
+
 module.exports = {
   getListingBid,
   add,
   remove,
+  myBid,
+  close,
 };
