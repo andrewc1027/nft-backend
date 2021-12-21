@@ -97,11 +97,11 @@ async function updateListingBid(bid) {
   }).sort('-price');
   const item = await listing.findById(listID);
   const bidListing = {
-    highest: bids[0].price || 0,
-    highestBidder: bids[0].bidder.id,
+    highest: bids[0] != undefined ? bids[0].price : item.price,
+    highestBidder: bids[0] != undefined ? bids[0].bidder.id : '',
     bidCount: bids.length,
-    endDate: item.bid.endDate,
-    activeAuction: item.bid.activeAuction,
+    // endDate: item.bid.endDate,
+    // activeAuction: item.bid.activeAuction,
   };
   await listing.findByIdAndUpdate(listID, {
     bid: bidListing,
