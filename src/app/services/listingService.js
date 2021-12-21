@@ -362,7 +362,7 @@ async function likeCounter(id, self = {}) {
 async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
-    royalties: joi.number().max(10).required(),
+    royalties: joi.number().max(10).optional(),
     copies: joi.number().required(),
     tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
@@ -385,42 +385,45 @@ async function publish(id, data, user, socket) {
   if (data.activeDate == undefined) {
     published = true;
   }
-  const listedItem = await listing.findOneAndUpdate({
-    _id: id,
-    owner: user._id,
-  }, {
-    owner: user._id,
-    price: data.price,
-    royalties: data.royalties,
-    activeDate: data.activeDate,
-    buyerAddress: data.buyerAddress,
-    tokenID: data.tokenID,
-    isPublished: published,
-    bid: {
-      highest: data.price,
-      endDate: data.endDate,
-    },
-    sellMethod: data.sellMethod,
-  }).orFail(
+  const item = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
+  console.log(user._id, item.creator.ID.toString());
+  if (data.royalties && user._id != item.creator.ID.toString()) {
+    throw new ValidationError('Not Allowed to Change Royalties');
+  }
+
+  item.owner= user._id;
+  item.price= data.price;
+  item.royalties= data.royalties;
+  item.activeDate= data.activeDate;
+  item.buyerAddress= data.buyerAddress;
+  item.tokenID= data.tokenID;
+  item.isPublished= published;
+  item.bid= {
+    highest: data.price,
+    endDate: data.endDate,
+  },
+  item.sellMethod= data.sellMethod;
+  await item.save();
+
   makeZip(id);
-  if (data.price != listedItem.price) {
-    await notificationSvc.priceChange(listedItem, data.price, socket);
+  if (data.price != item.price) {
+    await notificationSvc.priceChange(item, data.price, socket);
   }
   if (data.endDate) {
     console.log('adding agenda schedule Auction');
     await agenda.schedule(data.endDate, 'Auction Timer', {
-      _id: listedItem._id,
+      _id: item._id,
     });
   }
   if (data.activeDate) {
     console.log('adding agenda schedule');
     await agenda.schedule(data.activeDate, 'Scheduled Publish',
-        {_id: listedItem._id},
+        {_id: item._id},
     );
   }
-  return listedItem;
+  return item;
 }
 
 /**
