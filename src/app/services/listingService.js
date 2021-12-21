@@ -388,8 +388,7 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
-  console.log(user._id, item.creator.ID.toString());
-  if (data.royalties && user._id != item.creator.ID.toString()) {
+  if (item.tokenID) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
 
