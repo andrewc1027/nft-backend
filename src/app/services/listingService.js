@@ -88,12 +88,49 @@ async function getOne(id, user = {}) {
 }
 
 /**
+ * @param {String} resource
+ * @param {Object} data
+ */
+function validate(resource, data) {
+  let schema = {};
+  if (resource == '360 Tour') {
+    schema = joi.object({
+      name: joi.string().required(),
+      address: joi.string().required(),
+      city: joi.string().required(),
+      link360: joi.string().required(),
+    }).unknown(true);
+  } else if (resource == 'Image' || resource == 'Video') {
+    schema = joi.object({
+      name: joi.string().required(),
+      address: joi.string().required(),
+      city: joi.string().required(),
+    }).unknown(true);
+  }
+  const {error} = schema.validate(data, {all});
+  if (error) {
+    throw new Error(error);
+  }
+}
+
+/**
  * @param {Object} data
  * @param {File} files
  * @param {Object} user
  * @return {Array}
  */
 async function insert(data, files, user) {
+  let resource = '';
+  let link360 = '';
+  if (files.file[0].mimetype.includes('video')) {
+    resource = 'Video';
+  } else if (files.file.length > 1) {
+    resource = '360 Tour';
+    link360 = data.link360;
+  } else {
+    resource = 'Image';
+  }
+  validate(resource, data);
   let geoLocations = [];
   if (data.longitude) {
     geoLocations = [data.longitude, data.latitude];
@@ -119,17 +156,6 @@ async function insert(data, files, user) {
   }
   // Pre Check if user exists
   await userSvc.find(user._id);
-
-  let resource = '';
-  let link360 = '';
-  if (files.file[0].mimetype.includes('video')) {
-    resource = 'Video';
-  } else if (files.file.length > 1) {
-    resource = '360 Tour';
-    link360 = data.link360;
-  } else {
-    resource = 'Image';
-  }
 
   if (resource != '360 Tour' && !files.raw) {
     throw new Error('Raw file needed for verification purpose');
