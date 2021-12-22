@@ -416,13 +416,22 @@ async function publish(id, data, user, socket) {
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
+  let royalties = 0;
+
+  if (item.tokenID) {
+    royalties = item.royalties;
+  } else if (!item.tokenID && !data.royalties) {
+    throw new ValidationError('Royalties required');
+  } else {
+    royalties = data.royalties;
+  }
+
   if (item.tokenID && data.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
-
   item.owner= user._id;
   item.price= data.price;
-  item.royalties= data.royalties;
+  item.royalties= royalties;
   item.activeDate= data.activeDate;
   item.buyerAddress= data.buyerAddress;
   item.tokenID= data.tokenID;
