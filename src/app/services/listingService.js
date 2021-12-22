@@ -5,7 +5,6 @@ const bid = require('../models/bid');
 const joi = require('joi');
 const userSvc = require('./userService');
 const s3Utils = require('../utils/s3');
-const ipfsUtils = require('../utils/ipfs');
 const {ObjectId} = require('bson');
 const user = require('../models/user');
 const qTransform = require('../utils/queryTransform');
@@ -107,7 +106,7 @@ function validate(resource, data) {
       city: joi.string().required(),
     }).unknown(true);
   }
-  const {error} = schema.validate(data, {all});
+  const {error} = schema.validate(data);
   if (error) {
     throw new Error(error);
   }
@@ -286,19 +285,19 @@ async function update(id, files = {}, data, user) {
  * @return {Array}
  */
 async function remove(id, user) {
-  const exs = await listing.deleteById(id).orFail(
-      () => Error('Not Found'),
-  );
+  const item = await listing.findById(id).orFail(() => new Error('Not Found'));
+  if (item.owner != user._id) {
+    throw new Error('Not Authorized to delete this listing');
+  }
+  await item.delete();
 
   /**
    *  We Can't remove file from IPFS,
    *  but we can unpin it so it'll get removed by IPFS garbage collector
    */
   // TODO: unpin not working, exs empty
-  ipfsUtils.unpin(exs.ipfs.cid).then(() => {
-    listing.deleteById(id);
-  });
-  return exs;
+
+  return item;
 }
 
 /**
@@ -414,6 +413,9 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
       () => Error('Not Found'),
   );
+  if (item.owner != user._id) {
+    throw new Error('Not Authorized to publish this listing');
+  }
   if (item.tokenID && data.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
@@ -453,9 +455,15 @@ async function publish(id, data, user, socket) {
 
 /**
  * @param {String} id
+ * @param {Object} user
  */
-async function depublish(id) {
-  return await listing.findByIdAndUpdate(id, {isPublished: false});
+async function depublish(id, user) {
+  const item = await listing.findById(id).orFail( () => new Error('Not Found'));
+  if (item.owner != user._id) {
+    throw new Error('Unauthorized to depublish this listing');
+  }
+  item.isPublished = false;
+  return await item.save();
 }
 
 /**

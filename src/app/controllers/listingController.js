@@ -122,7 +122,7 @@ async function publish(req, res, next) {
  */
 async function depublish(req, res, next) {
   listingService.depublish(
-      req.params.id)
+      req.params.id, req.user)
       .then(function(item) {
         return res.json(item);
       })
@@ -150,8 +150,11 @@ async function like(req, res, next) {
  */
 async function remove(req, res, next) {
   listingService
-      .remove(req.params.id, req.user);
-  return res.json('ok');
+      .remove(req.params.id, req.user).then(function(item) {
+        return res.json('ok');
+      }).catch((e) => {
+        handler(e, res);
+      });
 }
 
 /**
