@@ -1,3 +1,4 @@
+const {ObjectId} = require('mongodb');
 const listing = require('../models/listing');
 const nft = require('../models/nft');
 const ipfsUtils = require('../utils/ipfs');
@@ -42,62 +43,74 @@ async function add(data) {
 /**
  * @param {ObjectId} listingId
  * @param {Array} files
- * @param {Array} raws
- * @param {String} resource
+ * @param {Array} deletedFiles
  */
-async function handle(listingId, files, raws, resource) {
-  const nfts = [];
-  let i = 0;
+async function handle360(listingId, files = [], deletedFiles) {
+  await remove(deletedFiles);
   for await (const file of files) {
-    ipfsUtils.uploadToIPFS(file.path, {
+    const res = await ipfsUtils.uploadToIPFS(file.path, {
       listingID: listingId.toString(),
       name: file.originalname,
-    }).then(async function(result) {
-      // Uploading RAW to IPFS
-      let raw = {};
-      if (resource != '360 Tour') {
-        rawResult = await ipfsUtils.uploadToIPFS(raws[i].path, {
-          listingID: listingId.toString(),
-          name: file.originalname,
-        });
-        raw = {
-          originalName: raws[i].originalname,
-          cid: rawResult.IpfsHash,
-          pinDate: rawResult.Timestamp,
-          pinSize: rawResult.PinSize,
-          isDuplicate: rawResult.isDuplicate,
-          path: `https://homejab-dev.mypinata.cloud/ipfs/${rawResult.IpfsHash}`,
-        };
-        console.log('1', raw);
-      }
-      console.log('2', raw);
-      const resNft = await nft.create({
-        listingID: listingId,
-        ipfs: {
-          raw: raw,
-          file: {
-            originalName: file.originalname,
-            cid: result.IpfsHash,
-            pinDate: result.Timestamp,
-            pinSize: result.PinSize,
-            isDuplicate: result.isDuplicate,
-            path: `https://homejab-dev.mypinata.cloud/ipfs/${result.IpfsHash}`,
-          },
-        },
-      });
-      nfts.push(resNft._id);
-      if (i === files.length - 1 && resource != '360 Tour') {
-        await listing.findByIdAndUpdate(listingId, {nfts: nfts});
-      } else if (i === files.length -1 && resource == '360 Tour') {
-        const item = await listing.findById(listingId);
-        item.nfts = [...item.nfts, ...nfts];
-        await item.save();
-      }
-      i++;
-    }).catch((e) => {
-      console.log(e);
+    });
+    const item = {
+      cid: res.IpfsHash,
+      pinDate: res.Timestamp,
+      pinSize: res.PinSize,
+      originalName: file.originalname,
+      path: `https://homejab-dev.mypinata.cloud/ipfs/${res.IpfsHash}`,
+    };
+    await nft.create({
+      'listingID': new ObjectId(listingId),
+      'ipfs.file': item,
     });
   }
+  const ids = await nft.find({
+    'listingID': listingId,
+    'deleted': false,
+  }).distinct('_id');
+  await listing.findByIdAndUpdate(listingId, {nfts: ids});
+}
+
+/**
+ * @param {String} id
+ * @param {Object} files
+ * @param {Object} raws
+ */
+async function handle(id, files, raws) {
+  const item = await nft.findOneAndUpdate(
+      {'listingID': new ObjectId(id)},
+      {'listingID': new ObjectId(id)},
+      {upsert: true, new: true});
+  if (files) {
+    const res = await ipfsUtils.uploadToIPFS(files[0].path, {
+      listingID: id.toString(),
+      name: files[0].originalname,
+    });
+    item.ipfs.file = {
+      cid: res.IpfsHash,
+      pinDate: res.Timestamp,
+      pinSize: res.PinSize,
+      originalName: files[0].originalname,
+      path: `https://homejab-dev.mypinata.cloud/ipfs/${res.IpfsHash}`,
+    };
+  }
+  if (raws) {
+    const res = await ipfsUtils.uploadToIPFS(raws[0].path, {
+      listingID: id.toString(),
+      name: raws[0].originalname,
+    });
+    item.ipfs.raw = {
+      cid: res.IpfsHash,
+      pinDate: res.Timestamp,
+      pinSize: res.PinSize,
+      originalName: raws[0].originalname,
+      path: `https://homejab-dev.mypinata.cloud/ipfs/${res.IpfsHash}`,
+    };
+  }
+  const nfts = [];
+  nfts.push(item._id);
+  await listing.findByIdAndUpdate(id, {nfts: nfts});
+  await item.save();
 }
 
 /**
@@ -107,16 +120,20 @@ async function remove(ids) {
   await Promise.all(ids.map(async (id) => {
     const item = await nft.findById(id);
     await nft.deleteById(id);
-    ipfsUtils.unpin(item.ipfs.raw.cid);
+    if (item.ipfs.raw.cid) {
+      ipfsUtils.unpin(item.ipfs.raw.cid);
+    }
     ipfsUtils.unpin(item.ipfs.file.cid);
   }));
 }
+
 
 module.exports = {
   getAll,
   getOne,
   getByListingId,
   add,
+  handle360,
   handle,
   remove,
 };

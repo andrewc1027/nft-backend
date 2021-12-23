@@ -54,6 +54,8 @@ const schema = new mongoose.Schema({
   downloadLink: {type: String, select: false},
   //
   subscribers: {type: [ObjectId]},
+  createdAt: {type: Date},
+  updatedAt: {type: Date},
 });
 schema.index({'geoLocation': '2dsphere'});
 schema.plugin(paginate);

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const softDelete = require('mongoose-delete');
 const schema = new mongoose.Schema({
   listingID: {type: ObjectId, required: true, ref: 'listings'},
+  createdAt: {type: Date},
   // IPFS Related Schema
   ipfs: {
     file: {

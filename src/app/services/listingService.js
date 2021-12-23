@@ -185,6 +185,7 @@ async function insert(data, files, user) {
     activeDate: data.activeDate || null,
     resource: resource,
     link360: link360,
+    createdAt: Date.now(),
   });
 
   // Uploading Jpg NFT to IPFS
@@ -201,17 +202,25 @@ async function insert(data, files, user) {
  * @param {Array} raws
  * @param {Array} thumbnail
  * @param {String} resources
+ * @param {String} deletedFiles
  */
-async function handleNfts(id, files, raws, thumbnail, resources) {
-  nftService.handle(id, files, raws, resources)
-      .then(function(ipfs) {
-        console.log('IPFS Upload Completed..');
-      });
+async function handleNfts(id, files, raws, thumbnail, resources,
+    deletedFiles) {
+  if (resources == '360 Tour') {
+    let ids = [];
+    if (deletedFiles) {
+      ids = deletedFiles.split(',');
+    }
+    nftService.handle360(id, files, ids);
+  } else {
+    nftService.handle(id, files, raws);
+  }
+
 
   // Upload first nft on array as thumbnail
-  if (resources == 'Video') {
+  if (resources == 'Video' && files) {
     s3Utils.uploadVid(id, files[0]);
-  } else if (resources == 'Image') {
+  } else if (resources == 'Image' && files) {
     s3Utils.upload(id, files[0]);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload(id, thumbnail[0]);
@@ -229,14 +238,6 @@ async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
       () => Error('Not Found'));
 
-  if (data.filesForDelete) {
-    const ids = data.filesForDelete.split(',');
-    nftService.remove(ids);
-    for await (const i of data.filesForDelete) {
-      const idx = data.filesForDelete.indexOf(i);
-      item.nfts.splice(idx, i);
-    };
-  }
   let tagStr = item.tags;
   if (data.tags) {
     const tags = data.tags.split(',');
@@ -249,8 +250,10 @@ async function update(id, files = {}, data, user) {
   item.description = data.description || item.description;
   item.blockchain = data.blockchain || item.blockchain;
   item.tags = tagStr;
-  if (files.file) {
-    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
+  item.updatedAt = Date.now();
+  if (files) {
+    // eslint-disable-next-line max-len
+    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
   }
 
   let dataCity = item.city;
