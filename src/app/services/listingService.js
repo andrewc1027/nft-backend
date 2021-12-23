@@ -16,6 +16,7 @@ const {default: axios} = require('axios');
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const bidSvc = require('./bidService');
 
 /**
  * @param {Object} query
@@ -617,7 +618,7 @@ async function finishAuction(id, user) {
     quantity: 1,
     event: 'Auction',
   });
-  await bid.delete({'listing.id': new ObjectId(id)});
+  await bidSvc.close(id);
   return trade;
 }
 

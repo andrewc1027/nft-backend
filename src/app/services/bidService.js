@@ -94,6 +94,7 @@ async function updateListingBid(bid) {
   const bids = await bidModel.find({
     'listing.id': listID,
     'deleted': false,
+    'status': 'Submitted',
   }).sort('-price');
   const item = await listing.findById(listID);
   console.log(item);
@@ -127,16 +128,17 @@ async function remove(id) {
  */
 async function close(listingId) {
   console.log('closgin bids');
-  let bids = await bidModel.find({'listing.id': new ObjectId(listingId)})
+  const bids = await bidModel.find({'listing.id': new ObjectId(listingId)})
       .sort('-price');
+
+  console.log(bids.length, ' bids left');
+  await bidModel.updateMany(
+      {'listing.id': new ObjectId(listingId)},
+      {status: 'Closed Lose'});
+
   await bidModel.findByIdAndUpdate(bids[0]._id, {
     status: 'Closed Won',
   });
-  bids = bids.shift();
-  console.log(bids.length, ' bids left');
-  for await (const bid of bids) {
-    await bidModel.findByIdAndUpdate(bid._id, {status: 'Closed Lose'});
-  }
 }
 
 module.exports = {
