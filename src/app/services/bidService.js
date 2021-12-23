@@ -13,7 +13,11 @@ async function myBid(query, user) {
   if (query.status) {
     filters['status'] = query.status;
   }
-  const bids = await bidModel.paginate(filters);
+  const bids = await bidModel.paginate(filters,
+      {populate: {
+        path: 'listing',
+        select: 'name thumbnail tokenID',
+      }});
   return bids;
 }
 /**
@@ -67,11 +71,7 @@ async function add(data, user) {
 
   const bid = await bidModel.create({
     bidIndex: data.bidIndex,
-    listing: {
-      id: listing._id,
-      name: listing.name,
-      thumbnail: listing.thumbnail,
-    },
+    listing: listing._id,
     bidder: {
       id: user._id,
       name: user.username,

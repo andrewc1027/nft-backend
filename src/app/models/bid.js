@@ -4,11 +4,7 @@ const paginate = require('mongoose-paginate-v2');
 const softDelete = require('mongoose-delete');
 
 const schema = new mongoose.Schema({
-  listing: {
-    name: {type: String},
-    id: {type: ObjectId, ref: 'listings'},
-    thumbnail: {type: String},
-  },
+  listing: {type: ObjectId, ref: 'listings'},
   bidder: {
     name: {type: String},
     id: {type: ObjectId, ref: 'users'},
