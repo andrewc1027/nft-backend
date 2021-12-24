@@ -1,6 +1,5 @@
 const {ObjectId} = require('bson');
 const bidModel = require('../models/bid');
-const listing = require('../models/listing');
 const listingModel = require('../models/listing');
 
 /**
@@ -34,7 +33,7 @@ async function getListingBid(query, page, limit, sort = 'price:asc') {
   const filters = {};
   filters['deleted'] = {$ne: true};
   if (query.listingID) {
-    filters['listing.id'] = new ObjectId(query.listingID);
+    filters['listing'] = new ObjectId(query.listingID);
   }
   if (query.bidderID) {
     filters['bidder.id'] = new ObjectId(query.bidderID);
@@ -61,7 +60,7 @@ async function add(data, user) {
     throw new Error('You cannot bid on your own listing');
   }
   const bids = await bidModel.find({
-    'listing.id': new ObjectId(data.listingID),
+    'listing': new ObjectId(data.listingID),
     'deleted': false,
   })
       .sort('-price');
@@ -78,6 +77,7 @@ async function add(data, user) {
       name: user.username,
       address: user.walletAddress,
     },
+    status: 'Submitted',
     expireAt: data.expireAt,
     floorDifference: data.floorDifference,
     price: data.price,
@@ -91,14 +91,14 @@ async function add(data, user) {
  * @param {*} bid
  */
 async function updateListingBid(bid) {
-  const listID = new ObjectId(bid.listing.id);
+  const listID = new ObjectId(bid.listing);
   const bids = await bidModel.find({
-    'listing.id': listID,
+    'listing': listID,
     'deleted': false,
     'status': 'Submitted',
-  }).sort('-price');
-  const item = await listing.findById(listID);
-  console.log(item);
+  }).sort('-price').orFail(() => new Error('Bids not found'));
+  const item = await listingModel.findById(listID);
+  console.log(bids);
   const bidListing = {
     highest: bids[0] != undefined ? bids[0].price : item.price,
     highestBidder: bids[0] != undefined ? bids[0].bidder.id : '',
@@ -106,7 +106,7 @@ async function updateListingBid(bid) {
     endDate: item.bid.endDate,
     activeAuction: item.bid.activeAuction,
   };
-  await listing.findByIdAndUpdate(listID, {
+  await listingModel.findByIdAndUpdate(listID, {
     bid: bidListing,
   });
   return bidListing;
@@ -129,17 +129,27 @@ async function remove(id) {
  */
 async function close(listingId) {
   console.log('closgin bids');
-  const bids = await bidModel.find({'listing.id': new ObjectId(listingId)})
+  const bids = await bidModel.find({
+    'listing': new ObjectId(listingId),
+    'deleted': {$ne: true},
+  })
       .sort('-price');
 
   console.log(bids.length, ' bids left');
-  await bidModel.updateMany(
-      {'listing.id': new ObjectId(listingId)},
-      {status: 'Closed Lose'});
+  if (bids.length > 0) {
+    await bidModel.updateMany({
+      'listing': new ObjectId(listingId),
+      'deleted': {$ne: true},
+    },
+    {status: 'Closed Lose'});
 
-  await bidModel.findByIdAndUpdate(bids[0]._id, {
-    status: 'Closed Won',
-  });
+    await bidModel.findByIdAndUpdate(bids[0]._id, {
+      status: 'Closed Won',
+    });
+
+    // Transfer item to highest bidder as winner
+    await listingModel.findByIdAndUpdate(listingId, {owner: bids[0].bidder.id});
+  }
 }
 
 module.exports = {
