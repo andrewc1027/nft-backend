@@ -10,6 +10,7 @@ const listingModel = require('../models/listing');
 async function myBid(query, user) {
   const filters = {};
   filters['bidder.id'] = new ObjectId(user._id);
+  filters['deleted'] = {$ne: true};
   if (query.status) {
     filters['status'] = query.status;
   }
