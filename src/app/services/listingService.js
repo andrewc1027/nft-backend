@@ -397,7 +397,7 @@ async function publish(id, data, user, socket) {
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
-    endDate: joi.date(),
+    endDate: joi.date().greater(Date.now()),
   });
   const {error} = schema.validate(data);
   if (error) {
