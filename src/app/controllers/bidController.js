@@ -47,8 +47,12 @@ async function add(req, res, next) {
  * @param  {Object} next
  */
 async function remove(req, res, next) {
-  const bid = await bidService.remove(req.params.id);
-  return res.json(bid);
+  try {
+    const bid = await bidService.remove(req.params.id);
+    return res.json(bid);
+  } catch (e) {
+    handler(e, res);
+  }
 }
 
 module.exports = {

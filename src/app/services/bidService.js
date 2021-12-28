@@ -96,7 +96,7 @@ async function updateListingBid(bid) {
     'listing': listID,
     'deleted': false,
     'status': 'Submitted',
-  }).sort('-price').orFail(() => new Error('Bids not found'));
+  }).sort('-price');
   const item = await listingModel.findById(listID);
   console.log(bids);
   const bidListing = {

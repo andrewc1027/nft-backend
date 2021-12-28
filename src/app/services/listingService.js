@@ -596,7 +596,7 @@ async function getTags() {
 async function finishAuction(id, user) {
   const bids = await bid.findOne({
     'deleted': false,
-    'listing.id': new ObjectId(id),
+    'listing': new ObjectId(id),
   }).sort('-price').orFail(
       () => Error('Bids Not Found for this listing'),
   );
