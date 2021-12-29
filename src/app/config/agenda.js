@@ -25,6 +25,7 @@ agenda.define('Scheduled Publish', async (job, done) => {
   console.log('Activating Listing: ', job.attrs.data._id);
   await Listing.findByIdAndUpdate(job.attrs.data._id, {
     isPublished: true,
+    activeDate: null,
   }).orFail( (e) => new Error(e));
   done();
 });
