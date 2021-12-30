@@ -32,6 +32,7 @@ async function getListingBid(query, page, limit, sort = 'price:asc') {
   const orderBy = field[1] == 'asc' ? '-1': '1';
   const filters = {};
   filters['status'] = 'Submitted';
+  filters['deleted'] = {$ne: true};
   if (query.listingID) {
     filters['listing'] = new ObjectId(query.listingID);
   }

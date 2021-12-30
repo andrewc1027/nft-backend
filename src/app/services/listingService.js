@@ -478,7 +478,8 @@ async function depublish(id, user) {
     throw new Error('Unauthorized to depublish this listing');
   }
   item.isPublished = false;
-  await bidSvc.close(id);
+  item.bid = {};
+  await bid.updateMany({listing: id}, {status: 'Closed'});
   return await item.save();
 }
 
