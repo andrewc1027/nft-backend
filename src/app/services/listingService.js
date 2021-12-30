@@ -425,7 +425,9 @@ async function publish(id, data, user, socket) {
   if (item.tokenID) {
     royalties = item.royalties;
   } else if (!item.tokenID && !data.royalties) {
-    throw new ValidationError('Royalties required');
+    if (data.royalties != 0) {
+      throw new ValidationError('Royalties required');
+    }
   } else {
     royalties = data.royalties;
   }
