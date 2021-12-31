@@ -1,6 +1,7 @@
 const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
+const softDelete = require('mongoose-delete');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true, unique: true},
@@ -27,6 +28,7 @@ const schema = new mongoose.Schema({
 });
 
 schema.plugin(paginate);
+schema.plugin(softDelete);
 const collection = mongoose.model('cities', schema);
 
 module.exports = collection;

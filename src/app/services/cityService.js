@@ -15,6 +15,10 @@ async function getAll(query, user, page, limit) {
   if (query.url) {
     queries['url'] = query.url;
   }
+  queries['deleted'] = {$ne: true};
+  if (query.name) {
+    queries['name'] = qTransform.regexLike(query.name);
+  }
 
   if (query.id) {
     queries['_id'] = new ObjectId(query.id);
@@ -49,6 +53,7 @@ async function getAutocomplete(query, limit = 10) {
     const q = query.search;
     filters['name'] = qTransform.regexLike(q);
   }
+  filters['deleted'] = {$ne: true};
   filters['parent'] = true;
   const result = await city.paginate(filters, {
     select: 'name _id',
