@@ -511,6 +511,17 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
     filters['$or'] = or;
   }
 
+  if (query.keyword) {
+    const q = query.keyword.split(',');
+    const ors = [];
+    for await (const s of q) {
+      ors.push({'name': qTransform.regexLike(s)});
+      ors.push({'address': qTransform.regexLike(s)});
+      ors.push({'city.name': qTransform.regexLike(s)});
+    }
+    filters['$or'] = ors;
+  }
+
   if (query.exclude) {
     filters['_id'] = {$ne: new ObjectId(query.exclude)};
   }
