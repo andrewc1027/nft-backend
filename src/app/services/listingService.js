@@ -107,6 +107,8 @@ function validate(resource, data) {
       address: joi.string().required(),
       city: joi.string().required(),
     }).unknown(true);
+  } else {
+    throw new Error('Resource Type Needed');
   }
   const {error} = schema.validate(data);
   if (error) {
@@ -121,17 +123,11 @@ function validate(resource, data) {
  * @return {Array}
  */
 async function insert(data, files, user) {
-  let resource = '';
   let link360 = '';
-  if (files.file[0].mimetype.includes('video')) {
-    resource = 'Video';
-  } else if (files.file.length > 1) {
-    resource = '360 Tour';
+  if (data.resource == '360 Tour') {
     link360 = data.link360;
-  } else {
-    resource = 'Image';
   }
-  validate(resource, data);
+  validate(data.resource, data);
   let geoLocations = [];
   if (data.longitude) {
     geoLocations = [data.longitude, data.latitude];
@@ -158,11 +154,11 @@ async function insert(data, files, user) {
   // Pre Check if user exists
   await userSvc.find(user._id);
 
-  if (resource != '360 Tour' && !files.raw) {
+  if (data.resource != '360 Tour' && !files.raw) {
     throw new Error('Raw file needed for verification purpose');
   }
 
-  if (resource == '360 Tour' && !files.thumbnail) {
+  if (data.resource == '360 Tour' && !files.thumbnail) {
     throw new Error('Please provide thumbnail file');
   }
 
@@ -185,13 +181,13 @@ async function insert(data, files, user) {
       coordinates: geoLocations,
     },
     activeDate: data.activeDate || null,
-    resource: resource,
+    resource: data.resource,
     link360: link360,
     createdAt: Date.now(),
   });
 
   // Uploading Jpg NFT to IPFS
-  handleNfts(item._id, files.file, files.raw, files.thumbnail, resource);
+  handleNfts(item._id, files.file, files.raw, files.thumbnail, data.resource);
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
@@ -616,30 +612,31 @@ async function finishAuction(id, user) {
   }).sort('-price').orFail(
       () => Error('Bids Not Found for this listing'),
   );
-  // const soldPrice = bids.price;
-  const item = await listing.findOne({
-    '_id': id,
-    'owner': user._id,
-  }).orFail((e) => Error('Cannot find your listing'));
-  // const item = await listing.findOneAndUpdate({
+  // const item = await listing.findOne({
   //   '_id': id,
   //   'owner': user._id,
-  // }, {
-  //   isPublished: false,
-  //   bid: {},
-  //   owner: bids.bidder.id,
   // }).orFail((e) => Error('Cannot find your listing'));
-  // const trade = await transaction.create({
-  //   from: item.owner,
-  //   to: item.bid.highestBidder,
-  //   price: soldPrice,
-  //   date: Date.now(),
-  //   listingID: id,
-  //   quantity: 1,
-  //   event: 'Auction',
-  // });
-  // await bidSvc.close(id);
-  contractSvc.acceptBid(item.tokenID, bids.bidIndex, user.walletAddress);
+  const soldPrice = bids.price;
+
+  const item = await listing.findOneAndUpdate({
+    '_id': id,
+    'owner': user._id,
+  }, {
+    isPublished: false,
+    bid: {},
+    owner: bids.bidder.id,
+  }).orFail((e) => Error('Cannot find your listing'));
+  const trade = await transaction.create({
+    from: item.owner,
+    to: item.bid.highestBidder,
+    price: soldPrice,
+    date: Date.now(),
+    listingID: id,
+    quantity: 1,
+    event: 'Auction',
+  });
+  await bidSvc.close(id);
+  // contractSvc.acceptBid(item.tokenID, bids.bidIndex, user.walletAddress);
   return trade;
 }
 
