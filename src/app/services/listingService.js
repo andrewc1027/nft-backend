@@ -492,6 +492,7 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   const filters = {};
   filters['isPublished'] = true;
   filters['deleted'] = false;
+  const ors = [];
   if (query.city) {
     filters['city.ID'] = qTransform.inObjectIDQuery(query.city, ',');
   }
@@ -500,23 +501,18 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   }
   if (query.search) {
     const q = query.search;
-    const or = [
-      {'name': qTransform.regexLike(q)},
-      {'address': qTransform.regexLike(q)},
-      {'city.name': qTransform.regexLike(q)},
-    ];
-    filters['$or'] = or;
+    ors.push({'name': qTransform.regexLike(q)});
+    ors.push({'address': qTransform.regexLike(q)});
+    ors.push({'city.name': qTransform.regexLike(q)});
   }
 
   if (query.keyword) {
     const q = query.keyword.split(',');
-    const ors = [];
     for await (const s of q) {
       ors.push({'name': qTransform.regexLike(s)});
       ors.push({'address': qTransform.regexLike(s)});
       ors.push({'city.name': qTransform.regexLike(s)});
     }
-    filters['$or'] = ors;
   }
 
   if (query.exclude) {
@@ -528,7 +524,10 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
     filters['price'] = qTransform.rangeNumber(prc[0], prc[1]);
   }
   if (query.tags) {
-    filters['tags'] = qTransform.regexLike(query.tags);
+    const q = query.tags.split(',');
+    for await (const s of q) {
+      ors.push({'tags': qTransform.regexLike(s)});
+    }
   }
   if (query.resource) {
     filters['resource'] = qTransform.inQuery(query.resource, ',');
@@ -567,6 +566,10 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
       },
     };
   }
+  if (ors.length > 0) {
+    filters['$or'] = ors;
+  }
+  console.log(filters);
   const listings = await listing.paginate(filters, {
     page, limit, sort: {[field[0]]: orderBy},
   });
