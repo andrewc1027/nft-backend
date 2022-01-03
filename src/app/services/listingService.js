@@ -17,6 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const bidSvc = require('./bidService');
+const contractSvc = require('./contractService');
 
 /**
  * @param {Object} query
@@ -615,25 +616,30 @@ async function finishAuction(id, user) {
   }).sort('-price').orFail(
       () => Error('Bids Not Found for this listing'),
   );
-  const soldPrice = bids.price;
-  const item = await listing.findOneAndUpdate({
+  // const soldPrice = bids.price;
+  const item = await listing.findOne({
     '_id': id,
     'owner': user._id,
-  }, {
-    isPublished: false,
-    bid: {},
-    owner: bids.bidder.id,
   }).orFail((e) => Error('Cannot find your listing'));
-  const trade = await transaction.create({
-    from: item.owner,
-    to: item.bid.highestBidder,
-    price: soldPrice,
-    date: Date.now(),
-    listingID: id,
-    quantity: 1,
-    event: 'Auction',
-  });
-  await bidSvc.close(id);
+  // const item = await listing.findOneAndUpdate({
+  //   '_id': id,
+  //   'owner': user._id,
+  // }, {
+  //   isPublished: false,
+  //   bid: {},
+  //   owner: bids.bidder.id,
+  // }).orFail((e) => Error('Cannot find your listing'));
+  // const trade = await transaction.create({
+  //   from: item.owner,
+  //   to: item.bid.highestBidder,
+  //   price: soldPrice,
+  //   date: Date.now(),
+  //   listingID: id,
+  //   quantity: 1,
+  //   event: 'Auction',
+  // });
+  // await bidSvc.close(id);
+  contractSvc.acceptBid(item.tokenID, bids.bidIndex, user.walletAddress);
   return trade;
 }
 
