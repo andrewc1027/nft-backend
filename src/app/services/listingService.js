@@ -147,7 +147,8 @@ async function insert(data, files, user) {
   }
   let tagStr = '';
   if (data.tags) {
-    const tags = data.tags.split(',');
+    let tags = data.tags.split(',');
+    tags = tags.filter((item) => item);
     const uniqueTags = [...new Set(tags)];
     tagStr = uniqueTags.join(',');
   }
@@ -217,9 +218,9 @@ async function handleNfts(id, files, raws, thumbnail, resources,
 
   // Upload first nft on array as thumbnail
   if (resources == 'Video' && files) {
-    s3Utils.uploadVid(id, files[0]);
+    s3Utils.uploadVid(id, files[0], raws[0]);
   } else if (resources == 'Image' && files) {
-    s3Utils.upload(id, files[0]);
+    s3Utils.upload(id, files[0], raws[0]);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload(id, thumbnail[0]);
   }

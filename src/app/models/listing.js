@@ -24,6 +24,7 @@ const schema = new mongoose.Schema({
   },
   nfts: [{type: ObjectId, ref: nft}],
   thumbnail: {type: String},
+  rawThumbnail: {type: String},
 
   // Listing Related
   owner: {type: String}, // Creator are the initial owner
