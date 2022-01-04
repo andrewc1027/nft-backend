@@ -2,7 +2,9 @@
 require('dotenv').config();
 const user = require('../models/user');
 const jwt = require('jsonwebtoken');
-const s3Utils = require('../utils/s3');
+const s3 = require('../config/s3');
+const fs = require('fs');
+const {PutObjectCommand} = require('@aws-sdk/client-s3');
 
 /**
  * @param {String} address
@@ -64,12 +66,30 @@ async function register(address) {
  */
 async function update(userRequest, data, files = {}) {
   if (files.logoImage) {
-    const thumbData = await s3Utils.upload(files.logoImage[0]);
-    data.logoImage = thumbData.Location;
+    const buffer = fs.readFileSync(files.logoImage[0].path);
+    const param = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${files.logoImage[0].filename}`,
+      Body: buffer,
+      ContentType: files.logoImage[0].mimetype,
+      ACL: 'public-read',
+    };
+    await s3.send(new PutObjectCommand(param));
+    // eslint-disable-next-line max-len
+    data.logoImage = `${process.env.AWS_BUCKET_URL}${files.logoImage[0].filename}`;
   }
   if (files.bannerImage) {
-    const thumbData = await s3Utils.upload(files.bannerImage[0]);
-    data.bannerImage = thumbData.Location;
+    const buffer = fs.readFileSync(files.bannerImage[0].path);
+    const param = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${files.bannerImage[0].filename}`,
+      Body: buffer,
+      ContentType: files.bannerImage[0].mimetype,
+      ACL: 'public-read',
+    };
+    await s3.send(new PutObjectCommand(param));
+    // eslint-disable-next-line max-len
+    data.bannerImage = `${process.env.AWS_BUCKET_URL}${files.bannerImage[0].filename}`;
   }
   await user.findByIdAndUpdate(userRequest._id, data, {
     runValidators: true, context: 'query',
