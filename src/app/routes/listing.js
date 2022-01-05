@@ -6,6 +6,7 @@ const listingController = require('../controllers/listingController');
 const tokenValidator = require('../middleware/tokenValidator');
 const tokenOption = require('../middleware/tokenOption');
 const multer = require('multer');
+const invitee = require('../middleware/invitee');
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     cb(null, 'uploads/');
@@ -35,6 +36,7 @@ router.get('/listings/:id',
 router.post('/listings',
     multi,
     handlerException(tokenValidator),
+    handlerException(invitee),
     handlerException(listingController.insert));
 
 router.patch('/listings/:id/publish',
