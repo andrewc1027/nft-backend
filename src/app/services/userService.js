@@ -1,6 +1,7 @@
 
 require('dotenv').config();
 const user = require('../models/user');
+const inviteCode = require('../models/inviteCode');
 const jwt = require('jsonwebtoken');
 const s3 = require('../config/s3');
 const fs = require('fs');
@@ -8,12 +9,13 @@ const {PutObjectCommand} = require('@aws-sdk/client-s3');
 
 /**
  * @param {String} address
+ * @param {Object} query
  */
-async function findAndSignIn(address) {
+async function findAndSignIn(address, query) {
   let signedUser = {};
   const exUser = await user.findOne({walletAddress: address});
   if (!exUser) {
-    signedUser = await register(address);
+    signedUser = await register(address, query.invite);
   } else {
     signedUser = exUser;
   }
@@ -49,12 +51,15 @@ async function me(self) {
 
 /**
  * @param {String} address
+ * @param {String} invite
  */
-async function register(address) {
+async function register(address, invite) {
   await user.create({
     walletAddress: address,
     createdAt: Date.now(),
   });
+  await inviteCode.findOneAndUpdate({inviteCode: invite},
+      {registeredAt: Date.now()});
   const data = await user.findOne({walletAddress: address});
   return data;
 }

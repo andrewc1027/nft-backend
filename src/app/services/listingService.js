@@ -17,7 +17,6 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const bidSvc = require('./bidService');
-const contractSvc = require('./contractService');
 
 /**
  * @param {Object} query

@@ -7,7 +7,7 @@ const {handler} = require('./errHandler');
  */
 async function findAndRegister(req, res, next) {
   const {token, signedUser} = await UserService
-      .findAndSignIn(req.params.address);
+      .findAndSignIn(req.params.address, req.query);
   return res.status(200).json({
     token: token,
     user: signedUser,
