@@ -176,9 +176,18 @@ async function downloadReady(user, socket, path) {
   });
   console.log('Notification sent:', user._id.toString(), path);
 }
+
+/**
+ * @param {Object} invitation
+ */
+async function sendInvite(invitation) {
+  
+}
+
 module.exports = {
   itemPurchased,
   itemSold,
   priceChange,
   downloadReady,
+  sendInvite,
 };
