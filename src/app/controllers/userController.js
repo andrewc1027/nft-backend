@@ -6,12 +6,17 @@ const {handler} = require('./errHandler');
  * @param  {Object} next
  */
 async function findAndRegister(req, res, next) {
-  const {token, signedUser} = await UserService
-      .findAndSignIn(req.params.address, req.query);
-  return res.status(200).json({
-    token: token,
-    user: signedUser,
-  });
+  await UserService
+      .findAndSignIn(req.params.address, req.query)
+      .then(function(token, signedUser) {
+        return res.status(200).json({
+          token: token,
+          user: signedUser,
+        });
+      })
+      .catch((e) => {
+        handler(e, res);
+      });
 }
 
 /**

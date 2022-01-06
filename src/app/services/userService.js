@@ -13,6 +13,11 @@ const {PutObjectCommand} = require('@aws-sdk/client-s3');
  */
 async function findAndSignIn(address, query) {
   let signedUser = {};
+  let inv = false;
+  if (query.invite) {
+    await validateInviteCode(query.invite);
+    inv = true;
+  }
   const exUser = await user.findOne({walletAddress: address});
   if (!exUser) {
     signedUser = await register(address, query.invite);
@@ -24,11 +29,25 @@ async function findAndSignIn(address, query) {
       {signedUser},
       process.env.JWT_SECRET,
       {expiresIn: process.env.JWT_EXPIRE});
-  await user.findByIdAndUpdate(signedUser._id, {lastLoginAt: Date.now()});
+  await user.findByIdAndUpdate(signedUser._id, {
+    lastLoginAt: Date.now(),
+    invited: inv,
+  });
+
   return {
     signedUser,
     token,
   };
+}
+
+/**
+ * @param {String} code
+ */
+async function validateInviteCode(code) {
+  await inviteCode.find({
+    status: 'Valid',
+    code: code,
+  }).orFail(() => new Error('Code Not Found or Invalid'));
 }
 
 /**
@@ -54,14 +73,20 @@ async function me(self) {
  * @param {String} invite
  */
 async function register(address, invite) {
-  await user.create({
+  const user = await user.create({
     walletAddress: address,
     createdAt: Date.now(),
   });
-  await inviteCode.findOneAndUpdate({inviteCode: invite},
-      {registeredAt: Date.now()});
-  const data = await user.findOne({walletAddress: address});
-  return data;
+  const invitation = await inviteCode.findOneAndUpdate({inviteCode: invite},
+      {
+        registeredAt: Date.now(),
+        status: 'Used',
+        user: user._id,
+      });
+  user.email = invitation.userEmail;
+  user.invited = true;
+  user.invitedAt = Date.now();
+  return user;
 }
 
 /**

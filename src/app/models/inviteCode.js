@@ -4,6 +4,7 @@ const users = require('./user');
 const schema = new mongoose.Schema({
   code: {type: String, unique: true, required: true},
   user: {type: ObjectId, ref: users},
+  userEmail: {type: String, required: true},
   invitedAt: {type: Date},
   registeredAt: {type: Date},
   createdAt: {type: Date},

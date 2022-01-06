@@ -615,12 +615,8 @@ async function finishAuction(id, user) {
   }).sort('-price').orFail(
       () => Error('Bids Not Found for this listing'),
   );
-  // const item = await listing.findOne({
-  //   '_id': id,
-  //   'owner': user._id,
-  // }).orFail((e) => Error('Cannot find your listing'));
-  const soldPrice = bids.price;
 
+  const soldPrice = bids.price;
   const item = await listing.findOneAndUpdate({
     '_id': id,
     'owner': user._id,
@@ -639,7 +635,6 @@ async function finishAuction(id, user) {
     event: 'Auction',
   });
   await bidSvc.close(id);
-  // contractSvc.acceptBid(item.tokenID, bids.bidIndex, user.walletAddress);
   return trade;
 }
 
