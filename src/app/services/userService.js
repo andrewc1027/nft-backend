@@ -44,10 +44,13 @@ async function findAndSignIn(address, query) {
  * @param {String} address
  */
 async function validateInviteCode(token, address) {
-  await invitation.find({
+  const invite = await invitation.findOne({
     status: 'Valid',
     token: token,
   }).orFail(() => new Error('Code Not Found or Invalid'));
+  invite.status = 'Used';
+  // invite.user = xxx;
+  invite.save();
 }
 
 /**
