@@ -26,6 +26,7 @@ async function upload(id, file, raw) {
     ContentType: file.mimetype,
     ACL: 'public-read',
   };
+  await s3.send(new PutObjectCommand(rawParam));
 
   // Convert raw to thumbnail
   const rawImage = await sharp(raw.path)
