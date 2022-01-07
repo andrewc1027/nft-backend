@@ -9,8 +9,8 @@ module.exports = async (req, res, next) => {
   }
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.signedUser;
-    if (!req.user.admin) {
+    req.admin = decoded.adm;
+    if (!req.admin.verified) {
       return res.status(403).json({
         message: 'Admin Only Access',
       });

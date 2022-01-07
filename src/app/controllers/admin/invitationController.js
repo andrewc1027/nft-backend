@@ -1,5 +1,5 @@
-const invService = require('../services/invitationService');
-const {handler} = require('./errHandler');
+const invService = require('../../services/admin/invitationService');
+const {handler} = require('./../errHandler');
 /**
  * @param  {Object} req
  * @param  {Object} res

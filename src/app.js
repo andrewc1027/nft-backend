@@ -24,7 +24,14 @@ app.use(cookieParser());
 
 // Dynamic routing
 fs.readdirSync(__dirname + '/app/routes').forEach((file) => {
-  app.use('/', require(__dirname + '/app/routes/' + file));
+  if (fs.lstatSync(__dirname + '/app/routes/' + file).isFile()) {
+    app.use('/', require(__dirname + '/app/routes/' + file));
+  }
+  if (fs.lstatSync(__dirname + '/app/routes/' + file).isDirectory()) {
+    fs.readdirSync(__dirname + '/app/routes/'+file).forEach((file2) => {
+      app.use('/', require(__dirname + `/app/routes/${file}/${file2}`));
+    });
+  }
 });
 
 // Default error handler
