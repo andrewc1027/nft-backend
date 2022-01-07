@@ -1,6 +1,7 @@
-const inviteModel = require('../../models/inviteCode');
+const inviteModel = require('../../models/admin/invitation');
 const Joi = require('joi');
 const {sendInvite} = require('../notificationService');
+const jwt = require('jsonwebtoken');
 /**
  * @param {Object} query
  * @param {Number} page
@@ -17,14 +18,22 @@ async function index(query, page, size, limit) {
  */
 async function add(data) {
   const schema = Joi.object({
-    code: Joi.string().required(),
     email: Joi.string().required(),
   });
-  const {error} = schema.validate(data, {allowUnknown: true});
+  const {error} = schema.validate(data);
   if (error) {
     throw new Error(error);
   }
-  return await inviteModel.create(data);
+  const token = await jwt.sign(data, process.env.JWT_SECRET,
+      {expiresIn: '10d'});
+  const invite = await inviteModel.create({
+    token: token,
+    email: data.email,
+    invitedAt: Date.now(),
+    createdAt: Date.now(),
+    status: 'Valid',
+  });
+  return invite;
 }
 
 /**

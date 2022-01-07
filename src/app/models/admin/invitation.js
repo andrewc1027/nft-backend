@@ -1,11 +1,11 @@
 const {ObjectId} = require('bson');
 const mongoose = require('mongoose');
-const users = require('./user');
+const users = require('./../user');
 const paginate = require('mongoose-paginate-v2');
 const schema = new mongoose.Schema({
-  code: {type: String, unique: true, required: true},
+  token: {type: String, unique: true, required: true},
   user: {type: ObjectId, ref: users},
-  userEmail: {type: String, required: true},
+  email: {type: String, required: true},
   invitedAt: {type: Date},
   registeredAt: {type: Date},
   createdAt: {type: Date},
@@ -14,6 +14,6 @@ const schema = new mongoose.Schema({
 });
 
 schema.plugin(paginate);
-const inviteCodes = mongoose.model('inviteCodes', schema);
+const inviteCodes = mongoose.model('invitations', schema);
 
 module.exports = inviteCodes;

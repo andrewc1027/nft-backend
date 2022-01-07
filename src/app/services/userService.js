@@ -1,7 +1,7 @@
 
 require('dotenv').config();
 const user = require('../models/user');
-const inviteCode = require('../models/inviteCode');
+const invitation = require('../models/admin/invitation');
 const jwt = require('jsonwebtoken');
 const s3 = require('../config/s3');
 const fs = require('fs');
@@ -15,7 +15,7 @@ async function findAndSignIn(address, query) {
   let signedUser = {};
   let inv = false;
   if (query.invite) {
-    await validateInviteCode(query.invite);
+    await validateInviteCode(query.invite, address);
     inv = true;
   }
   const exUser = await user.findOne({walletAddress: address});
@@ -33,7 +33,6 @@ async function findAndSignIn(address, query) {
     lastLoginAt: Date.now(),
     invited: inv,
   });
-
   return {
     signedUser,
     token,
@@ -41,12 +40,13 @@ async function findAndSignIn(address, query) {
 }
 
 /**
- * @param {String} code
+ * @param {String} token
+ * @param {String} address
  */
-async function validateInviteCode(code) {
-  await inviteCode.find({
+async function validateInviteCode(token, address) {
+  await invitation.find({
     status: 'Valid',
-    code: code,
+    token: token,
   }).orFail(() => new Error('Code Not Found or Invalid'));
 }
 
