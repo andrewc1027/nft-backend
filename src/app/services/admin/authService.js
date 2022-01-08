@@ -11,7 +11,7 @@ const {DocumentNotFoundError}= require('mongoose').Error;
  */
 async function login(data) {
   const adm = await admin.findOne({email: data.email})
-      .select('password lastLoginAt verified');
+      .select('password lastLoginAt verified superAdmin');
   console.log(adm);
   if (adm) {
     console.log(data.password, adm.password);
