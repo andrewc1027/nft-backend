@@ -3,8 +3,8 @@ const paginate = require('mongoose-paginate-v2');
 const softDelete = require('mongoose-delete');
 
 const schema = new mongoose.Schema({
-  name: {type: String, required: true},
-  email: {type: String, required: true},
+  name: {type: String, required: true, unique: true},
+  email: {type: String, required: true, unique: true},
   password: {type: String, required: true, select: false},
   verified: {type: Boolean},
   createdAt: {type: Date},
