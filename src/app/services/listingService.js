@@ -450,12 +450,12 @@ async function publish(id, data, user, socket) {
   if (data.price != item.price) {
     await notificationSvc.priceChange(item, data.price, socket);
   }
-  if (data.endDate) {
-    console.log('adding agenda schedule Auction');
-    await agenda.schedule(data.endDate, 'Auction Timer', {
-      _id: item._id,
-    });
-  }
+  // if (data.endDate) {
+  //   console.log('adding agenda schedule Auction');
+  //   await agenda.schedule(data.endDate, 'Auction Timer', {
+  //     _id: item._id,
+  //   });
+  // }
   if (data.activeDate) {
     console.log('adding agenda schedule');
     await agenda.schedule(data.activeDate, 'Scheduled Publish',
