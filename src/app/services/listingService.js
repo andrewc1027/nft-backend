@@ -600,7 +600,8 @@ async function getTags() {
     tags = tags.concat(tag);
   });
   // Filter unique item
-  const unique = [...new Set(tags)];
+  let unique = [...new Set(tags)];
+  unique = unique.filter((n) => n);
   return unique;
 }
 
