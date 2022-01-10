@@ -41,4 +41,9 @@ router.patch('/users',
     handlerException(tokenValidator),
     handlerException(userController.update));
 
+router.patch('/users/verify',
+    multi,
+    handlerException(tokenValidator),
+    handlerException(userController.verify));
+
 module.exports = router;

@@ -34,6 +34,7 @@ const schema = new mongoose.Schema({
   favorites: [ObjectId],
   invited: {type: Boolean, default: false},
   invitedAt: {type: Date},
+  verified: {type: Boolean, default: false},
 });
 schema.plugin(uniqueValidator, {message: '{PATH}AlreadyExists'});
 const user = mongoose.model('user', schema);

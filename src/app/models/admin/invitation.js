@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const users = require('./../user');
 const paginate = require('mongoose-paginate-v2');
 const schema = new mongoose.Schema({
-  token: {type: String, unique: true, required: true},
+  hash: {type: String, unique: true, required: true},
   user: {type: ObjectId, ref: users},
   email: {type: String, required: true},
   invitedAt: {type: Date},
@@ -11,9 +11,10 @@ const schema = new mongoose.Schema({
   createdAt: {type: Date},
   updatedAt: {type: Date},
   status: {type: String},
+  type: {type: String},
 });
 
 schema.plugin(paginate);
-const inviteCodes = mongoose.model('invitations', schema);
+const verifications = mongoose.model('hashVerifications', schema);
 
-module.exports = inviteCodes;
+module.exports = verifications;

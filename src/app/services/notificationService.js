@@ -181,7 +181,34 @@ async function downloadReady(user, socket, path) {
  * @param {Object} invitation
  */
 async function sendInvite(invitation) {
-  
+  const templateFile = fs.readFileSync(
+      path.resolve(
+          __dirname, '../../../email-template/userVerify.json',
+      ),
+  );
+  const template = JSON.parse(templateFile);
+  let payload = template.Template.HtmlPart;
+  payload = payload.replace('${username}', invitation.email);
+  payload = payload.replace('${verifyLink}', `?verify=${invitation.hash}`);
+
+  sendEmail(payload, [invitation.email]);
+}
+
+/**
+ * @param {Object} data
+ */
+async function sendVerifyRequest(data) {
+  const templateFile = fs.readFileSync(
+      path.resolve(
+          __dirname, '../../../email-template/userVerify.json',
+      ),
+  );
+  const template = JSON.parse(templateFile);
+  let payload = template.Template.HtmlPart;
+  payload = payload.replace('${username}', data.email);
+  payload = payload.replace('${verifyLink}', `?verify=${data.hash}`);
+
+  sendEmail(payload, [data.email]);
 }
 
 module.exports = {
@@ -190,4 +217,5 @@ module.exports = {
   priceChange,
   downloadReady,
   sendInvite,
+  sendVerifyRequest,
 };

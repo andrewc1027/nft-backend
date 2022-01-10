@@ -1,11 +1,12 @@
 
 require('dotenv').config();
 const user = require('../models/user');
-const invitation = require('../models/admin/invitation');
+const verify = require('../models/admin/invitation');
 const jwt = require('jsonwebtoken');
 const s3 = require('../config/s3');
 const fs = require('fs');
 const {PutObjectCommand} = require('@aws-sdk/client-s3');
+const {sendVerifyRequest} = require('./notificationService');
 
 /**
  * @param {String} address
@@ -13,12 +14,15 @@ const {PutObjectCommand} = require('@aws-sdk/client-s3');
  */
 async function findAndSignIn(address, query) {
   let signedUser = {};
-  let inv = false;
-  if (query.invite) {
-    await validateInviteCode(query.invite, address);
-    inv = true;
-  }
+
   const exUser = await user.findOne({walletAddress: address});
+  let email = exUser ? exUser.email : '';
+  let inv = exUser ? exUser.invited : false;
+  if (query.invite) {
+    const invite = await validateInviteCode(query.invite, address);
+    inv = true;
+    email = invite.email;
+  }
   if (!exUser) {
     signedUser = await register(address, query.invite);
   } else {
@@ -32,6 +36,7 @@ async function findAndSignIn(address, query) {
   await user.findByIdAndUpdate(signedUser._id, {
     lastLoginAt: Date.now(),
     invited: inv,
+    email: email,
   });
   return {
     signedUser,
@@ -40,17 +45,18 @@ async function findAndSignIn(address, query) {
 }
 
 /**
- * @param {String} token
+ * @param {String} hash
  * @param {String} address
  */
-async function validateInviteCode(token, address) {
-  const invite = await invitation.findOne({
+async function validateInviteCode(hash, address) {
+  const invite = await verify.findOne({
     status: 'Valid',
-    token: token,
+    hash: hash,
   }).orFail(() => new Error('Code Not Found or Invalid'));
   invite.status = 'Used';
   // invite.user = xxx;
   invite.save();
+  return invite;
 }
 
 /**
@@ -76,20 +82,11 @@ async function me(self) {
  * @param {String} invite
  */
 async function register(address, invite) {
-  const user = await user.create({
+  const newUser = await user.create({
     walletAddress: address,
     createdAt: Date.now(),
   });
-  const invitation = await inviteCode.findOneAndUpdate({inviteCode: invite},
-      {
-        registeredAt: Date.now(),
-        status: 'Used',
-        user: user._id,
-      });
-  user.email = invitation.userEmail;
-  user.invited = true;
-  user.invitedAt = Date.now();
-  return user;
+  return newUser;
 }
 
 /**
@@ -98,6 +95,7 @@ async function register(address, invite) {
  * @param {Object} files
  */
 async function update(userRequest, data, files = {}) {
+  sendVerifyRequest(user);
   if (files.logoImage) {
     const buffer = fs.readFileSync(files.logoImage[0].path);
     const param = {
