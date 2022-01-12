@@ -189,7 +189,7 @@ async function sendInvite(invitation) {
   const template = JSON.parse(templateFile);
   let payload = template.Template.HtmlPart;
   payload = payload.replace('${username}', invitation.email);
-  payload = payload.replace('${verifyLink}', `?verify=${invitation.hash}`);
+  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?verify=${invitation.hash}`);
 
   sendEmail(payload, [invitation.email]);
 }
@@ -206,7 +206,7 @@ async function sendVerifyRequest(data) {
   const template = JSON.parse(templateFile);
   let payload = template.Template.HtmlPart;
   payload = payload.replace('${username}', data.email);
-  payload = payload.replace('${verifyLink}', `?verify=${data.hash}`);
+  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?verify=${data.hash}`);
 
   sendEmail(payload, [data.email]);
 }
