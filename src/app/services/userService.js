@@ -28,16 +28,14 @@ async function findAndSignIn(address, query) {
   } else {
     signedUser = exUser;
   }
-
+  signedUser.invited = inv;
+  signedUser.email = email;
+  signedUser.lasstLoginAt = Date.now();
+  await signedUser.save();
   const token = jwt.sign(
       {signedUser},
       process.env.JWT_SECRET,
       {expiresIn: process.env.JWT_EXPIRE});
-  await user.findByIdAndUpdate(signedUser._id, {
-    lastLoginAt: Date.now(),
-    invited: inv,
-    email: email,
-  });
   return {
     signedUser,
     token,
