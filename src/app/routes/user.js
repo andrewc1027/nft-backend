@@ -46,4 +46,7 @@ router.patch('/users/verify',
     handlerException(tokenValidator),
     handlerException(userController.verify));
 
+router.get('/users/:wallet/check',
+    handlerException(userController.checkWallet));
+
 module.exports = router;

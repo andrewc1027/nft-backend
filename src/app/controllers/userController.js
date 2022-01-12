@@ -8,7 +8,7 @@ const {handler} = require('./errHandler');
 async function findAndRegister(req, res, next) {
   try {
     const {token, signedUser} = await UserService
-        .findAndSignIn(req.params.address, req.query);
+        .findAndSignIn(req.params.address, req.body);
     return res.status(200).json({
       token: token,
       user: signedUser,
@@ -63,9 +63,25 @@ async function update(req, res, next) {
       });
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function checkWallet(req, res, next) {
+  UserService.checkWallet(req.params.wallet)
+      .then(function(acc) {
+        return res.json(acc);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
 module.exports = {
   findAndRegister,
   find,
   update,
   me,
+  checkWallet,
 };

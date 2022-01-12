@@ -7,24 +7,25 @@ const s3 = require('../config/s3');
 const fs = require('fs');
 const {PutObjectCommand} = require('@aws-sdk/client-s3');
 const {sendVerifyRequest} = require('./notificationService');
+const {DocumentNotFoundError} = require('mongoose').Error;
 
 /**
  * @param {String} address
- * @param {Object} query
+ * @param {Object} data
  */
-async function findAndSignIn(address, query) {
+async function findAndSignIn(address, data) {
   let signedUser = {};
 
   const exUser = await user.findOne({walletAddress: address});
   let email = exUser ? exUser.email : '';
   let inv = exUser ? exUser.invited : false;
-  if (query.invite) {
-    const invite = await validateInviteCode(query.invite, address);
+  if (data.invite) {
+    const invite = await validateInviteCode(data.invite, address);
     inv = true;
     email = invite.email;
   }
   if (!exUser) {
-    signedUser = await register(address, query.invite);
+    signedUser = await register(address, data.invite);
   } else {
     signedUser = exUser;
   }
@@ -50,7 +51,7 @@ async function validateInviteCode(hash, address) {
   const invite = await verify.findOne({
     status: 'Valid',
     hash: hash,
-  }).orFail(() => new Error('Code Not Found or Invalid'));
+  }).orFail(() => new DocumentNotFoundError('Code Not Found or Invalid'));
   invite.status = 'Used';
   // invite.user = xxx;
   invite.save();
@@ -62,7 +63,7 @@ async function validateInviteCode(hash, address) {
  */
 async function find(id) {
   const data = await user.findById(id).orFail(
-      () => Error('User not Found'));
+      () => new DocumentNotFoundError('User not Found'));
   return data;
 }
 
@@ -71,7 +72,7 @@ async function find(id) {
  */
 async function me(self) {
   const data = await user.findById(self._id).orFail(
-      () => Error('User not Found'));
+      () => new DocumentNotFoundError('User not Found'));
   return data;
 }
 
@@ -131,10 +132,18 @@ async function update(userRequest, data, files = {}) {
  * @param {String} userID
  */
 async function getUserFavourites(userID) {
-  const favs = user.findOne({'_id': userID}).select('favourites');
+  const favs = await user.findOne({'_id': userID}).select('favourites');
   return favs;
 }
 
+/**
+ * @param {String} address
+ */
+async function checkWallet(address) {
+  const acc = await user.findOne({walletAddress: address})
+      .orFail(() => new DocumentNotFoundError('Wallet Not Exists'));
+  return acc;
+}
 /**
  * @param {String} userID
  */
@@ -151,4 +160,5 @@ module.exports = {
   getUserFavourites,
   addUserFavourites,
   me,
+  checkWallet,
 };
