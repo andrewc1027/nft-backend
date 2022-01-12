@@ -13,11 +13,12 @@ const {DocumentNotFoundError} = require('mongoose').Error;
  * @param {String} address
  * @param {Object} data
  */
-async function findAndSignIn(address, data) {
+async function findAndSignIn(address, data = {}) {
   let signedUser = {};
 
   const exUser = await user.findOne({walletAddress: address});
-  let email = exUser ? exUser.email : '';
+  let email = data.email ??= exUser.email;
+  const username = data.username ??= exUser.username;
   let inv = exUser ? exUser.invited : false;
   if (data.invite) {
     const invite = await validateInviteCode(data.invite, address);
@@ -31,6 +32,8 @@ async function findAndSignIn(address, data) {
   }
   signedUser.invited = inv;
   signedUser.email = email;
+  signedUser.username = username;
+  console.log(signedUser, username);
   signedUser.lasstLoginAt = Date.now();
   await signedUser.save();
   const token = jwt.sign(
