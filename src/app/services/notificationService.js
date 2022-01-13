@@ -183,7 +183,7 @@ async function downloadReady(user, socket, path) {
 async function sendInvite(invitation) {
   const templateFile = fs.readFileSync(
       path.resolve(
-          __dirname, '../../../email-template/userVerify.json',
+          __dirname, '../../../email-template/userInvite.json',
       ),
   );
   const template = JSON.parse(templateFile);
