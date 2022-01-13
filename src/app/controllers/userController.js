@@ -78,10 +78,26 @@ async function checkWallet(req, res, next) {
       });
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function sendVerifyEmail(req, res, next) {
+  UserService.sendVerifyEmail(req.params.id)
+      .then(function(acc) {
+        return res.json(acc);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
 module.exports = {
   findAndRegister,
   find,
   update,
   me,
   checkWallet,
+  sendVerifyEmail,
 };

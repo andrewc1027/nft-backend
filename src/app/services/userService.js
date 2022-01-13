@@ -6,8 +6,9 @@ const jwt = require('jsonwebtoken');
 const s3 = require('../config/s3');
 const fs = require('fs');
 const {PutObjectCommand} = require('@aws-sdk/client-s3');
-const {sendVerifyRequest} = require('./notificationService');
 const {DocumentNotFoundError} = require('mongoose').Error;
+const {sendVerifyRequest} = require('./notificationService');
+const crypto = require('crypto');
 
 /**
  * @param {String} address
@@ -20,20 +21,25 @@ async function findAndSignIn(address, data = {}) {
   let email = data.email ??= exUser.email;
   const username = data.username ??= exUser.username;
   let inv = exUser ? exUser.invited : false;
+  let verified = exUser.verified ??= false;
   if (data.invite) {
     const invite = await validateInviteCode(data.invite, address);
     inv = true;
     email = invite.email;
   }
+  if (data.verify) {
+    const verify = await validateInviteCode(data.verify, address);
+    verified = true;
+  }
   if (!exUser) {
-    signedUser = await register(address, data.invite);
+    signedUser = await register(address, data);
   } else {
     signedUser = exUser;
   }
   signedUser.invited = inv;
+  signedUser.verified = verified;
   signedUser.email = email;
   signedUser.username = username;
-  console.log(signedUser, username);
   signedUser.lasstLoginAt = Date.now();
   await signedUser.save();
   const token = jwt.sign(
@@ -56,7 +62,6 @@ async function validateInviteCode(hash, address) {
     hash: hash,
   }).orFail(() => new DocumentNotFoundError('Code Not Found or Invalid'));
   invite.status = 'Used';
-  // invite.user = xxx;
   invite.save();
   return invite;
 }
@@ -81,13 +86,27 @@ async function me(self) {
 
 /**
  * @param {String} address
- * @param {String} invite
+ * @param {object} data
  */
-async function register(address, invite) {
+async function register(address, data) {
   const newUser = await user.create({
     walletAddress: address,
     createdAt: Date.now(),
+    email: data.email, 
+    username: data.username,
   });
+  if (data.email) {
+    const hash = crypto.randomBytes(20).toString('hex');
+    const verify = await verify.create({
+      hash: hash,
+      email: data.email,
+      invitedAt: Date.now(),
+      createdAt: Date.now(),
+      status: 'Valid',
+      type: 'Verification',
+    });
+    sendVerifyRequest(verify);
+  }
   return newUser;
 }
 
@@ -97,7 +116,6 @@ async function register(address, invite) {
  * @param {Object} files
  */
 async function update(userRequest, data, files = {}) {
-  sendVerifyRequest(user);
   if (files.logoImage) {
     const buffer = fs.readFileSync(files.logoImage[0].path);
     const param = {
@@ -148,13 +166,30 @@ async function checkWallet(address) {
   return acc;
 }
 /**
- * @param {String} userID
+ * @param {String} id
  */
-async function addUserFavourites(userID) {
-  const favs = user.findOne({'_id': userID}).select('favourites');
+async function addUserFavourites(id) {
+  const favs = user.findOne({'_id': id}).select('favourites');
   return favs;
 }
 
+/**
+ * 
+ * @param {String} id 
+ */
+async function sendVerifyEmail(id) {
+  const usr = await user.findById(id);
+  const hash = crypto.randomBytes(20).toString('hex');
+    const verifyData = await verify.create({
+      hash: hash,
+      email: usr.email,
+      invitedAt: Date.now(),
+      createdAt: Date.now(),
+      status: 'Valid',
+      type: 'Verification',
+    });
+    sendVerifyRequest(verifyData);  
+}
 
 module.exports = {
   find,
@@ -164,4 +199,5 @@ module.exports = {
   addUserFavourites,
   me,
   checkWallet,
+  sendVerifyEmail,
 };
