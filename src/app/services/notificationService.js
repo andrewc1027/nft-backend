@@ -189,7 +189,7 @@ async function sendInvite(invitation) {
   const template = JSON.parse(templateFile);
   let payload = template.Template.HtmlPart;
   payload = payload.replace('${username}', invitation.email);
-  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?verify=${invitation.hash}`);
+  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?invite=${invitation.hash}`);
 
   sendEmail(payload, [invitation.email]);
 }
