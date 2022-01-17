@@ -16,12 +16,14 @@ const crypto = require('crypto');
  */
 async function findAndSignIn(address, data = {}) {
   let signedUser = {};
-
+  let email = data.email ??= '';
+  let username = data.username ??= '';
+  let verified = false;
   const exUser = await user.findOne({walletAddress: address.toLowerCase()});
-  let email = data.email ??= exUser.email;
-  const username = data.username ??= exUser.username;
+  email = exUser ? exUser.email : email;
+  username = exUser ? exUser.username : username;
   let inv = exUser ? exUser.invited : false;
-  let verified = exUser.verified ??= false;
+  verified = exUser ? exUser.verified : verified;
   if (data.invite) {
     const invite = await validateInviteCode(data.invite, address);
     inv = true;
@@ -97,7 +99,7 @@ async function register(address, data) {
   });
   if (data.email) {
     const hash = crypto.randomBytes(20).toString('hex');
-    const verify = await verify.create({
+    const newVerif = await verify.create({
       hash: hash,
       email: data.email,
       invitedAt: Date.now(),
@@ -105,7 +107,7 @@ async function register(address, data) {
       status: 'Valid',
       type: 'Verification',
     });
-    sendVerifyRequest(verify);
+    sendVerifyRequest(newVerif);
   }
   return newUser;
 }
