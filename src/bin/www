@@ -31,7 +31,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'putyourrandomstringhere';
 const appServer =server.listen(port);
 const io = require('socket.io')(appServer, {
   cors: {
-    origin: '*',
+    origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST'],
     allowedHeaders: ['authorization'],
   },
