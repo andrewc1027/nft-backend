@@ -17,7 +17,7 @@ const crypto = require('crypto');
 async function findAndSignIn(address, data = {}) {
   let signedUser = {};
 
-  const exUser = await user.findOne({walletAddress: address});
+  const exUser = await user.findOne({walletAddress: address.toLowerCase()});
   let email = data.email ??= exUser.email;
   const username = data.username ??= exUser.username;
   let inv = exUser ? exUser.invited : false;
@@ -90,7 +90,7 @@ async function me(self) {
  */
 async function register(address, data) {
   const newUser = await user.create({
-    walletAddress: address,
+    walletAddress: address.toLowerCase(),
     createdAt: Date.now(),
     email: data.email, 
     username: data.username,
@@ -161,7 +161,7 @@ async function getUserFavourites(userID) {
  * @param {String} address
  */
 async function checkWallet(address) {
-  const acc = await user.findOne({walletAddress: address})
+  const acc = await user.findOne({walletAddress: address.toLowerCase()})
       .orFail(() => new DocumentNotFoundError('Wallet Not Exists'));
   return acc;
 }
