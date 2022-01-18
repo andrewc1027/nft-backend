@@ -185,6 +185,7 @@ async function sendVerifyEmail(id) {
     const verifyData = await verify.create({
       hash: hash,
       email: usr.email,
+      username: usr.username,
       invitedAt: Date.now(),
       createdAt: Date.now(),
       status: 'Valid',

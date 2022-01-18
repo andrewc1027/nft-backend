@@ -19,6 +19,7 @@ async function index(query, page, size, limit) {
 async function add(data) {
   const schema = Joi.object({
     email: Joi.string().required(),
+    username: Joi.string().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -28,25 +29,17 @@ async function add(data) {
   const invite = await inviteModel.create({
     hash: hash,
     email: data.email,
+    username: data.username,
     invitedAt: Date.now(),
     createdAt: Date.now(),
     status: 'Valid',
     type: 'Invitation',
   });
-  send(invite._id);
+  sendInvite(invite);
   return invite;
-}
-
-/**
- * @param {String} id
- */
-async function send(id) {
-  const invitation = await inviteModel.findById(id);
-  sendInvite(invitation);
 }
 
 module.exports = {
   index,
   add,
-  send,
 };

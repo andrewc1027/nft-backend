@@ -4,7 +4,7 @@ const users = require('./../user');
 const paginate = require('mongoose-paginate-v2');
 const schema = new mongoose.Schema({
   hash: {type: String, unique: true, required: true},
-  user: {type: ObjectId, ref: users},
+  username: {type: String},
   email: {type: String, required: true},
   invitedAt: {type: Date},
   registeredAt: {type: Date},

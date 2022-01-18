@@ -1,7 +1,8 @@
 /* eslint-disable quotes */
 const notification = require('../models/notification');
 const user = require('../models/user');
-const mail = require('../config/mail');
+// const mail = require('../config/mail');
+const mail = require('../config/sendgrid');
 const fs = require('fs');
 const path = require('path');
 /**
@@ -19,9 +20,9 @@ async function itemPurchased(self, listing, socket) {
       createdAt: Date.now(),
     });
     const templateFile = fs.readFileSync(
-        path.resolve(
-            __dirname, '../../../email-template/purchaseSuccessful.json',
-        ),
+      path.resolve(
+        __dirname, '../../../email-template/purchaseSuccessful.json',
+      ),
     );
     if (self.email != '') {
       const template = JSON.parse(templateFile);
@@ -30,7 +31,10 @@ async function itemPurchased(self, listing, socket) {
       payload = payload.replace('${price}', listing.price);
       payload = payload.replace('${filePath}', listing.filePath);
       console.log('sending email purchase');
-      sendEmail(payload, [self.email]);
+      sendEmail(payload, {
+        to: self.email,
+        subject: 'You Just Purchase an Item',
+      });
     }
     await socket.to(self._id.toString()).emit('successfulPurchase', {
       listing: listing._id,
@@ -48,7 +52,7 @@ async function itemPurchased(self, listing, socket) {
  */
 async function itemSold(listing, socket) {
   const templateFile = fs.readFileSync(
-      path.resolve(__dirname, '../../../email-template/itemSold.json'),
+    path.resolve(__dirname, '../../../email-template/itemSold.json'),
   );
   await socket.to(listing.owner).emit('itemSold', {
     listing: listing._id,
@@ -64,7 +68,10 @@ async function itemSold(listing, socket) {
     payload = payload.replace('${price}', listing.price);
     payload = payload.replace('${filePath}', listing.filePath);
 
-    sendEmail(payload, [owner.email]);
+    sendEmail(payload, {
+      to: owner.email,
+      subject: 'You Just Sold an Item',
+    });
   }
   for (const usrID of listing.subscribers) {
     const usr = await user.findById(usrID);
@@ -83,7 +90,10 @@ async function itemSold(listing, socket) {
         payload = payload.replace('${price}', listing.price);
         payload = payload.replace('${filePath}', listing.filePath);
 
-        sendEmail(payload, [usr.email]);
+        sendEmail(payload, {
+          to: usr.email,
+          subject: 'Item Sold',
+        });
       }
       await socket.to(usr._id.toString()).emit('itemSold', {
         listing: listing._id,
@@ -102,7 +112,7 @@ async function itemSold(listing, socket) {
  */
 async function priceChange(listing, newPrice, socket) {
   const templateFile = fs.readFileSync(
-      path.resolve(__dirname, '../../../email-template/priceChange.json'),
+    path.resolve(__dirname, '../../../email-template/priceChange.json'),
   );
   const notif = {
     title: `${listing.name}: price has changed`,
@@ -114,7 +124,7 @@ async function priceChange(listing, newPrice, socket) {
     const usr = await user.findById(usrID);
     if (usr.notifications.priceChange) {
       notif['userID'] = usr._id,
-      await notification.create(notif);
+        await notification.create(notif);
       if (usr.email != '') {
         const template = JSON.parse(templateFile);
         let payload = template.Template.HtmlPart;
@@ -123,7 +133,10 @@ async function priceChange(listing, newPrice, socket) {
         payload = payload.replace('${newPrice}', newPrice);
         payload = payload.replace('${filePath}', listing.filePath);
 
-        sendEmail(payload, [usr.email]);
+        sendEmail(payload, {
+          to: usr.email,
+          subject: 'Price Change',
+        });
       }
       await socket.to(usr._id.toString()).emit('priceChange', {
         listing: listing._id,
@@ -138,30 +151,25 @@ async function priceChange(listing, newPrice, socket) {
 
 /**
  * @param {String} template
- * @param {String} to
+ * @param {Object} data
  */
-async function sendEmail(template, to) {
-  mail.sendEmail({
-    Destination: {
-      ToAddresses: to,
-    },
-    Message: {
-      Body: {
-        Html: {
-          Charset: "UTF-8",
-          Data: template,
-        },
-      },
-      Subject: {
-        Charset: 'UTF-8',
-        Data: 'Subject',
-      },
-    },
-    Source: 'jon@homejab.com',
-  }, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else console.log(data); // successful response
-  });
+async function sendEmail(template, data) {
+  try {
+    await mail.send({
+      to: data.to,
+      from: 'support@homejab.com',
+      templateId: template,
+      dynamicTemplateData: {
+        subject: data.subject,
+        username: data.username,
+        link: data.link,
+        linkWord: data.linkWord,
+        body: data.body,
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 /**
@@ -178,37 +186,31 @@ async function downloadReady(user, socket, path) {
 }
 
 /**
- * @param {Object} invitation
+ * @param {Object} data
  */
-async function sendInvite(invitation) {
-  const templateFile = fs.readFileSync(
-      path.resolve(
-          __dirname, '../../../email-template/userInvite.json',
-      ),
-  );
-  const template = JSON.parse(templateFile);
-  let payload = template.Template.HtmlPart;
-  payload = payload.replace('${username}', invitation.email);
-  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?invite=${invitation.hash}`);
-
-  sendEmail(payload, [invitation.email]);
+async function sendInvite(data) {
+  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+    to: data.email,
+    subject: 'You have been invited as Creator!',
+    link: `https://nft-homejab.netlify.app/?invite=${data.hash}`,
+    username: data.username,
+    body: 'You Have been invited as Creator on NFT Homejab, we are excited to welcome you',
+    linkWord: 'Accept Invitation',
+  });
 }
 
 /**
  * @param {Object} data
  */
 async function sendVerifyRequest(data) {
-  const templateFile = fs.readFileSync(
-      path.resolve(
-          __dirname, '../../../email-template/userVerify.json',
-      ),
-  );
-  const template = JSON.parse(templateFile);
-  let payload = template.Template.HtmlPart;
-  payload = payload.replace('${username}', data.email);
-  payload = payload.replace('${verifyLink}', `https://nft-homejab.netlify.app/?verify=${data.hash}`);
-
-  sendEmail(payload, [data.email]);
+  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+    to: data.email,
+    subject: 'Verify Your Email Address',
+    link: `https://nft-homejab.netlify.app/?verify=${data.hash}`,
+    username: data.username,
+    body: 'Please verify your email to start exploring our collection of listing',
+    linkWord: 'Verify Your Email Here',
+  });
 }
 
 module.exports = {
