@@ -19,17 +19,17 @@ async function index(query, page, size, limit) {
 async function add(data) {
   const schema = Joi.object({
     email: Joi.string().required(),
-    username: Joi.string().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
     throw new Error(error);
   }
   const hash = crypto.randomBytes(20).toString('hex');
+  const splitEmail = data.email.split('@');
   const invite = await inviteModel.create({
     hash: hash,
     email: data.email,
-    username: data.username,
+    username: splitEmail[0],
     invitedAt: Date.now(),
     createdAt: Date.now(),
     status: 'Valid',
