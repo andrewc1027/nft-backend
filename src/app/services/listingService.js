@@ -462,6 +462,7 @@ async function publish(id, data, user, socket) {
         {_id: item._id},
     );
   }
+  nftService.hashMetadata(id, data.tokenID, user._id);
   return item;
 }
 

@@ -1,6 +1,7 @@
 const {ObjectId} = require('mongodb');
 const listing = require('../models/listing');
 const nft = require('../models/nft');
+const axios = require('axios');
 const ipfsUtils = require('../utils/ipfs');
 /**
  * @param {Object} query
@@ -26,7 +27,7 @@ async function getByListingId(listingId) {
  */
 async function getOne(id) {
   const item = await nft.findById(id).orFail(
-      () => Error('Not Found'),
+    () => Error('Not Found'),
   );
   return item;
 }
@@ -78,9 +79,9 @@ async function handle360(listingId, files = [], deletedFiles) {
  */
 async function handle(id, files, raws) {
   const item = await nft.findOneAndUpdate(
-      {'listingID': new ObjectId(id)},
-      {'listingID': new ObjectId(id)},
-      {upsert: true, new: true});
+    {'listingID': new ObjectId(id)},
+    {'listingID': new ObjectId(id)},
+    {upsert: true, new: true});
   if (files) {
     const res = await ipfsUtils.uploadToIPFS(files[0].path, {
       listingID: id.toString(),
@@ -127,6 +128,33 @@ async function remove(ids) {
   }));
 }
 
+/**
+ * @param {String} listingID
+ * @param {String} token
+ * @param {String} owner
+ */
+async function hashMetadata(listingID, token, owner) {
+  const nfts = await nft.find({listingID: new ObjectId(listingID)}).select('ipfs.file');
+  for (const nft of nfts) {
+    const url = `${process.env.PINATA_API_URL}pinning/hashMetadata`;
+    const body = {
+      ipfsPinHash: nft.ipfs.file.cid,
+      keyvalues: {
+        token: token,
+        owner: owner,
+      }
+    };
+    const res = await axios.default.put(url, body, {
+      headers: {
+        pinata_api_key: process.env.PINATA_API_KEY,
+        pinata_secret_api_key: process.env.PINATA_SECRET_KEY,
+      }
+    });
+    if (res.isAxiosError) {
+      console.log(res.data.error);
+    }
+  }
+}
 
 module.exports = {
   getAll,
@@ -136,4 +164,5 @@ module.exports = {
   handle360,
   handle,
   remove,
+  hashMetadata,
 };
