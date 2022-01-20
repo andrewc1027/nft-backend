@@ -62,8 +62,8 @@ async function getAll(query, page, limit, self) {
   }
 
   const listings = await listing
-      .paginate(queries,
-          {page: page, limit: limit});
+    .paginate(queries,
+      {page: page, limit: limit});
   return listings;
 }
 /**
@@ -73,15 +73,15 @@ async function getAll(query, page, limit, self) {
 async function getOne(id, user = {}) {
   viewCounter(id);
   const detail = await listing.findById(id).orFail(
-      () => Error('NotFound'),
+    () => Error('NotFound'),
   ).populate('nfts',
-      // eslint-disable-next-line max-len
-      'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName ipfs.raw.path');
+    // eslint-disable-next-line max-len
+    'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName ipfs.raw.path');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
   if ((detail.isPublished == false && user._id == undefined) ||
-  (detail.isPublished == false && user._id != detail.owner)) {
+    (detail.isPublished == false && user._id != detail.owner)) {
     throw new Error('NotFound');
   }
   return detail;
@@ -203,7 +203,7 @@ async function insert(data, files, user) {
  * @param {String} deletedFiles
  */
 async function handleNfts(id, files, raws, thumbnail, resources,
-    deletedFiles) {
+  deletedFiles) {
   if (resources == '360 Tour') {
     let ids = [];
     if (deletedFiles) {
@@ -234,7 +234,7 @@ async function handleNfts(id, files, raws, thumbnail, resources,
  */
 async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
-      () => Error('Not Found'));
+    () => Error('Not Found'));
 
   let tagStr = item.tags;
   if (data.tags) {
@@ -312,7 +312,7 @@ async function purchase(id, data, user, socket) {
   const item = await listing.findById(id).where({
     isPublished: true,
   }).orFail(
-      () => Error('Listing Not Found'),
+    () => Error('Listing Not Found'),
   );
 
   const trade = await transaction.create({
@@ -339,9 +339,11 @@ async function purchase(id, data, user, socket) {
  */
 async function viewCounter(id) {
   const item = await listing.findById(id);
-  await listing.findByIdAndUpdate(id, {
-    views: item.views+1,
-  });
+  if (item) {
+    await listing.findByIdAndUpdate(id, {
+      views: item.views + 1,
+    });
+  }
 }
 
 /**
@@ -350,7 +352,7 @@ async function viewCounter(id) {
  */
 async function likeCounter(id, self = {}) {
   const item = await listing.findById(id);
-  if (self._id==undefined) {
+  if (self._id == undefined) {
     item.likes++;
     await item.save();
   } else {
@@ -359,7 +361,7 @@ async function likeCounter(id, self = {}) {
       const index = users.favorites.indexOf(id);
       users.favorites.splice(index, 1);
       await users.save();
-      item.likes = item.likes-1;
+      item.likes = item.likes - 1;
 
       // Remove User from listing subs list to avoid sending notif to them
       const usrIdx = item.subscribers.indexOf(self._id);
@@ -369,7 +371,7 @@ async function likeCounter(id, self = {}) {
     } else {
       users.favorites.push(id);
       await users.save();
-      item.likes = item.likes+1;
+      item.likes = item.likes + 1;
 
       // Add User to listing subs list for notification purpose
       item.subscribers.push(self._id);
@@ -412,7 +414,7 @@ async function publish(id, data, user, socket) {
     published = true;
   }
   const item = await listing.findById(id).orFail(
-      () => Error('Not Found'),
+    () => Error('Not Found'),
   );
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
@@ -432,18 +434,18 @@ async function publish(id, data, user, socket) {
   if (item.tokenID && data.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
-  item.owner= user._id;
-  item.price= data.price;
-  item.royalties= royalties;
-  item.activeDate= data.activeDate;
-  item.buyerAddress= data.buyerAddress;
-  item.tokenID= data.tokenID;
-  item.isPublished= published;
-  item.bid= {
+  item.owner = user._id;
+  item.price = data.price;
+  item.royalties = royalties;
+  item.activeDate = data.activeDate;
+  item.buyerAddress = data.buyerAddress;
+  item.tokenID = data.tokenID;
+  item.isPublished = published;
+  item.bid = {
     highest: data.price,
     endDate: data.endDate,
   },
-  item.sellMethod= data.sellMethod;
+    item.sellMethod = data.sellMethod;
   await item.save();
 
   makeZip(id);
@@ -459,7 +461,7 @@ async function publish(id, data, user, socket) {
   if (data.activeDate) {
     console.log('adding agenda schedule');
     await agenda.schedule(data.activeDate, 'Scheduled Publish',
-        {_id: item._id},
+      {_id: item._id},
     );
   }
   nftService.hashMetadata(id, data.tokenID, user._id);
@@ -471,7 +473,7 @@ async function publish(id, data, user, socket) {
  * @param {Object} user
  */
 async function depublish(id, user) {
-  const item = await listing.findById(id).orFail( () => new Error('Not Found'));
+  const item = await listing.findById(id).orFail(() => new Error('Not Found'));
   if (item.owner != user._id) {
     throw new Error('Unauthorized to depublish this listing');
   }
@@ -615,7 +617,7 @@ async function finishAuction(id, user) {
     'deleted': false,
     'listing': new ObjectId(id),
   }).sort('-price').orFail(
-      () => Error('Bids Not Found for this listing'),
+    () => Error('Bids Not Found for this listing'),
   );
 
   const soldPrice = bids.price;
@@ -653,7 +655,7 @@ async function makeZip(id) {
       responseType: 'stream',
     });
     const outPath = path.resolve(__dirname, '../../../uploads/',
-        nft.ipfs.file.originalName);
+      nft.ipfs.file.originalName);
     const writer = response.data.pipe(fs.createWriteStream(outPath));
     writer.on('finish', () => {
       const file = {
@@ -681,7 +683,7 @@ async function zip(id, files) {
   });
   const zipName = `${id}_${Date.now()}.zip`;
   const zipPath = path.resolve(
-      __dirname, `../../../uploads/${zipName}`);
+    __dirname, `../../../uploads/${zipName}`);
   const pipe = fs.createWriteStream(zipPath);
   archive.pipe(pipe);
   for await (const file of files) {
