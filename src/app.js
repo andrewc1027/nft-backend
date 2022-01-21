@@ -6,9 +6,10 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
+const mail = require('../config/sendgrid');
 
 app.use(cors({
-  origin: '*',
+  origin: process.env.CORS_ORIGIN,
 }));
 mongoose.connect(process.env.MONGO_CONN);
 const db = mongoose.connection;
@@ -48,4 +49,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+process.on('uncaughtException', function(er) {
+  console.log(er.stack);
+  await mail.send({
+    to: 'jon@homejab.com',
+    from: 'support@homejab.com',
+    subject: 'Sending with Twilio SendGrid is Fun',
+    text: 'and easy to do anywhere, even with Node.js',
+    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+  });
+});
 module.exports = app;
