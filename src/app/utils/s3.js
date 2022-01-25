@@ -12,13 +12,18 @@ const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
  * @param {String} id
  * @param {File} file
  * @param {File} raw
+ * @param {Object} socket
+ * @param {Object} user
  */
-async function upload(id, file, raw) {
+async function upload(id, file, raw, socket, user) {
   // Convert file to thumbnail
   const image = await sharp(file.path)
     .resize({width: 640})
     .jpeg({mozjpeg: true})
-    .toBuffer();
+    .toBuffer()
+    .catch((e) => {
+      console.log('Error Occured: ', e);
+    });
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: `${file.filename}`,
@@ -31,6 +36,7 @@ async function upload(id, file, raw) {
   let rawParam = {};
   if (raw) {
     // Convert raw to thumbnail
+    console.log('Processing Raw: ', raw);
     const rawImage = await sharp(raw.path)
       .resize({width: 640})
       .toFormat('jpeg')
@@ -39,10 +45,13 @@ async function upload(id, file, raw) {
         mozjpeg: true,
         force: true,
       })
-      .toBuffer();
+      .toBuffer()
+      .catch((e) => {
+        console.log('Error Occured: ', e);
+      });
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${raw.filename}.jpeg`,
+      Key: `${raw.filename}.jpeg`, 
       Body: rawImage,
       ContentType: 'image/jpeg',
       ACL: 'public-read',
@@ -67,12 +76,16 @@ async function uploadVid(id, videoFile, rawFile) {
 
   // Process video as gif thumbnail
   await processVideo(id, videoFile, newVidPath, 'gif',
-    {duration: 5, fps: 10, size: '300x?'});
+    {duration: 5, fps: 10, size: '300x?'}).catch((e) => {
+      console.log('Error Occured: ', e);
+    });
 
 
   // Process video raw as thumbnail
   await processVideo(id, rawFile, rawThumbPath, 'mp4',
-    {duration: 15, fps: 30, size: '300x?'});
+    {duration: 15, fps: 30, size: '300x?'}).catch((e) => {
+      console.log('Error Occured: ', e);
+    });
 }
 
 /**

@@ -119,9 +119,10 @@ function validate(resource, data) {
  * @param {Object} data
  * @param {File} files
  * @param {Object} user
+ * @param {Object} socket
  * @return {Array}
  */
-async function insert(data, files, user) {
+async function insert(data, files, user, socket) {
   let link360 = '';
   if (data.resource == '360 Tour') {
     link360 = data.link360;
@@ -187,7 +188,7 @@ async function insert(data, files, user) {
   });
 
   // Uploading Jpg NFT to IPFS
-  handleNfts(item._id, files.file, files.raw, files.thumbnail, data.resource);
+  handleNfts(item._id, files.file, files.raw, files.thumbnail, data.resource, '', socket, user);
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
@@ -201,9 +202,11 @@ async function insert(data, files, user) {
  * @param {Array} thumbnail
  * @param {String} resources
  * @param {String} deletedFiles
+ * @param {Object} socket
+ * @param {Object} user
  */
 async function handleNfts(id, files, raws, thumbnail, resources,
-  deletedFiles) {
+  deletedFiles, socket, user) {
   if (resources == '360 Tour') {
     let ids = [];
     if (deletedFiles) {
@@ -217,9 +220,9 @@ async function handleNfts(id, files, raws, thumbnail, resources,
 
   // Upload first nft on array as thumbnail
   if (resources == 'Video' && files) {
-    s3Utils.uploadVid(id, files[0], raws[0]);
+    s3Utils.uploadVid(id, files[0], raws[0], socket, user);
   } else if (resources == 'Image' && files) {
-    s3Utils.upload(id, files[0], raws[0]);
+    s3Utils.upload(id, files[0], raws[0], socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload(id, thumbnail[0]);
   }
