@@ -23,6 +23,7 @@ async function upload(id, file, raw, socket, user) {
     .toBuffer()
     .catch((e) => {
       console.log('Error Occured: ', e);
+      socket.to(user._id.toString()).emit('error', {error: e});
     });
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
@@ -48,6 +49,7 @@ async function upload(id, file, raw, socket, user) {
       .toBuffer()
       .catch((e) => {
         console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
       });
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
@@ -66,8 +68,10 @@ async function upload(id, file, raw, socket, user) {
  * @param {String} id
  * @param {File} videoFile
  * @param {File} rawFile
+ * @param {Object} socket
+ * @param {Object} user
  */
-async function uploadVid(id, videoFile, rawFile) {
+async function uploadVid(id, videoFile, rawFile, socket, user) {
   console.log('Processing Video...', videoFile);
   const newVidPath = path.resolve(__dirname,
     `../../../uploads/${id}.gif`);
@@ -78,6 +82,7 @@ async function uploadVid(id, videoFile, rawFile) {
   await processVideo(id, videoFile, newVidPath, 'gif',
     {duration: 5, fps: 10, size: '300x?'}).catch((e) => {
       console.log('Error Occured: ', e);
+      socket.to(user._id.toString()).emit('error', {error: e});
     });
 
 
@@ -85,6 +90,7 @@ async function uploadVid(id, videoFile, rawFile) {
   await processVideo(id, rawFile, rawThumbPath, 'mp4',
     {duration: 15, fps: 30, size: '300x?'}).catch((e) => {
       console.log('Error Occured: ', e);
+      socket.to(user._id.toString()).emit('error', {error: e});
     });
 }
 

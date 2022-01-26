@@ -46,7 +46,7 @@ async function insert(req, res, next) {
       message: 'Nft file needed',
     });
   }
-  listingService.insert(req.body, req.files, req.user)
+  listingService.insert(req.body, req.files, req.user, req.app.get('socketio'))
       .then(function(data) {
         return res.json(data);
       })

@@ -6,7 +6,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
-const mail = require('../config/sendgrid');
+const mail = require('./app/config/sendgrid');
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
@@ -51,7 +51,7 @@ app.use((err, req, res, next) => {
 
 process.on('uncaughtException', function(er) {
   console.log(er.stack);
-  await mail.send({
+  mail.send({
     to: 'jon@homejab.com',
     from: 'support@homejab.com',
     subject: 'Sending with Twilio SendGrid is Fun',
