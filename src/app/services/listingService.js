@@ -333,6 +333,7 @@ async function purchase(id, data, user, socket) {
     isPublished: false,
     bid: {},
   });
+  nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
 }

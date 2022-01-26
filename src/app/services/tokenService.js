@@ -6,7 +6,6 @@ const {DocumentNotFoundError} = require('mongoose').Error;
  * @return {Array}
  */
 async function getMetadata(token) {
-  console.log(token);
   const url = `https://api.pinata.cloud/data/pinList?metadata[keyvalues]={"token": {"value": ${token}, "op":"eq"}}`;
   const response = await axios({
     url: url,
@@ -17,7 +16,6 @@ async function getMetadata(token) {
     },
   });
   const data = response.data.rows;
-  console.log(data);
   if (!data) {
     throw new DocumentNotFoundError('Token Detail not Found');
   }
