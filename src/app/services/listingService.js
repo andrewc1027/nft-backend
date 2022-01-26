@@ -642,6 +642,7 @@ async function finishAuction(id, user) {
     quantity: 1,
     event: 'Auction',
   });
+  nftService.hashMetadata(id, item.tokenID, item.bid.highestBidder);
   await bidSvc.close(id);
   return trade;
 }
