@@ -219,10 +219,18 @@ async function handleNfts(id, files, raws, thumbnail, resources,
 
 
   // Upload first nft on array as thumbnail
+  let fileObj = {};
+  let rawObj = {};
+  if (files && files.length > 0) {
+    fileObj = files[0];
+  }
+  if (raws && raws.length > 0) {
+    rawObj = raws[0];
+  }
   if (resources == 'Video' && files) {
-    s3Utils.uploadVid(id, files[0], raws[0], socket, user);
+    s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
   } else if (resources == 'Image' && files) {
-    s3Utils.upload(id, files[0], raws[0], socket, user);
+    s3Utils.upload(id, fileObj, rawObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload(id, thumbnail[0]);
   }
@@ -251,6 +259,7 @@ async function update(id, files = {}, data, user) {
   item.description = data.description || item.description;
   item.blockchain = data.blockchain || item.blockchain;
   item.tags = tagStr;
+  item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
   if (files) {
     // eslint-disable-next-line max-len
