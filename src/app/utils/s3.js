@@ -16,26 +16,31 @@ const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
  * @param {Object} user
  */
 async function upload(id, file, raw, socket, user) {
-  // Convert file to thumbnail
-  const image = await sharp(file.path)
-    .resize({width: 640})
-    .jpeg({mozjpeg: true})
-    .toBuffer()
-    .catch((e) => {
-      console.log('Error Occured: ', e);
-      socket.to(user._id.toString()).emit('error', {error: e});
-    });
-  const param = {
-    Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${file.filename}`,
-    Body: image,
-    ContentType: file.mimetype,
-    ACL: 'public-read',
-  };
-  await s3.send(new PutObjectCommand(param));
+
+  let param = {}
+  if (Object.entries(file).length > 0) {
+    // Convert file to thumbnail
+    const image = await sharp(file.path)
+      .resize({width: 640})
+      .jpeg({mozjpeg: true})
+      .toBuffer()
+      .catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
+    param = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${file.filename}`,
+      Body: image,
+      ContentType: file.mimetype,
+      ACL: 'public-read',
+    };
+    await s3.send(new PutObjectCommand(param));
+  }
+
 
   let rawParam = {};
-  if (raw) {
+  if (Object.entries(raw).length > 0) {
     // Convert raw to thumbnail
     console.log('Processing Raw: ', raw);
     const rawImage = await sharp(raw.path)
@@ -53,7 +58,7 @@ async function upload(id, file, raw, socket, user) {
       });
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${raw.filename}.jpeg`, 
+      Key: `${raw.filename}.jpeg`,
       Body: rawImage,
       ContentType: 'image/jpeg',
       ACL: 'public-read',
@@ -78,20 +83,24 @@ async function uploadVid(id, videoFile, rawFile, socket, user) {
   const rawThumbPath = path.resolve(__dirname,
     `../../../uploads/${id}.mp4`);
 
-  // Process video as gif thumbnail
-  await processVideo(id, videoFile, newVidPath, 'gif',
-    {duration: 5, fps: 10, size: '300x?'}).catch((e) => {
-      console.log('Error Occured: ', e);
-      socket.to(user._id.toString()).emit('error', {error: e});
-    });
+  if (Object.entries(videoFile).length > 0) {
+    // Process video as gif thumbnail
+    await processVideo(id, videoFile, newVidPath, 'gif',
+      {duration: 5, fps: 10, size: '300x?'}).catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
+  }
 
+  if (Object.entries(rawFile).length > 0) {
 
-  // Process video raw as thumbnail
-  await processVideo(id, rawFile, rawThumbPath, 'mp4',
-    {duration: 15, fps: 30, size: '300x?'}).catch((e) => {
-      console.log('Error Occured: ', e);
-      socket.to(user._id.toString()).emit('error', {error: e});
-    });
+    // Process video raw as thumbnail
+    await processVideo(id, rawFile, rawThumbPath, 'mp4',
+      {duration: 15, fps: 30, size: '300x?'}).catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
+  }
 }
 
 /**

@@ -192,7 +192,7 @@ async function sendInvite(data) {
   sendEmail('d-3454448196734c359086c4b0ac7ec701', {
     to: data.email,
     subject: 'You have been invited as Creator!',
-    link: `https://nft-homejab.netlify.app/?invite=${data.hash}`,
+    link: `${process.env.HOMEJAB_WEB}?invite=${data.hash}`,
     username: data.username,
     body: 'You Have been invited as Creator on NFT Homejab, we are excited to welcome you',
     linkWord: 'Accept Invitation',
@@ -206,7 +206,7 @@ async function sendVerifyRequest(data) {
   sendEmail('d-3454448196734c359086c4b0ac7ec701', {
     to: data.email,
     subject: 'Verify Your Email Address',
-    link: `https://nft-homejab.netlify.app/?verify=${data.hash}`,
+    link: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
     username: data.username,
     body: 'Please verify your email to start exploring our collection of listing',
     linkWord: 'Verify Your Email Here',
