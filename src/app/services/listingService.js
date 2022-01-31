@@ -585,7 +585,6 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   if (ors.length > 0) {
     filters['$or'] = ors;
   }
-  console.log(filters);
   const listings = await listing.paginate(filters, {
     page, limit, sort: {[field[0]]: orderBy},
   });

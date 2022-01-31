@@ -25,6 +25,8 @@ const schema = new mongoose.Schema({
     url: {type: String},
     id: {type: ObjectId},
   },
+  index: {type: Number},
+  logo: {type: String},
 });
 
 schema.plugin(paginate);
