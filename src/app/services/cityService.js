@@ -11,7 +11,7 @@ const joi = require('joi');
  */
 async function getAll(query, user, page, limit) {
   const queries = {};
-  const sort = {population: -1};
+  const sort = {index: 1};
   if (query.url) {
     queries['url'] = query.url;
   }
