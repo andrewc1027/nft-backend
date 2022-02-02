@@ -19,11 +19,6 @@ async function itemPurchased(self, listing, socket) {
       userID: self._id,
       createdAt: Date.now(),
     });
-    const templateFile = fs.readFileSync(
-      path.resolve(
-        __dirname, '../../../email-template/purchaseSuccessful.json',
-      ),
-    );
     if (self.email != '') {
       itemPurchasedEmail({
         email: self.email,
@@ -180,21 +175,25 @@ async function downloadReady(user, socket, path) {
  * @param {Object} data
  */
 async function itemPurchasedEmail(data) {
-  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+  sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Your NFT purchase',
     body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
     You can access the files for your NFT here: ${downloadLink} \ \
     You can also access from your profile on https://nft.homejab.com. `,
+    buttonText: 'Homejab Web',
+    buttonLink: process.env.HOMEJAB_WEB,
   });
 }
 
 async function itemSoldEmail(data) {
-  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+  sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Your NFT is sold',
     body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
-    Funds from this sale will be deposited in your crypto wallet.`
+    Funds from this sale will be deposited in your crypto wallet.`,
+    buttonText: 'Homejab Web',
+    buttonLink: process.env.HOMEJAB_WEB,
   })
 }
 
@@ -202,13 +201,14 @@ async function itemSoldEmail(data) {
  * @param {Object} data
  */
 async function sendInvite(data) {
-  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+  console.log(`${process.env.HOMEJAB_WEB}?invite=${data.hash}`);
+  sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Invitation to HomeJab NFT Marketplace!',
-    link: `${process.env.HOMEJAB_WEB}?invite=${data.hash}`,
+    buttonLink: `${process.env.HOMEJAB_WEB}?invite=${data.hash}`,
     username: data.username,
     body: 'Please click the link below to accept your invitation to the HomeJab NFT Marketplace. Thank you for being part of this exciting new project!',
-    linkWord: 'Accept Invitation',
+    buttonText: 'Accept Invitation',
   });
 }
 
@@ -216,20 +216,20 @@ async function sendInvite(data) {
  * @param {Object} data
  */
 async function sendVerifyRequest(data) {
-  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+  console.log(`${process.env.HOMEJAB_WEB}?verify=${data.hash}`);
+  sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Please verify your email',
-    link: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
-    username: data.username,
+    textLink: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
     body: 'Please click the link below to verify your email address',
-    linkWord: 'Verify Your Email',
+    text: 'Verify Your Email',
   });
 }
 
 module.exports = {
   itemPurchased,
   itemSold,
-  priceChange,
+  // priceChange,
   downloadReady,
   sendInvite,
   sendVerifyRequest,
