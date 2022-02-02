@@ -322,7 +322,7 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  const item = await listing.findById(id).where({
+  const item = await listing.findById(id).select('downloadLink owner price name').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),

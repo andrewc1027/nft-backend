@@ -25,15 +25,11 @@ async function itemPurchased(self, listing, socket) {
       ),
     );
     if (self.email != '') {
-      const template = JSON.parse(templateFile);
-      let payload = template.Template.HtmlPart;
-      payload = payload.replace('${username}', self.username);
-      payload = payload.replace('${price}', listing.price);
-      payload = payload.replace('${filePath}', listing.filePath);
-      console.log('sending email purchase');
-      sendEmail(payload, {
-        to: self.email,
-        subject: 'You Just Purchase an Item',
+      itemPurchasedEmail({
+        email: self.email,
+        listingName: listing.name,
+        lisgtingPrice: listing.price,
+        downloadLink: listing.downloadLink,
       });
     }
     await socket.to(self._id.toString()).emit('successfulPurchase', {
@@ -62,47 +58,42 @@ async function itemSold(listing, socket) {
   });
   const owner = await user.findById(listing.owner);
   if (owner.email != '') {
-    const template = JSON.parse(templateFile);
-    let payload = template.Template.HtmlPart;
-    payload = payload.replace('${username}', owner.username);
-    payload = payload.replace('${price}', listing.price);
-    payload = payload.replace('${filePath}', listing.filePath);
-
-    sendEmail(payload, {
-      to: owner.email,
-      subject: 'You Just Sold an Item',
-    });
+    itemSoldEmail({
+      email: owner.email,
+      listingName: listing.name || '',
+      listingPrice: listing.price || 0,
+    })
   }
-  for (const usrID of listing.subscribers) {
-    const usr = await user.findById(usrID);
-    if (usr.notifications.itemSold) {
-      await notification.create({
-        title: `${listing.name}: Item Sold`,
-        event: 'Item Sold',
-        listing: listing._id,
-        userID: usr._id,
-        createdAt: Date.now(),
-      });
-      if (usr.email != '') {
-        const template = JSON.parse(templateFile);
-        let payload = template.Template.HtmlPart;
-        payload = payload.replace('${username}', usr.username);
-        payload = payload.replace('${price}', listing.price);
-        payload = payload.replace('${filePath}', listing.filePath);
+  // for (const usrID of listing.subscribers) {
+  //   const usr = await user.findById(usrID);
+  //   if (usr.notifications.itemSold) {
+  //     await notification.create({
+  //       title: `${listing.name}: Item Sold`,
+  //       event: 'Item Sold',
+  //       listing: listing._id,
+  //       userID: usr._id,
+  //       createdAt: Date.now(),
+  //     });
+  //     if (usr.email != '') {
+  //       const template = JSON.parse(templateFile);
+  //       let payload = template.Template.HtmlPart;
+  //       payload = payload.replace('${username}', usr.username);
+  //       payload = payload.replace('${price}', listing.price);
+  //       payload = payload.replace('${filePath}', listing.filePath);
 
-        sendEmail(payload, {
-          to: usr.email,
-          subject: 'Item Sold',
-        });
-      }
-      await socket.to(usr._id.toString()).emit('itemSold', {
-        listing: listing._id,
-        image: listing.filePath,
-        price: listing.price,
-        name: listing.name,
-      });
-    }
-  }
+  //       sendEmail(payload, {
+  //         to: usr.email,
+  //         subject: 'Item Sold',
+  //       });
+  //     }
+  //     await socket.to(usr._id.toString()).emit('itemSold', {
+  //       listing: listing._id,
+  //       image: listing.filePath,
+  //       price: listing.price,
+  //       name: listing.name,
+  //     });
+  //   }
+  // }
 }
 
 /**
@@ -110,44 +101,44 @@ async function itemSold(listing, socket) {
  * @param {Number} newPrice
  * @param {Object} socket
  */
-async function priceChange(listing, newPrice, socket) {
-  const templateFile = fs.readFileSync(
-    path.resolve(__dirname, '../../../email-template/priceChange.json'),
-  );
-  const notif = {
-    title: `${listing.name}: price has changed`,
-    event: 'Price Change',
-    listing: listing._id,
-    createdAt: Date.now(),
-  };
-  for (const usrID of listing.subscribers) {
-    const usr = await user.findById(usrID);
-    if (usr.notifications.priceChange) {
-      notif['userID'] = usr._id,
-        await notification.create(notif);
-      if (usr.email != '') {
-        const template = JSON.parse(templateFile);
-        let payload = template.Template.HtmlPart;
-        payload = payload.replace('${username}', usr.username);
-        payload = payload.replace('${oldPrice}', listing.price);
-        payload = payload.replace('${newPrice}', newPrice);
-        payload = payload.replace('${filePath}', listing.filePath);
+// async function priceChange(listing, newPrice, socket) {
+//   const templateFile = fs.readFileSync(
+//     path.resolve(__dirname, '../../../email-template/priceChange.json'),
+//   );
+//   const notif = {
+//     title: `${listing.name}: price has changed`,
+//     event: 'Price Change',
+//     listing: listing._id,
+//     createdAt: Date.now(),
+//   };
+//   for (const usrID of listing.subscribers) {
+//     const usr = await user.findById(usrID);
+//     if (usr.notifications.priceChange) {
+//       notif['userID'] = usr._id,
+//         await notification.create(notif);
+//       if (usr.email != '') {
+//         const template = JSON.parse(templateFile);
+//         let payload = template.Template.HtmlPart;
+//         payload = payload.replace('${username}', usr.username);
+//         payload = payload.replace('${oldPrice}', listing.price);
+//         payload = payload.replace('${newPrice}', newPrice);
+//         payload = payload.replace('${filePath}', listing.filePath);
 
-        sendEmail(payload, {
-          to: usr.email,
-          subject: 'Price Change',
-        });
-      }
-      await socket.to(usr._id.toString()).emit('priceChange', {
-        listing: listing._id,
-        image: listing.filePath,
-        name: listing.name,
-        newPrice: newPrice,
-        oldPrice: listing.price,
-      });
-    }
-  }
-}
+//         sendEmail(payload, {
+//           to: usr.email,
+//           subject: 'Price Change',
+//         });
+//       }
+//       await socket.to(usr._id.toString()).emit('priceChange', {
+//         listing: listing._id,
+//         image: listing.filePath,
+//         name: listing.name,
+//         newPrice: newPrice,
+//         oldPrice: listing.price,
+//       });
+//     }
+//   }
+// }
 
 /**
  * @param {String} template
@@ -188,13 +179,35 @@ async function downloadReady(user, socket, path) {
 /**
  * @param {Object} data
  */
+async function itemPurchasedEmail(data) {
+  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+    to: data.email,
+    subject: 'Your NFT purchase',
+    body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
+    You can access the files for your NFT here: ${downloadLink} \ \
+    You can also access from your profile on https://nft.homejab.com. `,
+  });
+}
+
+async function itemSoldEmail(data) {
+  sendEmail('d-3454448196734c359086c4b0ac7ec701', {
+    to: data.email,
+    subject: 'Your NFT is sold',
+    body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
+    Funds from this sale will be deposited in your crypto wallet.`
+  })
+}
+
+/**
+ * @param {Object} data
+ */
 async function sendInvite(data) {
   sendEmail('d-3454448196734c359086c4b0ac7ec701', {
     to: data.email,
-    subject: 'You have been invited as Creator!',
+    subject: 'Invitation to HomeJab NFT Marketplace!',
     link: `${process.env.HOMEJAB_WEB}?invite=${data.hash}`,
     username: data.username,
-    body: 'You Have been invited as Creator on NFT Homejab, we are excited to welcome you',
+    body: 'Please click the link below to accept your invitation to the HomeJab NFT Marketplace. Thank you for being part of this exciting new project!',
     linkWord: 'Accept Invitation',
   });
 }
@@ -205,11 +218,11 @@ async function sendInvite(data) {
 async function sendVerifyRequest(data) {
   sendEmail('d-3454448196734c359086c4b0ac7ec701', {
     to: data.email,
-    subject: 'Verify Your Email Address',
+    subject: 'Please verify your email',
     link: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
     username: data.username,
-    body: 'Please verify your email to start exploring our collection of listing',
-    linkWord: 'Verify Your Email Here',
+    body: 'Please click the link below to verify your email address',
+    linkWord: 'Verify Your Email',
   });
 }
 
