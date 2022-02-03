@@ -19,14 +19,13 @@ async function itemPurchased(self, listing, socket) {
       userID: self._id,
       createdAt: Date.now(),
     });
-    if (self.email != '') {
-      itemPurchasedEmail({
-        email: self.email,
-        listingName: listing.name,
-        lisgtingPrice: listing.price,
-        downloadLink: listing.downloadLink,
-      });
-    }
+    itemPurchasedEmail({
+      email: self.email,
+      listingName: listing.name,
+      lisgtingPrice: listing.price,
+      downloadLink: listing.downloadLink,
+    });
+
     await socket.to(self._id.toString()).emit('successfulPurchase', {
       listing: listing._id,
       image: listing.filePath,
@@ -52,88 +51,13 @@ async function itemSold(listing, socket) {
     name: listing.name,
   });
   const owner = await user.findById(listing.owner);
-  if (owner.email != '') {
-    itemSoldEmail({
-      email: owner.email,
-      listingName: listing.name || '',
-      listingPrice: listing.price || 0,
-    })
-  }
-  // for (const usrID of listing.subscribers) {
-  //   const usr = await user.findById(usrID);
-  //   if (usr.notifications.itemSold) {
-  //     await notification.create({
-  //       title: `${listing.name}: Item Sold`,
-  //       event: 'Item Sold',
-  //       listing: listing._id,
-  //       userID: usr._id,
-  //       createdAt: Date.now(),
-  //     });
-  //     if (usr.email != '') {
-  //       const template = JSON.parse(templateFile);
-  //       let payload = template.Template.HtmlPart;
-  //       payload = payload.replace('${username}', usr.username);
-  //       payload = payload.replace('${price}', listing.price);
-  //       payload = payload.replace('${filePath}', listing.filePath);
-
-  //       sendEmail(payload, {
-  //         to: usr.email,
-  //         subject: 'Item Sold',
-  //       });
-  //     }
-  //     await socket.to(usr._id.toString()).emit('itemSold', {
-  //       listing: listing._id,
-  //       image: listing.filePath,
-  //       price: listing.price,
-  //       name: listing.name,
-  //     });
-  //   }
-  // }
+  itemSoldEmail({
+    email: owner.email,
+    listingName: listing.name || '',
+    listingPrice: listing.price || 0,
+  })
 }
 
-/**
- * @param {Object} listing
- * @param {Number} newPrice
- * @param {Object} socket
- */
-// async function priceChange(listing, newPrice, socket) {
-//   const templateFile = fs.readFileSync(
-//     path.resolve(__dirname, '../../../email-template/priceChange.json'),
-//   );
-//   const notif = {
-//     title: `${listing.name}: price has changed`,
-//     event: 'Price Change',
-//     listing: listing._id,
-//     createdAt: Date.now(),
-//   };
-//   for (const usrID of listing.subscribers) {
-//     const usr = await user.findById(usrID);
-//     if (usr.notifications.priceChange) {
-//       notif['userID'] = usr._id,
-//         await notification.create(notif);
-//       if (usr.email != '') {
-//         const template = JSON.parse(templateFile);
-//         let payload = template.Template.HtmlPart;
-//         payload = payload.replace('${username}', usr.username);
-//         payload = payload.replace('${oldPrice}', listing.price);
-//         payload = payload.replace('${newPrice}', newPrice);
-//         payload = payload.replace('${filePath}', listing.filePath);
-
-//         sendEmail(payload, {
-//           to: usr.email,
-//           subject: 'Price Change',
-//         });
-//       }
-//       await socket.to(usr._id.toString()).emit('priceChange', {
-//         listing: listing._id,
-//         image: listing.filePath,
-//         name: listing.name,
-//         newPrice: newPrice,
-//         oldPrice: listing.price,
-//       });
-//     }
-//   }
-// }
 
 /**
  * @param {String} template
