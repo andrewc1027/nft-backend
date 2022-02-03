@@ -103,7 +103,7 @@ async function itemPurchasedEmail(data) {
     to: data.email,
     subject: 'Your NFT purchase',
     body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
-    You can access the files for your NFT here: ${downloadLink} \ \
+    You can access the files for your NFT here: ${data.downloadLink} \ \
     You can also access from your profile on https://nft.homejab.com. `,
     buttonText: 'Homejab Web',
     buttonLink: process.env.HOMEJAB_WEB,
