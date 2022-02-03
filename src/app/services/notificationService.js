@@ -22,7 +22,7 @@ async function itemPurchased(self, listing, socket) {
     itemPurchasedEmail({
       email: self.email,
       listingName: listing.name,
-      lisgtingPrice: listing.price,
+      listingPrice: listing.price,
       downloadLink: listing.downloadLink,
     });
 
@@ -99,12 +99,12 @@ async function downloadReady(user, socket, path) {
  * @param {Object} data
  */
 async function itemPurchasedEmail(data) {
+  console.log(data);
   sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Your NFT purchase',
     body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
-    You can access the files for your NFT here: ${data.downloadLink} \ \
-    You can also access from your profile on https://nft.homejab.com. `,
+    You can access from your profile on ${process.env.HOMEJAB_WEB}. `,
     buttonText: 'Homejab Web',
     buttonLink: process.env.HOMEJAB_WEB,
   });
