@@ -144,9 +144,9 @@ async function sendVerifyRequest(data) {
   sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Please verify your email',
-    textLink: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
+    buttonLink: `${process.env.HOMEJAB_WEB}?verify=${data.hash}`,
     body: 'Please click the link below to verify your email address',
-    text: 'Verify Your Email',
+    buttonText: 'Verify Your Email',
   });
 }
 
