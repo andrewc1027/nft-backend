@@ -255,7 +255,7 @@ async function update(id, files = {}, data, user) {
     tagStr = uniqueTags.join(',');
   }
 
-  if (data.resource == '360 Tour') {
+  if (item.resource == '360 Tour') {
     item.link360 = data.link360 || item.link360;
   }
   item.address = data.address || item.address;
