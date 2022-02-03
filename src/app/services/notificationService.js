@@ -72,8 +72,8 @@ async function sendEmail(template, data) {
       dynamicTemplateData: {
         subject: data.subject,
         username: data.username,
-        link: data.link,
-        linkWord: data.linkWord,
+        buttonLink: data.buttonLink,
+        buttonText: data.buttonText,
         body: data.body,
       }
     });
