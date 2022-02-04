@@ -186,6 +186,23 @@ async function uploadFile(file) {
 }
 
 /**
+ * @param {Object} thumbnail
+ */
+async function upload360(id, thumbnail) {
+  const fileBuffer = fs.readFileSync(thumbnail.path);
+  const param = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${thumbnail.name}`,
+    Body: fileBuffer,
+    ContentType: thumbnail.mimetype,
+    ACL: 'public-read',
+  };
+  const item = await s3.send(new PutObjectCommand(param));
+  updateListing(id, param.Key);
+  return item;
+}
+
+/**
  * @param {String} key
  */
 async function removeFile(key) {
@@ -199,4 +216,5 @@ module.exports = {
   uploadVid,
   uploadFile,
   removeFile,
+  upload360,
 };
