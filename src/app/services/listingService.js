@@ -658,6 +658,7 @@ async function finishAuction(id, user) {
  * @param {String} id
  */
 async function makeZip(id) {
+  console.log('Making Zip for: ', id);
   const nfts = await nftService.getByListingId(id);
   const zipFile = [];
   for await (const nft of nfts) {
@@ -689,6 +690,7 @@ async function makeZip(id) {
  * @param {Object} socket
  */
 async function zip(id, files) {
+  console.log('Compressing Zip for :', id, files.length);
   const archive = archiver('zip', {zlib: {level: 9}});
   archive.on('error', function(err) {
     console.log(err);
@@ -702,6 +704,7 @@ async function zip(id, files) {
     archive.file(file.path, {name: file.name});
   }
   pipe.on('close', async function() {
+    console.log('Uploading Zip for: ', id, zipName)
     await s3Utils.uploadFile({
       name: zipName,
       ext: 'zip',
@@ -711,6 +714,7 @@ async function zip(id, files) {
   });
   archive.finalize();
 
+  console.log('Updating Download Link: ', id);
   await listing.findByIdAndUpdate(id, {
     downloadLink: `${process.env.AWS_BUCKET_URL}${zipName}`,
   });

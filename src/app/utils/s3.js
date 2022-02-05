@@ -35,7 +35,6 @@ async function upload(id, file, raw, socket, user) {
       ContentType: file.mimetype,
       ACL: 'public-read',
     };
-    console.log('Uplading: ', param);
     await s3.send(new PutObjectCommand(param));
   }
 
@@ -64,7 +63,6 @@ async function upload(id, file, raw, socket, user) {
       ContentType: 'image/jpeg',
       ACL: 'public-read',
     };
-    console.log('Uplading: ', rawParam);
     await s3.send(new PutObjectCommand(rawParam));
   }
 
@@ -134,7 +132,6 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
           ContentType: 'image/gif',
           ACL: 'public-read',
         };
-        console.log('Uplading: ', param);
         await s3.send(new PutObjectCommand(param));
         updateListing(id, param.Key, '');
       } else if (type == 'mp4') {
@@ -146,7 +143,6 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
           ContentType: 'video/mp4',
           ACL: 'public-read',
         };
-        console.log('Uplading: ', rawParam);
         await s3.send(new PutObjectCommand(rawParam));
         updateListing(id, '', rawParam.Key);
       }
@@ -162,12 +158,10 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
 async function updateListing(id, key, rawKey) {
   const item = await listing.findById(id);
   if (key) {
-    console.log('Thumbnail ', key);
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${key}` ?
       `${process.env.AWS_BUCKET_URL}${key}` : item.thumbnail;
   }
   if (rawKey) {
-    console.log('Raw Thumbnail ', rawKey);
     item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawKey}` ?
       `${process.env.AWS_BUCKET_URL}${rawKey}` : item.rawThumbnail;
   }
@@ -203,7 +197,6 @@ async function upload360(id, thumbnail) {
     ContentType: thumbnail.mimetype,
     ACL: 'public-read',
   };
-  console.log('Uplading: ', param);
   const item = await s3.send(new PutObjectCommand(param));
   updateListing(id, param.Key, '');
   return item;
