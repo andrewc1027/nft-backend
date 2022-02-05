@@ -161,12 +161,12 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
  */
 async function updateListing(id, key, rawKey) {
   const item = await listing.findById(id);
-  if (key != '') {
+  if (key) {
     console.log('Thumbnail ', key);
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${key}` ?
       `${process.env.AWS_BUCKET_URL}${key}` : item.thumbnail;
   }
-  if (rawKey != '') {
+  if (rawKey) {
     console.log('Raw Thumbnail ', rawKey);
     item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawKey}` ?
       `${process.env.AWS_BUCKET_URL}${rawKey}` : item.rawThumbnail;
