@@ -198,7 +198,7 @@ async function upload360(id, thumbnail) {
   const fileBuffer = fs.readFileSync(thumbnail.path);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${thumbnail.name}`,
+    Key: `${thumbnail.filename}`,
     Body: fileBuffer,
     ContentType: thumbnail.mimetype,
     ACL: 'public-read',
