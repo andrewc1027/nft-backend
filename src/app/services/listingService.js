@@ -208,6 +208,8 @@ async function insert(data, files, user, socket) {
  */
 async function handleNfts(id, files, raws, thumbnail, resources,
   deletedFiles, socket, user) {
+  console.log('Handling File');
+
   if (resources == '360 Tour') {
     let ids = [];
     if (deletedFiles) {
@@ -228,9 +230,9 @@ async function handleNfts(id, files, raws, thumbnail, resources,
   if (raws && raws.length > 0) {
     rawObj = raws[0];
   }
-  if (resources == 'Video' && files) {
+  if ((resources == 'Video' && files || resources == 'Video' && raws)) {
     s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
-  } else if (resources == 'Image' && files) {
+  } else if ((resources == 'Image' && files) || (resources == 'Image' && raws)) {
     s3Utils.upload(id, fileObj, rawObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload360(id, thumbnail[0]);
@@ -267,7 +269,6 @@ async function update(id, files = {}, data, user) {
   item.updatedAt = Date.now();
   console.log(files);
   if (Object.entries(files).length > 0) {
-    console.log('Handling File');
     // eslint-disable-next-line max-len
     handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
   }
