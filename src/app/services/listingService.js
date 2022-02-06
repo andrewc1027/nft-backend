@@ -422,8 +422,12 @@ async function publish(id, data, user, socket) {
   if (error) {
     throw new Error(error);
   }
+  const item = await listing.findById(id).orFail(
+    () => Error('Not Found'),
+  );
   const check = await listing.findOne({
     tokenID: data.tokenID,
+    blockchain: item.blockchain,
     _id: {$ne: new ObjectId(id)},
   });
   if (check) {
@@ -433,9 +437,7 @@ async function publish(id, data, user, socket) {
   if (data.activeDate == undefined) {
     published = true;
   }
-  const item = await listing.findById(id).orFail(
-    () => Error('Not Found'),
-  );
+
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
