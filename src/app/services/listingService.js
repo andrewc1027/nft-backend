@@ -251,7 +251,7 @@ async function update(id, files = {}, data, user) {
     () => Error('Not Found'));
 
   if (item.isPublished) {
-    if (files) {
+    if (Object.entries(files).length > 0) {
       throw new Error('Not Allowed to update nft files after minting/publishing');
     }
     if (data.address || data.city || data.blockchain) {
