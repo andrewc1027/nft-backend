@@ -76,7 +76,7 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName ipfs.raw.path');
+    'ipfs.file.originalName ipfs.raw.originalName');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -230,12 +230,13 @@ async function handleNfts(id, files, raws, thumbnail, resources,
   if (raws && raws.length > 0) {
     rawObj = raws[0];
   }
+
   if ((resources == 'Video' && files || resources == 'Video' && raws)) {
     s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
   } else if ((resources == 'Image' && files) || (resources == 'Image' && raws)) {
     s3Utils.upload(id, fileObj, rawObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
-    s3Utils.upload360(id, thumbnail[0]);
+    s3Utils.upload360(id, thumbnail[0], files);
   }
 }
 
