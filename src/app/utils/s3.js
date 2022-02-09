@@ -157,11 +157,11 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
  */
 async function updateListing(id, key, rawKey) {
   const item = await listing.findById(id);
-  if (key != '') {
+  if (key) {
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${key}` ?
       `${process.env.AWS_BUCKET_URL}${key}` : item.thumbnail;
   }
-  if (rawKey != '') {
+  if (rawKey) {
     item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawKey}` ?
       `${process.env.AWS_BUCKET_URL}${rawKey}` : item.rawThumbnail;
   }
@@ -186,6 +186,54 @@ async function uploadFile(file) {
 }
 
 /**
+ * @param {string} id
+ * @param {Array} thumbnail
+ * @param {Array} files
+ */
+async function upload360(id, thumbnail, files) {
+  const fileBuffer = fs.readFileSync(thumbnail.path);
+  const param = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `${thumbnail.filename}`,
+    Body: fileBuffer,
+    ContentType: thumbnail.mimetype,
+    ACL: 'public-read',
+  };
+  const item = await s3.send(new PutObjectCommand(param));
+  updateListing(id, param.Key, '');
+  compress360(id, files);
+  return item;
+}
+
+/**
+ * 
+ * @param {String} id 
+ * @param {Array} files 
+ */
+async function compress360(id, files) {
+  let assets = [];
+  for (const file of files) {
+    const fileBuffer = fs.readFileSync(file.path);
+    const param = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `${file.filename}`,
+      Body: fileBuffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read',
+    };
+    const item = await s3.send(new PutObjectCommand(param));
+    const asset = {
+      fileName: param.Key,
+      path: `${process.env.AWS_BUCKET_URL}${param.Key}`
+    };
+    assets.push(asset);
+  }
+  if (assets.length > 0) {
+    await listing.findByIdAndUpdate(id, {assets: assets});
+  }
+}
+
+/**
  * @param {String} key
  */
 async function removeFile(key) {
@@ -199,4 +247,5 @@ module.exports = {
   uploadVid,
   uploadFile,
   removeFile,
+  upload360,
 };

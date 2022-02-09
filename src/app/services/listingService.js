@@ -76,7 +76,7 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.path ipfs.file.originalName ipfs.raw.originalName ipfs.raw.path');
+    'ipfs.file.originalName ipfs.raw.originalName');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -208,6 +208,8 @@ async function insert(data, files, user, socket) {
  */
 async function handleNfts(id, files, raws, thumbnail, resources,
   deletedFiles, socket, user) {
+  console.log('Handling File');
+
   if (resources == '360 Tour') {
     let ids = [];
     if (deletedFiles) {
@@ -228,12 +230,13 @@ async function handleNfts(id, files, raws, thumbnail, resources,
   if (raws && raws.length > 0) {
     rawObj = raws[0];
   }
-  if (resources == 'Video' && files) {
+
+  if ((resources == 'Video' && files || resources == 'Video' && raws)) {
     s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
-  } else if (resources == 'Image' && files) {
+  } else if ((resources == 'Image' && files) || (resources == 'Image' && raws)) {
     s3Utils.upload(id, fileObj, rawObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
-    s3Utils.upload(id, thumbnail[0]);
+    s3Utils.upload360(id, thumbnail[0], files);
   }
 }
 
@@ -248,6 +251,14 @@ async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
     () => Error('Not Found'));
 
+  if (item.isPublished) {
+    if (Object.entries(files).length > 0) {
+      throw new Error('Not Allowed to update nft files after minting/publishing');
+    }
+    if (data.address || data.city || data.blockchain) {
+      throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
+    }
+  }
   let tagStr = item.tags;
   if (data.tags) {
     const tags = data.tags.split(',');
@@ -255,6 +266,9 @@ async function update(id, files = {}, data, user) {
     tagStr = uniqueTags.join(',');
   }
 
+  if (item.resource == '360 Tour') {
+    item.link360 = data.link360 || item.link360;
+  }
   item.address = data.address || item.address;
   item.name = data.name || item.name;
   item.description = data.description || item.description;
@@ -262,7 +276,8 @@ async function update(id, files = {}, data, user) {
   item.tags = tagStr;
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
-  if (files) {
+  console.log(files);
+  if (Object.entries(files).length > 0) {
     // eslint-disable-next-line max-len
     handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
   }
@@ -322,7 +337,7 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  const item = await listing.findById(id).where({
+  const item = await listing.findById(id).select('downloadLink owner price name').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
@@ -416,8 +431,12 @@ async function publish(id, data, user, socket) {
   if (error) {
     throw new Error(error);
   }
+  const item = await listing.findById(id).orFail(
+    () => Error('Not Found'),
+  );
   const check = await listing.findOne({
     tokenID: data.tokenID,
+    blockchain: item.blockchain,
     _id: {$ne: new ObjectId(id)},
   });
   if (check) {
@@ -427,9 +446,7 @@ async function publish(id, data, user, socket) {
   if (data.activeDate == undefined) {
     published = true;
   }
-  const item = await listing.findById(id).orFail(
-    () => Error('Not Found'),
-  );
+
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
@@ -463,15 +480,7 @@ async function publish(id, data, user, socket) {
   await item.save();
 
   makeZip(id);
-  if (data.price != item.price) {
-    await notificationSvc.priceChange(item, data.price, socket);
-  }
-  // if (data.endDate) {
-  //   console.log('adding agenda schedule Auction');
-  //   await agenda.schedule(data.endDate, 'Auction Timer', {
-  //     _id: item._id,
-  //   });
-  // }
+
   if (data.activeDate) {
     console.log('adding agenda schedule');
     await agenda.schedule(data.activeDate, 'Scheduled Publish',
@@ -660,6 +669,7 @@ async function finishAuction(id, user) {
  * @param {String} id
  */
 async function makeZip(id) {
+  console.log('Making Zip for: ', id);
   const nfts = await nftService.getByListingId(id);
   const zipFile = [];
   for await (const nft of nfts) {
@@ -691,6 +701,7 @@ async function makeZip(id) {
  * @param {Object} socket
  */
 async function zip(id, files) {
+  console.log('Compressing Zip for :', id, files.length);
   const archive = archiver('zip', {zlib: {level: 9}});
   archive.on('error', function(err) {
     console.log(err);
@@ -704,6 +715,7 @@ async function zip(id, files) {
     archive.file(file.path, {name: file.name});
   }
   pipe.on('close', async function() {
+    console.log('Uploading Zip for: ', id, zipName)
     await s3Utils.uploadFile({
       name: zipName,
       ext: 'zip',
@@ -713,6 +725,7 @@ async function zip(id, files) {
   });
   archive.finalize();
 
+  console.log('Updating Download Link: ', id);
   await listing.findByIdAndUpdate(id, {
     downloadLink: `${process.env.AWS_BUCKET_URL}${zipName}`,
   });

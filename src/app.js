@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
 const mail = require('./app/config/sendgrid');
+const MulterError = require('multer').MulterError;
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
@@ -29,7 +30,7 @@ fs.readdirSync(__dirname + '/app/routes').forEach((file) => {
     app.use('/', require(__dirname + '/app/routes/' + file));
   }
   if (fs.lstatSync(__dirname + '/app/routes/' + file).isDirectory()) {
-    fs.readdirSync(__dirname + '/app/routes/'+file).forEach((file2) => {
+    fs.readdirSync(__dirname + '/app/routes/' + file).forEach((file2) => {
       app.use('/', require(__dirname + `/app/routes/${file}/${file2}`));
     });
   }
@@ -43,6 +44,12 @@ app.use((err, req, res, next) => {
 
   console.log(err);
 
+  if (err instanceof MulterError) {
+    res.status(err.statusCode || 500).json({
+      code: err.code || 500,
+      msg: err.message,
+    });
+  }
   res.status(err.statusCode || 500).json({
     code: err.statusCode || 500,
     msg: err.printMsg || 'Something went wrong!',

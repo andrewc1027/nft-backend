@@ -20,7 +20,10 @@ const storage = multer.diskStorage({
     cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
   },
 });
-const upload = multer({storage: storage});
+const upload = multer({
+    storage: storage,
+    limits: {fileSize: 80000000},
+});
 const multi = upload.fields([
   {name: 'file', maxCount: 20},
   {name: 'raw', maxCount: 20},
