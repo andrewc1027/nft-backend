@@ -4,10 +4,13 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const listing = require('../models/listing');
+const nft = require('../models/nft');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
+const {default: axios} = require('axios');
+
 /**
  * @param {String} id
  * @param {File} file
@@ -201,36 +204,56 @@ async function upload360(id, thumbnail, files) {
   };
   const item = await s3.send(new PutObjectCommand(param));
   updateListing(id, param.Key, '');
-  compress360(id, files);
   return item;
 }
 
 /**
  * 
  * @param {String} id 
- * @param {Array} files 
  */
-async function compress360(id, files) {
+async function compress360(id) {
+  console.log('Compressing 360 Resources...');
   let assets = [];
-  for (const file of files) {
-    const fileBuffer = fs.readFileSync(file.path);
-    const param = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${file.filename}`,
-      Body: fileBuffer,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-    };
-    const item = await s3.send(new PutObjectCommand(param));
-    const asset = {
-      fileName: param.Key,
-      path: `${process.env.AWS_BUCKET_URL}${param.Key}`
-    };
-    assets.push(asset);
+  const item = await listing.findById(id);
+  const nfts = await nft.find({listingID: id});
+  for (const nft of nfts) {
+    console.log(nft);
+    const url = nft.ipfs.file.path;
+    const filePath = path.resolve(__dirname, '../../../uploads', nft.ipfs.file.originalName);
+    const writer = fs.createWriteStream(filePath);
+
+    const response = await axios.get(url, {responseType: 'stream'});
+    response.data.pipe(writer);
+    writer.on('finish', async function() {
+      console.log('writer finish..');
+      const image = await sharp(filePath)
+        .resize({width: 640})
+        .jpeg({mozjpeg: true})
+        .toBuffer()
+        .catch((e) => {
+          console.log('Error Occured: ', e);
+        });
+      param = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `compressed_640_${nft.ipfs.file.originalName}`,
+        Body: image,
+        ContentType: 'image/jpeg',
+        ACL: 'public-read',
+      };
+      await s3.send(new PutObjectCommand(param));
+      assets.push({
+        filename: nft.ipfs.file.originalName,
+        path: `${process.env.AWS_BUCKET_URL}${param.Key}`,
+      });
+      if (assets.length == nfts.length) {
+        console.log('Adding assets..', assets.length);
+        item.assets = assets;
+        await item.save();
+      }
+    })
   }
-  if (assets.length > 0) {
-    await listing.findByIdAndUpdate(id, {assets: assets});
-  }
+
+
 }
 
 /**
@@ -248,4 +271,5 @@ module.exports = {
   uploadFile,
   removeFile,
   upload360,
+  compress360,
 };

@@ -3,6 +3,7 @@ const listing = require('../models/listing');
 const nft = require('../models/nft');
 const axios = require('axios');
 const ipfsUtils = require('../utils/ipfs');
+const s3Utils = require('../utils/s3');
 /**
  * @param {Object} query
  * @param {Object} user
@@ -70,6 +71,7 @@ async function handle360(listingId, files = [], deletedFiles) {
     'deleted': false,
   }).distinct('_id');
   await listing.findByIdAndUpdate(listingId, {nfts: ids});
+  s3Utils.compress360(listingId);
 }
 
 /**
