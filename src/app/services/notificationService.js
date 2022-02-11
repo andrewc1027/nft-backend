@@ -114,7 +114,7 @@ async function itemSoldEmail(data) {
   sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
     to: data.email,
     subject: 'Your NFT is sold',
-    body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
+    body: `Congratulations!  Purchase for ${data.listingName} is complete for $${data.listingPrice}. \
     Funds from this sale will be deposited in your crypto wallet.`,
     buttonText: 'Homejab Web',
     buttonLink: process.env.HOMEJAB_WEB,
