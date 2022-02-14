@@ -4,10 +4,13 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const listing = require('../models/listing');
+const nft = require('../models/nft');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
+const {default: axios} = require('axios');
+
 /**
  * @param {String} id
  * @param {File} file
@@ -66,7 +69,9 @@ async function upload(id, file, raw, socket, user) {
     await s3.send(new PutObjectCommand(rawParam));
   }
 
-  updateListing(id, param.Key, rawParam.Key || '');
+  updateListing(id,
+    {key: param.Key, name: file.originalname},
+    {key: rawParam.Key, name: raw.originalname} || '');
 }
 
 /**
@@ -82,11 +87,19 @@ async function uploadVid(id, videoFile, rawFile, socket, user) {
     `../../../uploads/${id}.gif`);
   const rawThumbPath = path.resolve(__dirname,
     `../../../uploads/${id}.mp4`);
+  const compressedVidPath = path.resolve(__dirname,
+    `../../../uploads/${id}_compressed.mp4`);
 
   if (Object.entries(videoFile).length > 0) {
     // Process video as gif thumbnail
     await processVideo(id, videoFile, newVidPath, 'gif',
       {duration: 5, fps: 10, size: '300x?'}).catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
+
+    await processVideo(id, videoFile, compressedVidPath, 'mp4_compress',
+      {duration: 60, fps: 15, size: '300x?'}).catch((e) => {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
@@ -133,7 +146,7 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
           ACL: 'public-read',
         };
         await s3.send(new PutObjectCommand(param));
-        updateListing(id, param.Key, '');
+        updateListing(id, {key: param.Key}, {});
       } else if (type == 'mp4') {
         const rawBuffer = fs.readFileSync(newVidPath);
         const rawParam = {
@@ -144,7 +157,18 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
           ACL: 'public-read',
         };
         await s3.send(new PutObjectCommand(rawParam));
-        updateListing(id, '', rawParam.Key);
+        updateListing(id, {}, {key: rawParam.Key});
+      } else if (type == 'mp4_compress') {
+        const rawBuffer = fs.readFileSync(newVidPath);
+        const param = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `${id}_compressed_vid.mp4`,
+          Body: rawBuffer,
+          ContentType: 'video/mp4',
+          ACL: 'public-read',
+        };
+        await s3.send(new PutObjectCommand(param));
+        updateListing(id, {}, {}, {key: param.Key, name: videoFile.originalname});
       }
     })
     .save(newVidPath);
@@ -152,18 +176,30 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
 
 /**
  * @param {String} id
- * @param {String} key
- * @param {String} rawKey
+ * @param {Object} file
+ * @param {Object} raw
+ * @param {Object} compressed
  */
-async function updateListing(id, key, rawKey) {
+async function updateListing(id, file, raw, compressed) {
   const item = await listing.findById(id);
-  if (key) {
-    item.thumbnail = `${process.env.AWS_BUCKET_URL}${key}` ?
-      `${process.env.AWS_BUCKET_URL}${key}` : item.thumbnail;
+  const assets = [];
+  if (file) {
+    item.thumbnail = `${process.env.AWS_BUCKET_URL}${file.key}` ?
+      `${process.env.AWS_BUCKET_URL}${file.key}` : item.thumbnail;
   }
-  if (rawKey) {
-    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawKey}` ?
-      `${process.env.AWS_BUCKET_URL}${rawKey}` : item.rawThumbnail;
+  if (raw) {
+    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${raw.key}` ?
+      `${process.env.AWS_BUCKET_URL}${raw.key}` : item.rawThumbnail;
+    item.rawOriginalName = raw.name;
+  }
+  if (compressed) {
+    item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${compressed.key}` ?
+      `${process.env.AWS_BUCKET_URL}${compressed.key}` : item.videoThumbnail;
+    assets.push({
+      fileName: compressed.name,
+      path: item.videoThumbnail,
+    });
+    item.assets = assets;
   }
 
   await item.save();
@@ -201,36 +237,56 @@ async function upload360(id, thumbnail, files) {
   };
   const item = await s3.send(new PutObjectCommand(param));
   updateListing(id, param.Key, '');
-  compress360(id, files);
   return item;
 }
 
 /**
  * 
  * @param {String} id 
- * @param {Array} files 
  */
-async function compress360(id, files) {
+async function compress360(id) {
+  console.log('Compressing 360 Resources...');
   let assets = [];
-  for (const file of files) {
-    const fileBuffer = fs.readFileSync(file.path);
-    const param = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${file.filename}`,
-      Body: fileBuffer,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-    };
-    const item = await s3.send(new PutObjectCommand(param));
-    const asset = {
-      fileName: param.Key,
-      path: `${process.env.AWS_BUCKET_URL}${param.Key}`
-    };
-    assets.push(asset);
+  const item = await listing.findById(id);
+  const nfts = await nft.find({listingID: id});
+  for (const nft of nfts) {
+    console.log(nft);
+    const url = nft.ipfs.file.path;
+    const filePath = path.resolve(__dirname, '../../../uploads', nft.ipfs.file.originalName);
+    const writer = fs.createWriteStream(filePath);
+
+    const response = await axios.get(url, {responseType: 'stream'});
+    response.data.pipe(writer);
+    writer.on('finish', async function() {
+      console.log('writer finish..');
+      const image = await sharp(filePath)
+        .resize({width: 640})
+        .jpeg({mozjpeg: true})
+        .toBuffer()
+        .catch((e) => {
+          console.log('Error Occured: ', e);
+        });
+      param = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `compressed_640_${nft.ipfs.file.originalName}`,
+        Body: image,
+        ContentType: 'image/jpeg',
+        ACL: 'public-read',
+      };
+      await s3.send(new PutObjectCommand(param));
+      assets.push({
+        filename: nft.ipfs.file.originalName,
+        path: `${process.env.AWS_BUCKET_URL}${param.Key}`,
+      });
+      if (assets.length == nfts.length) {
+        console.log('Adding assets..', assets.length);
+        item.assets = assets;
+        await item.save();
+      }
+    })
   }
-  if (assets.length > 0) {
-    await listing.findByIdAndUpdate(id, {assets: assets});
-  }
+
+
 }
 
 /**
@@ -248,4 +304,5 @@ module.exports = {
   uploadFile,
   removeFile,
   upload360,
+  compress360,
 };
