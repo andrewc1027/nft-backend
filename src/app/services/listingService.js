@@ -76,7 +76,7 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.originalName ipfs.raw.originalName');
+    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
