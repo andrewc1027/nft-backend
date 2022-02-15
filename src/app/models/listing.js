@@ -25,6 +25,7 @@ const schema = new mongoose.Schema({
   nfts: [{type: ObjectId, ref: nft}],
   thumbnail: {type: String},
   rawThumbnail: {type: String},
+  videoThumbnail: {type: String},
   assets: [{
     fileName: {type: String},
     path: {type: String},
