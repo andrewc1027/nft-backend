@@ -123,7 +123,6 @@ function validate(resource, data) {
  * @return {Array}
  */
 async function insert(data, files, user, socket) {
-  console.log(files);
   let link360 = '';
   if (data.resource == '360 Tour') {
     link360 = data.link360;
