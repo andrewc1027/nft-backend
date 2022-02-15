@@ -30,6 +30,7 @@ const schema = new mongoose.Schema({
     fileName: {type: String},
     path: {type: String},
   }],
+  lazyMinting: {type: Boolean, default: false},
 
   // Listing Related
   owner: {type: String}, // Creator are the initial owner

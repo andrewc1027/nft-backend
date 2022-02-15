@@ -343,6 +343,9 @@ async function purchase(id, data, user, socket) {
     () => Error('Listing Not Found'),
   );
 
+  if (item.lazyMinting && data.tokenId) {
+    throw new ValidationError('TokenID required');
+  }
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -421,7 +424,13 @@ async function publish(id, data, user, socket) {
     price: joi.number().required(),
     royalties: joi.number().max(10).optional(),
     copies: joi.number().required(),
-    tokenID: joi.string().required(),
+    lazyMinting: joi.boolean(),
+    tokenID: joi.string().when('lazyMinting', {
+      switch: [
+        {is: false, then: joi.required()},
+        {is: true, then: joi.forbidden()}
+      ]
+    }),// Support lazy minting
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
