@@ -337,7 +337,7 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  const item = await listing.findById(id).select('downloadLink owner price name').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
@@ -364,6 +364,7 @@ async function purchase(id, data, user, socket) {
     price: item.price,
     date: Date.now(),
     listingID: id,
+    tokenId: data.tokenId,
     quantity: 1,
     event: 'Purchasing',
   });
@@ -377,12 +378,7 @@ async function purchase(id, data, user, socket) {
   console.log(item.tokenIds);
   await item.save();
 
-  await listing.findByIdAndUpdate(id, {
-    owner: user._id,
-    isPublished: false,
-    bid: {},
-  });
-  nftService.hashMetadata(id, item.tokenID, user._id);
+  // nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
 }
@@ -445,12 +441,10 @@ async function publish(id, data, user, socket) {
     price: joi.number().required(),
     royalties: joi.number().max(10).optional(),
     copies: joi.number().required(),
-    tokenID: joi.string().required(),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
-    tokenIds: joi.array().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -460,10 +454,11 @@ async function publish(id, data, user, socket) {
     () => Error('Not Found'),
   );
   const check = await listing.findOne({
-    tokenID: data.tokenID,
+    tokenIds: {$in: data.tokenIds},
     blockchain: item.blockchain,
     _id: {$ne: new ObjectId(id)},
   });
+  console.log(check, data.tokenIds);
   if (check) {
     throw new ValidationError('Token ID already used by another listing.');
   }
@@ -495,7 +490,7 @@ async function publish(id, data, user, socket) {
   item.royalties = royalties;
   item.activeDate = data.activeDate;
   item.buyerAddress = data.buyerAddress;
-  item.tokenID = data.tokenID;
+  item.tokenIds = data.tokenIds;
   item.isPublished = published;
   item.bid = {
     highest: data.price,
