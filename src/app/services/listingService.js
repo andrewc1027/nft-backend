@@ -445,7 +445,6 @@ async function publish(id, data, user, socket) {
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
-    tokenIds: joi.array().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
