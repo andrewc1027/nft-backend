@@ -204,17 +204,17 @@ async function updateListing(id, file, raw, compressed) {
   const item = await listing.findById(id);
   const assets = [];
   if (file) {
-    item.thumbnail = `${process.env.AWS_BUCKET_URL}${file.key}` ?
-      `${process.env.AWS_BUCKET_URL}${file.key}` : item.thumbnail;
+    item.thumbnail = `${process.env.AWS_BUCKET_URL}${file}` ?
+      `${process.env.AWS_BUCKET_URL}${file}` : item.thumbnail;
   }
   if (raw) {
-    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${raw.key}` ?
-      `${process.env.AWS_BUCKET_URL}${raw.key}` : item.rawThumbnail;
+    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${raw.Key}` ?
+      `${process.env.AWS_BUCKET_URL}${raw.Key}` : item.rawThumbnail;
     item.rawOriginalName = raw.name;
   }
   if (compressed) {
-    item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${compressed.key}` ?
-      `${process.env.AWS_BUCKET_URL}${compressed.key}` : item.videoThumbnail;
+    item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${compressed.Key}` ?
+      `${process.env.AWS_BUCKET_URL}${compressed.Key}` : item.videoThumbnail;
     assets.push({
       fileName: compressed.name,
       path: item.videoThumbnail,
@@ -247,6 +247,7 @@ async function uploadFile(file) {
  * @param {Array} files
  */
 async function upload360(id, thumbnail, files) {
+  console.log(thumbnail);
   const fileBuffer = fs.readFileSync(thumbnail.path);
   const param = {
     Bucket: process.env.S3_BUCKET_NAME,
@@ -365,6 +366,7 @@ async function updateVideoListing(id, param, type) {
       path: `${process.env.AWS_BUCKET_URL}${param.Key}`,
       fileName: param.Key
     }
+    item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${param.Key}`;
     assets.push(asset);
     item.assets = assets;
   }
