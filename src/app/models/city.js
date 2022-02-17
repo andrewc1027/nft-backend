@@ -25,7 +25,7 @@ const schema = new mongoose.Schema({
     url: {type: String},
     id: {type: ObjectId},
   },
-  index: {type: Number},
+  index: {type: Number, default: 999},
   logo: {type: String},
 });
 
