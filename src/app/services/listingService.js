@@ -210,11 +210,7 @@ async function handleNfts(id, files, raws, thumbnail, resources,
   console.log('Handling File');
 
   if (resources == '360 Tour') {
-    let ids = [];
-    if (deletedFiles) {
-      ids = deletedFiles.split(',');
-    }
-    nftService.handle360(id, files, ids);
+    nftService.handle360(id, files);
   } else {
     nftService.handle(id, files, raws);
   }
@@ -276,9 +272,14 @@ async function update(id, files = {}, data, user) {
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
   console.log(files);
+  if (data.filesForDelete) {
+    let ids = [];
+    ids = data.filesForDelete.split(',');
+    await nftService.remove(ids);
+  }
   if (Object.entries(files).length > 0) {
     // eslint-disable-next-line max-len
-    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
+    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
   }
 
   let dataCity = item.city;

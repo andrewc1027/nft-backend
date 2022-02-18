@@ -212,16 +212,7 @@ async function updateListing(id, file, raw, compressed) {
       `${process.env.AWS_BUCKET_URL}${raw.Key}` : item.rawThumbnail;
     item.rawOriginalName = raw.name;
   }
-  if (compressed) {
-    item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${compressed.Key}` ?
-      `${process.env.AWS_BUCKET_URL}${compressed.Key}` : item.videoThumbnail;
-    assets.push({
-      fileName: compressed.name,
-      path: item.videoThumbnail,
-    });
-    item.assets = assets;
-  }
-
+  console.log(item.assets, 'update listing');
   await item.save();
 }
 
@@ -269,7 +260,7 @@ async function compress360(id) {
   console.log('Compressing 360 Resources...');
   let assets = [];
   const item = await listing.findById(id);
-  const nfts = await nft.find({listingID: id});
+  const nfts = await nft.find({listingID: id, deleted: false});
   for (const nft of nfts) {
     console.log(nft);
     const url = nft.ipfs.file.path;
@@ -296,12 +287,13 @@ async function compress360(id) {
       };
       await s3.send(new PutObjectCommand(param));
       assets.push({
-        filename: nft.ipfs.file.originalName,
+        fileName: nft.ipfs.file.originalName,
         path: `${process.env.AWS_BUCKET_URL}${param.Key}`,
       });
       if (assets.length == nfts.length) {
         console.log('Adding assets..', assets.length);
         item.assets = assets;
+        console.log(item.assets, '360 compress');
         await item.save();
       }
     })
@@ -329,11 +321,11 @@ async function removeFile(key) {
 async function updateImageListing(id, param640, param320, rawParam) {
   const item = await listing.findById(id);
   const assets = [];
-  if (param320) {
+  if (Object.entries(param320).length > 0) {
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${param320.Key}` ?
       `${process.env.AWS_BUCKET_URL}${param320.Key}` : item.thumbnail;
   }
-  if (param640) {
+  if (Object.entries(param640).length > 0) {
     const asset = {
       path: `${process.env.AWS_BUCKET_URL}${param640.Key}`,
       fileName: param640.Key
@@ -341,7 +333,7 @@ async function updateImageListing(id, param640, param320, rawParam) {
     assets.push(asset);
     item.assets = assets;
   }
-  if (rawParam) {
+  if (Object.entries(rawParam).length > 0) {
     item.rawFileName = rawParam.originalName;
     item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawParam.Key}` ?
       `${process.env.AWS_BUCKET_URL}${rawParam.Key}` : item.rawThumbnail;

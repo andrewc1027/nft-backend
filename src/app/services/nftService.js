@@ -48,7 +48,7 @@ async function add(data) {
  * @param {Array} deletedFiles
  */
 async function handle360(listingId, files = [], deletedFiles) {
-  await remove(deletedFiles);
+  // await remove(deletedFiles);
   for await (const file of files) {
     const res = await ipfsUtils.uploadToIPFS(file.path, {
       listingID: listingId.toString(),
@@ -66,12 +66,20 @@ async function handle360(listingId, files = [], deletedFiles) {
       'ipfs.file': item,
     });
   }
+  recount360(listingId);
+}
+
+/**
+ * Recount 360 Nft
+ * @param {String} listingId
+ */
+async function recount360(listingId) {
   const ids = await nft.find({
     'listingID': listingId,
     'deleted': false,
   }).distinct('_id');
   await listing.findByIdAndUpdate(listingId, {nfts: ids});
-  s3Utils.compress360(listingId);
+  await s3Utils.compress360(listingId);
 }
 
 /**
@@ -120,14 +128,20 @@ async function handle(id, files, raws) {
  * @param {Array} ids
  */
 async function remove(ids) {
+  let listingId;
   await Promise.all(ids.map(async (id) => {
     const item = await nft.findById(id);
+    listingId = item.listingID;
+    console.log('removing :', id);
     await nft.deleteById(id);
     if (item.ipfs.raw.cid) {
       ipfsUtils.unpin(item.ipfs.raw.cid);
     }
     ipfsUtils.unpin(item.ipfs.file.cid);
   }));
+  if (listingId) {
+    await recount360(listingId);
+  }
 }
 
 /**
