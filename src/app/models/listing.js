@@ -40,8 +40,7 @@ const schema = new mongoose.Schema({
   blockchain: {type: String},
   paymentTokens: {type: [String]},
   price: {type: Number}, // Price / Starting Price
-  tokenID: {type: String}, //Deprecated
-  tokenIds: {type: [Number]},
+  tokenID: {type: String},
   views: {type: Number, default: 0},
   likes: {type: Number, default: 0},
   activeDate: {type: Date},
