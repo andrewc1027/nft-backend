@@ -352,7 +352,7 @@ async function purchase(id, data, user, socket) {
     err.message = error.message;
     throw err;
   }
-  const tokenIdx = item.tokenIds.indexOf(data.tokenId);
+  const tokenIdx = item.tokenIds.indexOf(data.tokenId); // find Token index in an array. 
   if (tokenIdx == -1) {
     const err = new Error();
     err.message = 'Wrong Token ID';
@@ -369,25 +369,14 @@ async function purchase(id, data, user, socket) {
     event: 'Purchasing',
   });
   if (item.tokenIds.length > 1) {
-    console.log('Duplicating...');
-    item = await listing.findById(id);
-    const idx = item.tokenIds.indexOf(data.tokenId);
-    item.tokenIds.splice(idx, 1);
-    await item.save();
-    const dupe = item;
-    delete dupe._id;
-    delete dupe.__v; // Remove versioning
-    dupe.tokenIds = [data.tokenId];
-    dupe.owner = user._id;
-    dupe.isPublished = false;
-    const dp = await listing.create(dupe);
-    console.log(dp, dupe);
+    item.tokenIds.splice(tokenIdx, 1);
+    await recreateById(id, data, user);
   } else if (item.tokenIds.length == 1) {
-    item = await listing.findById(id);
     item.owner = user._id;
     item.isPublished = false;
-    await item.save();
   }
+  console.log(item.tokenIds);
+  await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
@@ -456,7 +445,7 @@ async function publish(id, data, user, socket) {
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
-    tokenIds: joi.array().required(), 
+    tokenIds: joi.array().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -780,6 +769,23 @@ async function download(id, user) {
     nftPath = `${process.env.PINATA_GATEWAY}/ipfs/${gem[0].ipfs.file.cid}`;
   }
   return nftPath;
+}
+
+/**
+ * @param {String} id 
+ * @param {Object} data 
+ * @param {Object} user 
+ */
+async function recreateById(id, data, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  const newListing = item.toObject();
+  delete newListing['_id'];
+  delete newListing['__v'];
+  newListing.tokenIds = [data.tokenId];
+  newListing.owner = user._id;
+  newListing.isPublished = false;
+  const saved = await listing.create(newListing);
+  return saved._id;
 }
 
 module.exports = {
