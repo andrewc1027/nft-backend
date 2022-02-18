@@ -329,11 +329,11 @@ async function removeFile(key) {
 async function updateImageListing(id, param640, param320, rawParam) {
   const item = await listing.findById(id);
   const assets = [];
-  if (param320) {
+  if (Object.entries(param320).length > 0) {
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${param320.Key}` ?
       `${process.env.AWS_BUCKET_URL}${param320.Key}` : item.thumbnail;
   }
-  if (param640) {
+  if (Object.entries(param640).length > 0) {
     const asset = {
       path: `${process.env.AWS_BUCKET_URL}${param640.Key}`,
       fileName: param640.Key
@@ -341,7 +341,7 @@ async function updateImageListing(id, param640, param320, rawParam) {
     assets.push(asset);
     item.assets = assets;
   }
-  if (rawParam) {
+  if (Object.entries(rawParam).length > 0) {
     item.rawFileName = rawParam.originalName;
     item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawParam.Key}` ?
       `${process.env.AWS_BUCKET_URL}${rawParam.Key}` : item.rawThumbnail;

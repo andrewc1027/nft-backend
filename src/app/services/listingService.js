@@ -276,7 +276,7 @@ async function update(id, files = {}, data, user) {
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
   console.log(files);
-  if (Object.entries(files).length > 0) {
+  if (Object.entries(files).length > 0 || data.filesForDelete) {
     // eslint-disable-next-line max-len
     handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
   }

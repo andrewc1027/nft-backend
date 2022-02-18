@@ -48,6 +48,7 @@ async function add(data) {
  * @param {Array} deletedFiles
  */
 async function handle360(listingId, files = [], deletedFiles) {
+  console.log(deletedFiles);
   await remove(deletedFiles);
   for await (const file of files) {
     const res = await ipfsUtils.uploadToIPFS(file.path, {
@@ -122,6 +123,7 @@ async function handle(id, files, raws) {
 async function remove(ids) {
   await Promise.all(ids.map(async (id) => {
     const item = await nft.findById(id);
+    console.log('removing :', id);
     await nft.deleteById(id);
     if (item.ipfs.raw.cid) {
       ipfsUtils.unpin(item.ipfs.raw.cid);
