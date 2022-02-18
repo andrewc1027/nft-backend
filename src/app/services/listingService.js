@@ -343,6 +343,21 @@ async function purchase(id, data, user, socket) {
     () => Error('Listing Not Found'),
   );
 
+  const schema = joi.object({
+    tokenId: joi.number().required(),
+  });
+  const {error} = schema.validate(data, {presence: 'required'});
+  if (error) {
+    const err = new Error();
+    err.message = error.message;
+    throw err;
+  }
+  const tokenIdx = item.tokenIds.indexOf(data.tokenId); // find Token index in an array. 
+  if (tokenIdx == -1) {
+    const err = new Error();
+    err.message = 'Wrong Token ID';
+    throw err;
+  }
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -352,6 +367,15 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
+  if (item.tokenIds.length > 1) {
+    item.tokenIds.splice(tokenIdx, 1);
+    await recreateById(id, data, user);
+  } else if (item.tokenIds.length == 1) {
+    item.owner = user._id;
+    item.isPublished = false;
+  }
+  console.log(item.tokenIds);
+  await item.save();
 
   await listing.findByIdAndUpdate(id, {
     owner: user._id,
@@ -426,6 +450,7 @@ async function publish(id, data, user, socket) {
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
+    tokenIds: joi.array().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -794,6 +819,23 @@ async function retrieveIPFSFile(fileObj) {
     fileObj.originalName);
   const writer = response.data.pipe(fs.createWriteStream(endFile));
   return [writer, endFile];
+}
+
+/**
+ * @param {String} id
+ * @param {Object} data
+ * @param {Object} user
+ */
+async function recreateById(id, data, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  const newListing = item.toObject();
+  delete newListing['_id'];
+  delete newListing['__v'];
+  newListing.tokenIds = [data.tokenId];
+  newListing.owner = user._id;
+  newListing.isPublished = false;
+  const saved = await listing.create(newListing);
+  return saved._id;
 }
 
 module.exports = {
