@@ -788,6 +788,55 @@ async function recreateById(id, data, user) {
   return saved._id;
 }
 
+/**
+ * 
+ */
+async function indexer() {
+  const listings = await listing.find({
+    assets: []
+  });
+  console.log('Listings Found: ', listings.length);
+  let count = 0;
+  for (const list of listings) {
+    console.log(count++, '/', listings.length);
+    const nfts = await nftService.getByListingId(list._id);
+    console.log('NFTs found: ', nfts.length);
+    if (nfts.length == 0) {
+      continue;
+    }
+    const [writerFile, raw] = await retrieveIPFSFile(nfts[0].ipfs.file);
+    writerFile.on('finish', () => {
+      console.log('Updating file of: ', list._id);
+      s3Utils.upload(list._id, {
+        path: raw,
+        filename: nfts[0].ipfs.file.originalName,
+        mimetype: 'image/jpeg',
+      }, {});
+    });
+    list.rawFileName = nfts[0].ipfs.raw.originalName;
+    list.save();
+  }
+}
+
+
+/**
+ * @dev get file from ipfs to compressed it as thumbnail
+ * @param {Object} fileObj
+ * @return {writer}
+ */
+async function retrieveIPFSFile(fileObj) {
+  const url = fileObj.path;
+  const response = await axios({
+    url: url,
+    method: 'GET',
+    responseType: 'stream',
+  });
+  const endFile = path.resolve(__dirname, '../../../uploads/',
+    fileObj.originalName);
+  const writer = response.data.pipe(fs.createWriteStream(endFile));
+  return [writer, endFile];
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -802,4 +851,5 @@ module.exports = {
   getTags,
   finishAuction,
   download,
+  indexer,
 };

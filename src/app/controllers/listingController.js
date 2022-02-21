@@ -219,6 +219,20 @@ async function download(req, res, next) {
       });
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function indexer(req, res, next) {
+  listingService.indexer()
+    .then(function() {
+      return res.json('ok');
+    })
+    .catch((e) => {
+      handler(e, res);
+    });
+}
 module.exports = {
   index,
   detail,
@@ -233,4 +247,5 @@ module.exports = {
   getTags,
   finishAuction,
   download,
+  indexer,
 };
