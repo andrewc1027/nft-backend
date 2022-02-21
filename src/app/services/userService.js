@@ -42,7 +42,7 @@ async function findAndSignIn(address, data = {}) {
   signedUser.verified = verified;
   signedUser.email = email;
   signedUser.username = username;
-  signedUser.lasstLoginAt = Date.now();
+  signedUser.lastLoginAt = Date.now();
   await signedUser.save();
   const token = jwt.sign(
       {signedUser},

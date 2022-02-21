@@ -97,7 +97,7 @@ async function upload(id, file, raw, socket, user) {
  * @param {Object} socket
  * @param {Object} user
  */
-async function uploadVid(id, videoFile, rawFile, socket, user) {
+async function uploadVid(id, videoFile, rawFile = {}, socket, user) {
   console.log('Processing Video...', videoFile);
   const newVidPath = path.resolve(__dirname,
     `../../../uploads/${id}.gif`);
