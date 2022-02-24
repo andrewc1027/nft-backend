@@ -10,6 +10,7 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
+const cr2raw = require('cr2-raw')
 
 /**
  * @param {String} id
@@ -64,7 +65,16 @@ async function upload(id, file, raw, socket, user) {
   if (Object.entries(raw).length > 0) {
     // Convert raw to thumbnail
     console.log('Processing Raw: ', raw);
-    const rawImage = await sharp(raw.path)
+    let rawPath = raw.path;
+    const nameSplitted = raw.originalname.split('.');
+    const rawFileFormat = nameSplitted.pop();
+    const tempPath=`${raw.path}.jpg`;
+    if(rawFileFormat ==='CR2') {
+      const tempImg = cr2raw(raw.path).previewImage();
+      fs.writeFileSync(tempPath, tempImg);
+      rawPath = tempPath;
+    }
+    const rawImage = await sharp(rawPath)
       .resize({width: 640})
       .toFormat('jpeg')
       .jpeg({
@@ -77,6 +87,9 @@ async function upload(id, file, raw, socket, user) {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
+    if (rawFileFormat === 'CR2') {
+      fs.unlinkSync(tempPath)
+    }
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `${raw.filename}.jpeg`,
