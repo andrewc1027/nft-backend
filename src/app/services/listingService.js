@@ -123,7 +123,6 @@ function validate(resource, data) {
  * @return {Array}
  */
 async function insert(data, files, user, socket) {
-  console.log(files);
   let link360 = '';
   if (data.resource == '360 Tour') {
     link360 = data.link360;
@@ -211,11 +210,7 @@ async function handleNfts(id, files, raws, thumbnail, resources,
   console.log('Handling File');
 
   if (resources == '360 Tour') {
-    let ids = [];
-    if (deletedFiles) {
-      ids = deletedFiles.split(',');
-    }
-    nftService.handle360(id, files, ids);
+    nftService.handle360(id, files);
   } else {
     nftService.handle(id, files, raws);
   }
@@ -277,9 +272,14 @@ async function update(id, files = {}, data, user) {
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
   console.log(files);
+  if (data.filesForDelete) {
+    let ids = [];
+    ids = data.filesForDelete.split(',');
+    await nftService.remove(ids);
+  }
   if (Object.entries(files).length > 0) {
     // eslint-disable-next-line max-len
-    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource, data.filesForDelete);
+    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
   }
 
   let dataCity = item.city;
@@ -750,6 +750,52 @@ async function download(id, user) {
   return nftPath;
 }
 
+async function indexer() {
+  const listings = await listing.find({
+    assets: []
+  });
+  console.log('Listings Found: ', listings.length);
+  let count = 0;
+  for (const list of listings) {
+    console.log(count++, '/', listings.length);
+    const nfts = await nftService.getByListingId(list._id);
+    console.log('NFTs found: ', nfts.length);
+    if (nfts.length == 0) {
+      continue;
+    }
+    const [writerFile, raw] = await retrieveIPFSFile(nfts[0].ipfs.file);
+    writerFile.on('finish', () => {
+      console.log('Updating file of: ', list._id);
+      s3Utils.upload(list._id, {
+        path: raw,
+        filename: nfts[0].ipfs.file.originalName,
+        mimetype: 'image/jpeg',
+      }, {});
+    });
+    list.rawFileName = nfts[0].ipfs.raw.originalName;
+    list.save();
+  }
+}
+
+
+/**
+ * @dev get file from ipfs to compressed it as thumbnail
+ * @param {Object} fileObj
+ * @return {writer}
+ */
+async function retrieveIPFSFile(fileObj) {
+  const url = fileObj.path;
+  const response = await axios({
+    url: url,
+    method: 'GET',
+    responseType: 'stream',
+  });
+  const endFile = path.resolve(__dirname, '../../../uploads/',
+    fileObj.originalName);
+  const writer = response.data.pipe(fs.createWriteStream(endFile));
+  return [writer, endFile];
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -764,4 +810,5 @@ module.exports = {
   getTags,
   finishAuction,
   download,
+  indexer,
 };
