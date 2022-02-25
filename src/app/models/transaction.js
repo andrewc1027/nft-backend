@@ -12,6 +12,7 @@ const schema = new mongoose.Schema({
   event: {type: String, required: true},
   listingID: {type: ObjectId, required: true, ref: listing},
   remark: {type: String},
+  tokenId: {type: Number, required: true},
 });
 
 schema.plugin(paginate);
