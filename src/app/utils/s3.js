@@ -10,7 +10,7 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
-const cr2raw = require('cr2-raw')
+const dcraw = require('dcraw')
 
 /**
  * @param {String} id
@@ -67,10 +67,11 @@ async function upload(id, file, raw, socket, user) {
     console.log('Processing Raw: ', raw);
     let rawPath = raw.path;
     const nameSplitted = raw.originalname.split('.');
-    const rawFileFormat = nameSplitted.pop();
-    const tempPath=`${raw.path}.jpg`;
-    if(rawFileFormat ==='CR2') {
-      const tempImg = cr2raw(raw.path).previewImage();
+    const rawFileFormat = nameSplitted.pop().toUpperCase();
+    const tempPath = `${raw.path}.jpg`;
+    if (rawFileFormat === 'CR2' || rawFileFormat === 'ARW' || rawFileFormat === 'RAF') {
+      const buf = fs.readFileSync(rawPath);
+      const tempImg = dcraw(buf, {extractThumbnail: true});
       fs.writeFileSync(tempPath, tempImg);
       rawPath = tempPath;
     }
@@ -87,7 +88,7 @@ async function upload(id, file, raw, socket, user) {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
-    if (rawFileFormat === 'CR2') {
+    if (rawFileFormat === 'CR2' || rawFileFormat === 'ARW' || rawFileFormat === 'RAF') {
       fs.unlinkSync(tempPath)
     }
     rawParam = {
