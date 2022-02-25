@@ -771,6 +771,7 @@ async function download(id, user) {
   return nftPath;
 }
 
+<<<<<<< HEAD
 async function indexer() {
   const listings = await listing.find({
     assets: []
@@ -817,6 +818,8 @@ async function retrieveIPFSFile(fileObj) {
   return [writer, endFile];
 }
 
+=======
+>>>>>>> 6b1be3cd331aa5cdabb9623c828d5f46a4de9be9
 /**
  * @param {String} id 
  * @param {Object} data 
