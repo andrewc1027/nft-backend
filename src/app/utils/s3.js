@@ -10,7 +10,7 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
-const dcraw = require('dcraw')
+const extractd = require('extractd')
 
 /**
  * @param {String} id
@@ -65,14 +65,11 @@ async function upload(id, file, raw, socket, user) {
     // Convert raw to thumbnail
     console.log('Processing Raw: ', raw);
     let rawPath = raw.path;
-    const nameSplitted = raw.originalname.split('.');
-    const rawFileFormat = nameSplitted.pop().toUpperCase();
-    const tempPath = `${raw.path}.jpg`;
-    if (rawFileFormat === 'CR2' || rawFileFormat === 'ARW' || rawFileFormat === 'RAF') {
-      const buf = fs.readFileSync(rawPath);
-      const tempImg = dcraw(buf, {extractThumbnail: true});
-      fs.writeFileSync(tempPath, tempImg);
-      rawPath = tempPath;
+    const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
+    let needPreprocessingFormats =["ARW", "CR2", "CR3", "RAF"]
+    if (needPreprocessingFormats.includes(currentRawFileFormat)) {
+      const extracted = await extractd.generate(rawPath, {destination: `./${raw.path.split('/')[0]}`});
+      rawPath = extracted.preview;
     }
     const rawImage = await sharp(rawPath)
       .resize({width: 640})
@@ -87,8 +84,8 @@ async function upload(id, file, raw, socket, user) {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
-    if (rawFileFormat === 'CR2' || rawFileFormat === 'ARW' || rawFileFormat === 'RAF') {
-      fs.unlinkSync(tempPath)
+    if (needPreprocessingFormats.includes(currentRawFileFormat)) {
+      fs.unlinkSync(rawPath)
     }
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
