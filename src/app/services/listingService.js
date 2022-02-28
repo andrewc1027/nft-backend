@@ -758,17 +758,7 @@ async function zip(id, files) {
  */
 async function download(id, user) {
   const item = await listing.findById(id).select('+downloadLink');
-  let nftPath = '';
-  if (item.resource == '360 Tour' && !item.downloadLink) {
-    throw new Error('Downloadable Resources are not found');
-  }
-  if (item.resource == '360 Tour') {
-    nftPath = item.downloadLink;
-  } else {
-    const gem = await nftService.getByListingId(id);
-    nftPath = `${process.env.PINATA_GATEWAY}/ipfs/${gem[0].ipfs.file.cid}`;
-  }
-  return nftPath;
+  return item;
 }
 
 /**
@@ -835,6 +825,23 @@ async function retrieveIPFSFile(fileObj) {
     fileObj.originalName);
   const writer = response.data.pipe(fs.createWriteStream(endFile));
   return [writer, endFile];
+}
+
+/**
+ * @param {String} id 
+ * @param {Object} data 
+ * @param {Object} user 
+ */
+async function recreateById(id, data, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  const newListing = item.toObject();
+  delete newListing['_id'];
+  delete newListing['__v'];
+  newListing.tokenIds = [data.tokenId];
+  newListing.owner = user._id;
+  newListing.isPublished = false;
+  const saved = await listing.create(newListing);
+  return saved._id;
 }
 
 module.exports = {
