@@ -39,6 +39,7 @@ async function upload(id, file, raw, socket, user) {
       ContentType: file.mimetype,
       ACL: 'public-read',
     };
+    param640.originalName = file.originalname;
     await s3.send(new PutObjectCommand(param640));
     const image320 = await sharp(file.path)
       .resize({width: 320})
@@ -328,7 +329,7 @@ async function updateImageListing(id, param640, param320, rawParam) {
   if (Object.entries(param640).length > 0) {
     const asset = {
       path: `${process.env.AWS_BUCKET_URL}${param640.Key}`,
-      fileName: param640.Key
+      fileName: param640.originalName,
     }
     assets.push(asset);
     item.assets = assets;
