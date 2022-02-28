@@ -12,12 +12,12 @@ async function index(req, res, next) {
   const query = req.query;
   const user = req.user;
   listingService.getAll(query, page, limit, user)
-      .then(function(data) {
-        return res.json(data);
-      })
-      .catch((err) => {
-        handler(err, res);
-      });
+    .then(function(data) {
+      return res.json(data);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -27,12 +27,12 @@ async function index(req, res, next) {
  */
 async function detail(req, res, next) {
   listingService.getOne(req.params.id, req.user)
-      .then(function(listing) {
-        return res.json(listing);
-      })
-      .catch((err) =>{
-        handler(err, res);
-      });
+    .then(function(listing) {
+      return res.json(listing);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -47,13 +47,13 @@ async function insert(req, res, next) {
     });
   }
   listingService.insert(req.body, req.files, req.user, req.app.get('socketio'))
-      .then(function(data) {
-        return res.json(data);
-      })
-      .catch((err)=> {
-        console.log(err);
-        handler(err, res);
-      });
+    .then(function(data) {
+      return res.json(data);
+    })
+    .catch((err) => {
+      console.log(err);
+      handler(err, res);
+    });
 }
 
 /**
@@ -63,17 +63,17 @@ async function insert(req, res, next) {
  */
 async function update(req, res, next) {
   listingService.update(
-      req.params.id,
-      req.files,
-      req.body,
-      req.user,
+    req.params.id,
+    req.files,
+    req.body,
+    req.user,
   )
-      .then(function(data) {
-        return res.json(data);
-      })
-      .catch((err)=> {
-        handler(err, res);
-      });
+    .then(function(data) {
+      return res.json(data);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -83,17 +83,17 @@ async function update(req, res, next) {
  */
 async function purchase(req, res, next) {
   listingService.purchase(
-      req.params.id,
-      req.body,
-      req.user,
-      req.app.get('socketio'),
+    req.params.id,
+    req.body,
+    req.user,
+    req.app.get('socketio'),
   )
-      .then(function(trade) {
-        return res.json(trade);
-      })
-      .catch((err) => {
-        handler(err, res);
-      });
+    .then(function(trade) {
+      return res.json(trade);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -103,16 +103,16 @@ async function purchase(req, res, next) {
  */
 async function publish(req, res, next) {
   listingService.publish(
-      req.params.id,
-      req.body,
-      req.user,
-      req.app.get('socketio'))
-      .then(function(trade) {
-        return res.json(trade);
-      })
-      .catch((err) => {
-        handler(err, res);
-      });
+    req.params.id,
+    req.body,
+    req.user,
+    req.app.get('socketio'))
+    .then(function(trade) {
+      return res.json(trade);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -122,13 +122,13 @@ async function publish(req, res, next) {
  */
 async function depublish(req, res, next) {
   listingService.depublish(
-      req.params.id, req.user)
-      .then(function(item) {
-        return res.json(item);
-      })
-      .catch((err) => {
-        handler(err, res);
-      });
+    req.params.id, req.user)
+    .then(function(item) {
+      return res.json(item);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 
@@ -139,7 +139,7 @@ async function depublish(req, res, next) {
  */
 async function like(req, res, next) {
   listingService
-      .likeCounter(req.params.id, req.user);
+    .likeCounter(req.params.id, req.user);
   return res.json('ok');
 }
 
@@ -150,11 +150,11 @@ async function like(req, res, next) {
  */
 async function remove(req, res, next) {
   listingService
-      .remove(req.params.id, req.user).then(function(item) {
-        return res.json('ok');
-      }).catch((e) => {
-        handler(e, res);
-      });
+    .remove(req.params.id, req.user).then(function(item) {
+      return res.json('ok');
+    }).catch((e) => {
+      handler(e, res);
+    });
 }
 
 /**
@@ -167,12 +167,12 @@ async function explore(req, res, next) {
   const limit = req.query.limit || 10;
   const query = req.query;
   listingService.explore(query, page, limit, req.query.sort)
-      .then(function(data) {
-        return res.json(data);
-      })
-      .catch((err) => {
-        handler(err, res);
-      });
+    .then(function(data) {
+      return res.json(data);
+    })
+    .catch((err) => {
+      handler(err, res);
+    });
 }
 
 /**
@@ -182,7 +182,7 @@ async function explore(req, res, next) {
  */
 async function getTags(req, res, next) {
   const tags = await listingService
-      .getTags();
+    .getTags();
   return res.json(tags);
 }
 
@@ -193,12 +193,12 @@ async function getTags(req, res, next) {
  */
 async function finishAuction(req, res, next) {
   listingService.finishAuction(req.params.id, req.user)
-      .then(function(trx) {
-        return res.json(trx);
-      })
-      .catch((e) => {
-        handler(e, res);
-      });
+    .then(function(trx) {
+      return res.json(trx);
+    })
+    .catch((e) => {
+      handler(e, res);
+    });
 }
 
 /**
@@ -207,16 +207,17 @@ async function finishAuction(req, res, next) {
  *@param {Object} next
  */
 async function download(req, res, next) {
-  listingService.download(req.params.id, req.user)
-      .then(function(path) {
-        http.get(path, function(file) {
-          // res.header('Content-Disposition', `attachment; filename="${id}"`);
-          file.pipe(res);
-        });
-      })
-      .catch((e) => {
-        handler(e, res);
-      });
+  try {
+    const listing = await listingService.download(req.params.id);
+    http.get(listing.downloadLink, function(file) {
+      res.header('Content-Disposition', `attachment; filename="${listing._id}.zip"`);
+      file.pipe(res);
+    });
+  } catch (e) {
+    handler(e, res);
+  }
+
+
 }
 
 /**
