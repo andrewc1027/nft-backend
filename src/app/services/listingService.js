@@ -337,27 +337,13 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  let item = await listing.findById(id).select('downloadLink owner price name tokenIds').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
   );
 
-  const schema = joi.object({
-    tokenId: joi.number().required(),
-  });
-  const {error} = schema.validate(data, {presence: 'required'});
-  if (error) {
-    const err = new Error();
-    err.message = error.message;
-    throw err;
-  }
-  const tokenIdx = item.tokenIds.indexOf(data.tokenId); // find Token index in an array. 
-  if (tokenIdx == -1) {
-    const err = new Error();
-    err.message = 'Wrong Token ID';
-    throw err;
-  }
+  item = await validatePurchase(id, item, data);
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -368,19 +354,66 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.tokenIds.length > 1) {
+  if (item.copies > 1) {
     item.tokenIds.splice(tokenIdx, 1);
     await recreateById(id, data, user);
-  } else if (item.tokenIds.length == 1) {
+    item.copies--;
+  } else if (item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
   }
-  console.log(item.tokenIds);
   await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
+}
+
+/**
+ * 
+ * @param {String} id 
+ * @param {Object} item 
+ * @param {Object} data 
+ */
+async function validatePurchase(id, item, data) {
+  const schema = joi.object({
+    tokenId: joi.number().required(),
+  });
+  const {error} = schema.validate(data, {presence: 'required'});
+  if (error) {
+    const err = new Error();
+    err.message = error.message;
+    throw err;
+  }
+
+  let royalties = 0;
+
+  if (item.tokenIds) {
+    royalties = item.royalties;
+  } else if (!item.tokenID && !data.royalties) {
+    if (data.royalties != 0) {
+      throw new ValidationError('Royalties required');
+    }
+  } else {
+    royalties = data.royalties;
+  }
+
+  if (item.tokenID && data.royalties) {
+    throw new ValidationError('Not Allowed to Change Royalties');
+  }
+
+  const check = await listing.findOne({
+    tokenIds: data.tokenId,
+    blockchain: item.blockchain,
+    _id: {$ne: new ObjectId(id)},
+  });
+  console.log(check, data.tokenIds);
+  if (check) {
+    throw new ValidationError('Token ID already used by another listing.');
+  }
+
+  item.royalties = royalties;
+  return item;
 }
 
 /**
@@ -439,7 +472,6 @@ async function likeCounter(id, self = {}) {
 async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
-    royalties: joi.number().max(10).optional(),
     copies: joi.number().required(),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
@@ -453,15 +485,7 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
     () => Error('Not Found'),
   );
-  const check = await listing.findOne({
-    tokenIds: {$in: data.tokenIds},
-    blockchain: item.blockchain,
-    _id: {$ne: new ObjectId(id)},
-  });
-  console.log(check, data.tokenIds);
-  if (check) {
-    throw new ValidationError('Token ID already used by another listing.');
-  }
+
   let published = false;
   if (data.activeDate == undefined) {
     published = true;
@@ -470,27 +494,11 @@ async function publish(id, data, user, socket) {
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
-  let royalties = 0;
 
-  if (item.tokenID) {
-    royalties = item.royalties;
-  } else if (!item.tokenID && !data.royalties) {
-    if (data.royalties != 0) {
-      throw new ValidationError('Royalties required');
-    }
-  } else {
-    royalties = data.royalties;
-  }
-
-  if (item.tokenID && data.royalties) {
-    throw new ValidationError('Not Allowed to Change Royalties');
-  }
   item.owner = user._id;
   item.price = data.price;
-  item.royalties = royalties;
   item.activeDate = data.activeDate;
   item.buyerAddress = data.buyerAddress;
-  item.tokenIds = data.tokenIds;
   item.isPublished = published;
   item.bid = {
     highest: data.price,
@@ -826,6 +834,7 @@ async function recreateById(id, data, user) {
   const newListing = item.toObject();
   delete newListing['_id'];
   delete newListing['__v'];
+  newListing.copies = 1;
   newListing.tokenIds = [data.tokenId];
   newListing.owner = user._id;
   newListing.isPublished = false;
