@@ -489,8 +489,12 @@ async function publish(id, data, user, socket) {
     royalties = data.royalties;
   }
 
-  if (item.tokenIds.length > 0 && data.royalties) {
+  if (item.tokenIds.length > 0 && data.royalties !== item.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
+  }
+
+  if (!("tokenIds" in item) || item.tokenIds.length === 0) {
+    item.tokenIds = data.tokenIds;
   }
 
   item.royalties = royalties;
