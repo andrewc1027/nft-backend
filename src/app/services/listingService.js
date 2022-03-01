@@ -76,7 +76,8 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path');
+    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path')
+    .populate('creator', 'username walletAddress');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
