@@ -248,7 +248,7 @@ async function update(id, files = {}, data, user) {
     if (Object.entries(files).length > 0) {
       throw new Error('Not Allowed to update nft files after minting/publishing');
     }
-    if (data.address || data.city || data.blockchain) {
+    if (data.address != item.address || data.city != item.city.ID.toString() || data.blockchain != item.blockchain) {
       throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
     }
   }
@@ -459,6 +459,7 @@ async function publish(id, data, user, socket) {
     royalties: joi.number().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
+    tokenIds: joi.array().required(),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -467,7 +468,6 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
     () => Error('Not Found'),
   );
-
   let published = false;
   if (data.activeDate == undefined) {
     published = true;
@@ -764,19 +764,29 @@ async function zip(id, files) {
  */
 async function download(id, user) {
   const item = await listing.findById(id).select('+downloadLink');
-  let nftPath = '';
-  if (item.resource == '360 Tour' && !item.downloadLink) {
-    throw new Error('Downloadable Resources are not found');
-  }
-  if (item.resource == '360 Tour') {
-    nftPath = item.downloadLink;
-  } else {
-    const gem = await nftService.getByListingId(id);
-    nftPath = `${process.env.PINATA_GATEWAY}/ipfs/${gem[0].ipfs.file.cid}`;
-  }
-  return nftPath;
+  return item;
 }
 
+/**
+ * @param {String} id 
+ * @param {Object} data 
+ * @param {Object} user 
+ */
+async function recreateById(id, data, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  const newListing = item.toObject();
+  delete newListing['_id'];
+  delete newListing['__v'];
+  newListing.tokenIds = [data.tokenId];
+  newListing.owner = user._id;
+  newListing.isPublished = false;
+  const saved = await listing.create(newListing);
+  return saved._id;
+}
+
+/**
+ * 
+ */
 async function indexer() {
   const listings = await listing.find({
     assets: []
