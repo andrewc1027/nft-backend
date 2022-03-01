@@ -47,13 +47,13 @@ async function getAll(query, page, limit, self) {
 
   // Use Creator ID
   if (query.creator) {
-    queries['creator.ID'] = new ObjectId(query.creator);
+    queries['creator'] = new ObjectId(query.creator);
   }
 
   // Use Owner ID
   if (query.owner) {
     queries['owner'] = query.owner;
-    queries['creator.ID'] = {$ne: query.owner};
+    queries['creator'] = {$ne: query.owner};
   }
 
   if (query.liked) {
@@ -169,10 +169,7 @@ async function insert(data, files, user, socket) {
     description: data.description,
     location: data.location,
     address: data.address,
-    creator: {
-      name: user.username,
-      ID: user._id,
-    },
+    creator: user._id,
     owner: user._id,
     blockchain: data.blockchain,
     city: datacity,
