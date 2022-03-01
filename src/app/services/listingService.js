@@ -359,6 +359,7 @@ async function purchase(id, data, user, socket) {
   } else if (item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
+    item.tokenIds = [data.tokenId];
   }
   await item.save();
 
