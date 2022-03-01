@@ -384,22 +384,6 @@ async function validatePurchase(id, item, data) {
     throw err;
   }
 
-  let royalties = 0;
-
-  if (item.tokenIds) {
-    royalties = item.royalties;
-  } else if (!item.tokenID && !data.royalties) {
-    if (data.royalties != 0) {
-      throw new ValidationError('Royalties required');
-    }
-  } else {
-    royalties = data.royalties;
-  }
-
-  if (item.tokenID && data.royalties) {
-    throw new ValidationError('Not Allowed to Change Royalties');
-  }
-
   const check = await listing.findOne({
     tokenIds: data.tokenId,
     blockchain: item.blockchain,
@@ -410,7 +394,6 @@ async function validatePurchase(id, item, data) {
     throw new ValidationError('Token ID already used by another listing.');
   }
 
-  item.royalties = royalties;
   return item;
 }
 
@@ -473,6 +456,7 @@ async function publish(id, data, user, socket) {
     copies: joi.number().required(),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
+    royalties: joi.number().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
   });
@@ -493,6 +477,22 @@ async function publish(id, data, user, socket) {
     throw new Error('Not Authorized to publish this listing');
   }
 
+  let royalties = 0;
+  if (item.tokenIds.length > 0) {
+    royalties = item.royalties;
+  } else if (!item.tokenID && !data.royalties) {
+    if (data.royalties != 0) {
+      throw new ValidationError('Royalties required');
+    }
+  } else {
+    royalties = data.royalties;
+  }
+
+  if (item.tokenIds.length > 0 && data.royalties) {
+    throw new ValidationError('Not Allowed to Change Royalties');
+  }
+
+  item.royalties = royalties;
   item.owner = user._id;
   item.price = data.price;
   item.activeDate = data.activeDate;
@@ -501,8 +501,9 @@ async function publish(id, data, user, socket) {
   item.bid = {
     highest: data.price,
     endDate: data.endDate,
-  },
-    item.sellMethod = data.sellMethod;
+  };
+  item.sellMethod = data.sellMethod;
+  console.log(item.royalties);
   await item.save();
 
   makeZip(id);
