@@ -3,15 +3,13 @@ const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
 const softDelete = require('mongoose-delete');
 const nft = require('./nft');
+const user = require('./user');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
   description: {type: String},
   address: {type: String, required: true},
-  creator: {
-    name: {type: String},
-    ID: {type: ObjectId, required: true},
-  },
+  creator: {type: ObjectId, ref: user, required: true},
   city: {
     ID: {type: ObjectId},
     name: {type: String},
