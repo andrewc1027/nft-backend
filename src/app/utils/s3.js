@@ -67,10 +67,13 @@ async function upload(id, file, raw, socket, user) {
     console.log('Processing Raw: ', raw);
     let rawPath = raw.path;
     const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
-    let needPreprocessingFormats =["ARW", "CR2", "CR3", "RAF"]
+    let needPreprocessingFormats = ["ARW", "CR2", "CR3", "RAF"];
     if (needPreprocessingFormats.includes(currentRawFileFormat)) {
-      const extracted = await extractd.generate(rawPath, {destination: `./${raw.path.split('/')[0]}`});
-      rawPath = extracted.preview;
+      const extracted = await extractd.generate(rawPath, {base64: true, datauri: true});
+      const base64Image = extracted.preview;
+      let parts = base64Image.split(';');
+      let imageData = parts[1].split(',')[1];
+      rawPath = Buffer.from(imageData, 'base64');
     }
     const rawImage = await sharp(rawPath)
       .resize({width: 640})
@@ -85,9 +88,6 @@ async function upload(id, file, raw, socket, user) {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
-    if (needPreprocessingFormats.includes(currentRawFileFormat)) {
-      fs.unlinkSync(rawPath)
-    }
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `${raw.filename}.jpeg`,
