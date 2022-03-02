@@ -69,13 +69,16 @@ async function upload(id, file, raw, socket, user) {
     const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
     let needPreprocessingFormats = ["ARW", "CR2", "CR3", "RAF"];
     if (needPreprocessingFormats.includes(currentRawFileFormat)) {
+      console.log(`upload ::: Need additional processing for: ${currentRawFileFormat}`);
       const extracted = await extractd.generate(rawPath, {base64: true, datauri: true});
+      console.log(`upload ::: file extracted.generate() completed`);
       const base64Image = extracted.preview;
       let parts = base64Image.split(';');
       let mimeType = parts[1].split(',')[0];
       let imageData = parts[1].split(',')[1];
       console.log(`upload ::: Raw file format: ${currentRawFileFormat}, extacted mime-type: ${mimeType}` )
       rawPath = Buffer.from(imageData, 'base64');
+      console.log(`upload ::: Buffer created` )
     }
     console.log(`upload ::: Processing data from buffer`)
     const rawImage = await sharp(rawPath)
