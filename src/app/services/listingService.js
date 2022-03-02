@@ -808,9 +808,9 @@ async function retrieveIPFSFile(fileObj) {
 }
 
 /**
- * @param {String} id 
- * @param {Object} data 
- * @param {Object} user 
+ * @param {String} id
+ * @param {Object} data
+ * @param {Object} user
  */
 async function recreateById(id, data, user) {
   const item = await listing.findById(id).select('+downloadLink');
