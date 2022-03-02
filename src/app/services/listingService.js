@@ -460,7 +460,7 @@ async function publish(id, data, user, socket) {
     royalties: joi.number().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
-    tokenIds: joi.array().required(),
+    tokenIds: joi.array().when('sellMethod', {is: 'Auction', then: joi.array().required()}),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -504,6 +504,7 @@ async function publish(id, data, user, socket) {
     highest: data.price,
     endDate: data.endDate,
   };
+  item.tokenIds = data.tokenIds ??= [];
   item.sellMethod = data.sellMethod;
   console.log(item.royalties);
   await item.save();
@@ -688,6 +689,7 @@ async function finishAuction(id, user) {
     listingID: id,
     quantity: 1,
     event: 'Auction',
+    tokenId: item.tokenIds[0] ??= 0,
   });
   nftService.hashMetadata(id, item.tokenID, item.bid.highestBidder);
   await bidSvc.close(id);
