@@ -72,9 +72,12 @@ async function upload(id, file, raw, socket, user) {
       const extracted = await extractd.generate(rawPath, {base64: true, datauri: true});
       const base64Image = extracted.preview;
       let parts = base64Image.split(';');
+      let mimeType = parts[1].split(',')[0];
       let imageData = parts[1].split(',')[1];
+      console.log(`upload ::: Raw file format: ${currentRawFileFormat}, extacted mime-type: ${mimeType}` )
       rawPath = Buffer.from(imageData, 'base64');
     }
+    console.log(`upload ::: Processing data from buffer`)
     const rawImage = await sharp(rawPath)
       .resize({width: 640})
       .toFormat('jpeg')
@@ -88,6 +91,7 @@ async function upload(id, file, raw, socket, user) {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
+    console.log(`upload ::: Prepare buffered data to upload to S3 for ${raw.filename}.jpeg`);
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `${raw.filename}.jpeg`,
@@ -100,6 +104,7 @@ async function upload(id, file, raw, socket, user) {
   }
 
   updateImageListing(id, param640, param320, rawParam);
+  console.log(`upload ::: ended`)
 }
 
 /**
@@ -331,6 +336,7 @@ async function removeFile(key) {
  * @param {Object} rawParam 
  */
 async function updateImageListing(id, param640, param320, rawParam) {
+  console.log(`updateImageListing ::: started for ${id}`)
   const item = await listing.findById(id);
   const assets = [];
   if (Object.entries(param320).length > 0) {
@@ -351,6 +357,7 @@ async function updateImageListing(id, param640, param320, rawParam) {
       `${process.env.AWS_BUCKET_URL}${rawParam.Key}` : item.rawThumbnail;
   }
   await item.save();
+  console.log(`updateImageListing ::: complete for ${id}`)
 }
 
 /**
