@@ -11,6 +11,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
 const extractd = require('extractd')
+const dcraw = require('dcraw')
 
 /**
  * @param {String} id
@@ -67,17 +68,14 @@ async function upload(id, file, raw, socket, user) {
     console.log('Processing Raw: ', raw);
     let rawPath = raw.path;
     const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
-    let needPreprocessingFormats = ["ARW", "CR2", "CR3", "RAF"];
+    let needPreprocessingFormats = ["ARW", "CR2", "RAF"];
     if (needPreprocessingFormats.includes(currentRawFileFormat)) {
-      const extracted = await extractd.generate(rawPath, {base64: true, datauri: true});
-      const base64Image = extracted.preview;
-      let parts = base64Image.split(';');
-      let mimeType = parts[1].split(',')[0];
-      let imageData = parts[1].split(',')[1];
-      console.log(`upload ::: Raw file format: ${currentRawFileFormat}, extacted mime-type: ${mimeType}` )
-      rawPath = Buffer.from(imageData, 'base64');
+      console.log(`upload ::: Need additional processing for: ${currentRawFileFormat}`);
+      const buf = fs.readFileSync(rawPath);
+      rawPath = dcraw(buf, { extractThumbnail: true});
+      console.log(`upload ::: Additional processing done`);
     }
-    console.log(`upload ::: Processing data from buffer`)
+    console.log(`upload ::: Processing data with sharp`)
     const rawImage = await sharp(rawPath)
         .resize({width: 640})
         .toFormat('jpeg')
