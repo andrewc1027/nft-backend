@@ -469,7 +469,6 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
     () => Error('Not Found'),
   );
-
   let published = false;
   if (data.activeDate == undefined) {
     published = true;
@@ -771,6 +770,26 @@ async function download(id, user) {
   return item;
 }
 
+/**
+ * @param {String} id 
+ * @param {Object} data 
+ * @param {Object} user 
+ */
+async function recreateById(id, data, user) {
+  const item = await listing.findById(id).select('+downloadLink');
+  const newListing = item.toObject();
+  delete newListing['_id'];
+  delete newListing['__v'];
+  newListing.tokenIds = [data.tokenId];
+  newListing.owner = user._id;
+  newListing.isPublished = false;
+  const saved = await listing.create(newListing);
+  return saved._id;
+}
+
+/**
+ * 
+ */
 async function indexer() {
   const listings = await listing.find({
     assets: []
