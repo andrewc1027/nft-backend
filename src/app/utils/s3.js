@@ -26,13 +26,13 @@ async function upload(id, file, raw, socket, user) {
   if (Object.entries(file).length > 0) {
     // Convert file to thumbnail
     const image640 = await sharp(file.path)
-        .resize({width: 640})
-        .jpeg({mozjpeg: true})
-        .toBuffer()
-        .catch((e) => {
-          console.log('Error Occured: ', e);
-          socket.to(user._id.toString()).emit('error', {error: e});
-        });
+      .resize({width: 640})
+      .jpeg({mozjpeg: true})
+      .toBuffer()
+      .catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
     param640 = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `640_${file.filename}`,
@@ -43,13 +43,13 @@ async function upload(id, file, raw, socket, user) {
     param640.originalName = file.originalname;
     await s3.send(new PutObjectCommand(param640));
     const image320 = await sharp(file.path)
-        .resize({width: 320})
-        .jpeg({mozjpeg: true})
-        .toBuffer()
-        .catch((e) => {
-          console.log('Error Occured: ', e);
-          socket.to(user._id.toString()).emit('error', {error: e});
-        });
+      .resize({width: 320})
+      .jpeg({mozjpeg: true})
+      .toBuffer()
+      .catch((e) => {
+        console.log('Error Occured: ', e);
+        socket.to(user._id.toString()).emit('error', {error: e});
+      });
     param320 = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `320_${file.filename}`,
