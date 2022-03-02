@@ -10,6 +10,7 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
+const extractd = require('extractd')
 
 /**
  * @param {String} id
@@ -25,13 +26,13 @@ async function upload(id, file, raw, socket, user) {
   if (Object.entries(file).length > 0) {
     // Convert file to thumbnail
     const image640 = await sharp(file.path)
-      .resize({width: 640})
-      .jpeg({mozjpeg: true})
-      .toBuffer()
-      .catch((e) => {
-        console.log('Error Occured: ', e);
-        socket.to(user._id.toString()).emit('error', {error: e});
-      });
+        .resize({width: 640})
+        .jpeg({mozjpeg: true})
+        .toBuffer()
+        .catch((e) => {
+          console.log('Error Occured: ', e);
+          socket.to(user._id.toString()).emit('error', {error: e});
+        });
     param640 = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `640_${file.filename}`,
@@ -42,13 +43,13 @@ async function upload(id, file, raw, socket, user) {
     param640.originalName = file.originalname;
     await s3.send(new PutObjectCommand(param640));
     const image320 = await sharp(file.path)
-      .resize({width: 320})
-      .jpeg({mozjpeg: true})
-      .toBuffer()
-      .catch((e) => {
-        console.log('Error Occured: ', e);
-        socket.to(user._id.toString()).emit('error', {error: e});
-      });
+        .resize({width: 320})
+        .jpeg({mozjpeg: true})
+        .toBuffer()
+        .catch((e) => {
+          console.log('Error Occured: ', e);
+          socket.to(user._id.toString()).emit('error', {error: e});
+        });
     param320 = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `320_${file.filename}`,
@@ -64,19 +65,33 @@ async function upload(id, file, raw, socket, user) {
   if (Object.entries(raw).length > 0) {
     // Convert raw to thumbnail
     console.log('Processing Raw: ', raw);
-    const rawImage = await sharp(raw.path)
-      .resize({width: 640})
-      .toFormat('jpeg')
-      .jpeg({
-        quality: 60,
-        mozjpeg: true,
-        force: true,
-      })
-      .toBuffer()
-      .catch((e) => {
-        console.log('Error Occured: ', e);
-        socket.to(user._id.toString()).emit('error', {error: e});
-      });
+    let rawPath = raw.path;
+    const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
+    let needPreprocessingFormats = ["ARW", "CR2", "CR3", "RAF"];
+    if (needPreprocessingFormats.includes(currentRawFileFormat)) {
+      const extracted = await extractd.generate(rawPath, {base64: true, datauri: true});
+      const base64Image = extracted.preview;
+      let parts = base64Image.split(';');
+      let mimeType = parts[1].split(',')[0];
+      let imageData = parts[1].split(',')[1];
+      console.log(`upload ::: Raw file format: ${currentRawFileFormat}, extacted mime-type: ${mimeType}` )
+      rawPath = Buffer.from(imageData, 'base64');
+    }
+    console.log(`upload ::: Processing data from buffer`)
+    const rawImage = await sharp(rawPath)
+        .resize({width: 640})
+        .toFormat('jpeg')
+        .jpeg({
+          quality: 60,
+          mozjpeg: true,
+          force: true,
+        })
+        .toBuffer()
+        .catch((e) => {
+          console.log('Error Occured: ', e);
+          socket.to(user._id.toString()).emit('error', {error: e});
+        });
+    console.log(`upload ::: Prepare buffered data to upload to S3 for ${raw.filename}.jpeg`);
     rawParam = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `${raw.filename}.jpeg`,
@@ -89,7 +104,9 @@ async function upload(id, file, raw, socket, user) {
   }
 
   updateImageListing(id, param640, param320, rawParam);
+  console.log(`upload ::: ended`)
 }
+
 
 /**
  * @param {String} id
