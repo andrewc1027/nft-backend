@@ -1,9 +1,5 @@
 const listingModel = require("../../models/listing");
 const qTransform = require("../../utils/queryTransform");
-const {ObjectId} = require("bson");
-const user = require("../../models/user");
-const listing = require("../../models/listing");
-const {DocumentNotFoundError} = require('mongoose').Error;
 
 async function getListings(userId, query, page, limit) {
     const queries = {};
