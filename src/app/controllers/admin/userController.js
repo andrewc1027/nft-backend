@@ -2,8 +2,10 @@ const usrService = require('../../services/admin/userService');
 const {handler} = require('./../errHandler');
 
 async function getAllUsers(req, res, next) {
-    const users = await usrService.getAllUsers();
-    return res.json(users);
+    usrService.getAllUsers()
+        .then(function (users) {
+        return res.json(users);
+    })
 }
 
 async function getUserById(req, res, next) {
