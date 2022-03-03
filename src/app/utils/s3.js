@@ -130,7 +130,7 @@ async function uploadVid(id, videoFile, rawFile = {}, socket, user) {
       });
 
     await processVideo(id, videoFile, compressedVidPath, 'mp4_compress',
-      {duration: 60, fps: 15, size: '600x?'}).catch((e) => {
+      {duration: 3*60*60, fps: 15, size: '600x?'}).catch((e) => {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
