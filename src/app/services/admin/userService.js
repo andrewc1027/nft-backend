@@ -27,8 +27,9 @@ async function getUserById(id) {
 }
 
 async function updateUser(id, updateQuery) {
-    return userModel.findByIdAndUpdate(id, updateQuery).orFail(
+    await userModel.findByIdAndUpdate(id, updateQuery).orFail(
         () => new DocumentNotFoundError('User not found or wrong request'));
+    return userModel.findById(id)
 }
 
 module.exports = {

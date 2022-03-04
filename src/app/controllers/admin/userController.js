@@ -21,7 +21,7 @@ async function getUserById(req, res, next) {
 async function updateUser(req, res, next) {
     usrService.updateUser(req.params.id, req.body)
         .then(function (user) {
-            return res.json({"message": "Success"});
+            return res.json(user);
         })
         .catch((err) => {
             handler(err, res);
