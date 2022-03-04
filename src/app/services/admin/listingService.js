@@ -1,41 +1,37 @@
 const listingModel = require("../../models/listing");
 const qTransform = require("../../utils/queryTransform");
-const {ObjectId} = require("bson");
-const user = require("../../models/user");
 
 async function getListings(userId, query, page, limit) {
-    const queries = {};
+    const filters = {};
+    const ors = [];
 
-    if (query.deleted !== "true") {
-        queries['deleted'] = {$ne: true};
-    }
-
-    if (query.cityUrl) {
-        queries['city.url'] = query.cityUrl;
-    }
-
-    if (query.name) {
-        queries['name'] = qTransform.regexLike(query.name);
-    }
-
-    if (query.city) {
-        queries['city.ID'] = new ObjectId(query.city);
-    }
-
-    if (query.exclude) {
-        queries['_id'] = {$ne: new ObjectId(query.exclude)};
-    }
-
-    if (query.creator) {
-        queries['creator'] = new ObjectId(query.creator);
+    if (query.search) {
+        const q = query.search;
+        ors.push({'name': qTransform.regexLike(q)});
+        ors.push({'description': qTransform.regexLike(q)});
+        ors.push({'address': qTransform.regexLike(q)});
+        ors.push({'city.name': qTransform.regexLike(q)});
+        ors.push({'city.url': qTransform.regexLike(q)});
+        ors.push({'tags': qTransform.regexLike(q)});
+        ors.push({'blockchain': qTransform.regexLike(q)});
+        ors.push({'tokenID': qTransform.regexLike(q)});
+        ors.push({'buyerAddress': qTransform.regexLike(q)});
+        ors.push({'resource': qTransform.regexLike(q)});
+        ors.push({'link360': qTransform.regexLike(q)});
+        ors.push({'bid.highestBidder': qTransform.regexLike(q)});
+        ors.push({'downloadLink': qTransform.regexLike(q)});
     }
 
     if (userId) {
-        queries['owner'] = userId;
+        filters['owner'] = userId;
+    }
+
+    if (ors.length > 0) {
+        filters['$or'] = ors;
     }
 
     const listings = await listingModel
-        .paginate(queries,
+        .paginate(filters,
             {page: page, limit: limit});
     return listings;
 }
