@@ -4,7 +4,6 @@ const qTransform = require("../../utils/queryTransform");
 async function getListings(userId, query, page, limit) {
     const filters = {};
     const ors = [];
-
     if (query.search) {
         const q = query.search;
         ors.push({'name': qTransform.regexLike(q)});

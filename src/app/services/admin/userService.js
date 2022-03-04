@@ -5,27 +5,19 @@ const qTransform = require("../../utils/queryTransform");
 
 
 async function getAllUsers(query) {
-    const queries = {};
-    if (query.username) {
-        queries['username'] = qTransform.regexLike(query.username);
+    const filters = {};
+    const ors = [];
+    if (query.search) {
+        const q = query.search;
+        ors.push({'username': qTransform.regexLike(q)});
+        ors.push({'email': qTransform.regexLike(q)});
+        ors.push({'bio': qTransform.regexLike(q)});
+        ors.push({'walletAddress': qTransform.regexLike(q)});
     }
-
-    if (query.email) {
-        queries['email'] = qTransform.regexLike(query.email);
+    if (ors.length > 0) {
+        filters['$or'] = ors;
     }
-
-    if (query.invited === "true") {
-        queries['invited'] = true;
-    } else if (query.invited === "false") {
-        queries['invited'] = false;
-    }
-
-    if (query.walletAddress) {
-        queries['walletAddress'] = query.walletAddress;
-    }
-
-
-    const users = await userModel.find(queries);
+    const users = await userModel.find(filters);
     return users;
 }
 
