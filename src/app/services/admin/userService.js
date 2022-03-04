@@ -1,10 +1,26 @@
 const userModel = require("../../models/user");
 const {DocumentNotFoundError} = require('mongoose').Error;
 const {ObjectId} = require("mongodb");
+const qTransform = require("../../utils/queryTransform");
 
 
-async function getAllUsers() {
-    const users = await userModel.find({});
+async function getAllUsers(query) {
+    const queries = {};
+    if (query.username) {
+        queries['username'] = qTransform.regexLike(query.username);
+    }
+
+    if (query.email) {
+        queries['email'] = qTransform.regexLike(query.email);
+    }
+
+    if (query.invited === "true") {
+        queries['invited'] = true;
+    } else if (query.invited === "false") {
+        queries['invited'] = false;
+    }
+
+    const users = await userModel.find(queries);
     return users;
 }
 

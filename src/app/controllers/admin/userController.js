@@ -2,7 +2,7 @@ const usrService = require('../../services/admin/userService');
 const {handler} = require('./../errHandler');
 
 async function getAllUsers(req, res, next) {
-    usrService.getAllUsers()
+    usrService.getAllUsers(req.query)
         .then(function (users) {
         return res.json(users);
     })
