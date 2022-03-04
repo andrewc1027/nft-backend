@@ -20,6 +20,11 @@ async function getAllUsers(query) {
         queries['invited'] = false;
     }
 
+    if (query.walletAddress) {
+        queries['walletAddress'] = query.walletAddress;
+    }
+
+
     const users = await userModel.find(queries);
     return users;
 }
