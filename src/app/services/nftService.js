@@ -85,9 +85,8 @@ async function recount360(listingId) {
 /**
  * @param {String} id
  * @param {Object} files
- * @param {Object} raws
  */
-async function handle(id, files, raws) {
+async function handle(id, files) {
   const item = await nft.findOneAndUpdate(
     {'listingID': new ObjectId(id)},
     {'listingID': new ObjectId(id)},
@@ -102,19 +101,6 @@ async function handle(id, files, raws) {
       pinDate: res.Timestamp,
       pinSize: res.PinSize,
       originalName: files[0].originalname,
-      path: `https://homejab-dev.mypinata.cloud/ipfs/${res.IpfsHash}`,
-    };
-  }
-  if (raws) {
-    const res = await ipfsUtils.uploadToIPFS(raws[0].path, {
-      listingID: id.toString(),
-      name: raws[0].originalname,
-    });
-    item.ipfs.raw = {
-      cid: res.IpfsHash,
-      pinDate: res.Timestamp,
-      pinSize: res.PinSize,
-      originalName: raws[0].originalname,
       path: `https://homejab-dev.mypinata.cloud/ipfs/${res.IpfsHash}`,
     };
   }
@@ -134,9 +120,6 @@ async function remove(ids) {
     listingId = item.listingID;
     console.log('removing :', id);
     await nft.deleteById(id);
-    if (item.ipfs.raw.cid) {
-      ipfsUtils.unpin(item.ipfs.raw.cid);
-    }
     ipfsUtils.unpin(item.ipfs.file.cid);
   }));
   if (listingId) {
