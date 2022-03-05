@@ -10,6 +10,8 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
+const extractd = require('extractd')
+const dcraw = require('dcraw')
 
 /**
  * @param {String} id
@@ -85,7 +87,7 @@ async function uploadVid(id, videoFile, socket, user) {
       });
 
     await processVideo(id, videoFile, compressedVidPath, 'mp4_compress',
-      {duration: 60, fps: 15, size: '600x?'}).catch((e) => {
+      {duration: 3*60*60, fps: 15, size: '600x?'}).catch((e) => {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
@@ -273,6 +275,7 @@ async function updateImageListing(id, param640, param320) {
     item.assets = assets;
   }
   await item.save();
+  console.log(`updateImageListing ::: complete for ${id}`)
 }
 
 /**
