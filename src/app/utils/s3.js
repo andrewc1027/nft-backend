@@ -10,8 +10,6 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
-const extractd = require('extractd')
-const dcraw = require('dcraw')
 
 /**
  * @param {String} id
