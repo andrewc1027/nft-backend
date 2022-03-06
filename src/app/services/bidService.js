@@ -16,7 +16,7 @@ async function myBid(query, user) {
   const bids = await bidModel.paginate(filters,
       {populate: {
         path: 'listing',
-        select: 'name thumbnail tokenID blockchain',
+        select: 'name thumbnail tokenIds blockchain',
       }});
   return bids;
 }
