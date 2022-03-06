@@ -3,15 +3,13 @@ const mongoose = require('mongoose');
 const paginate = require('mongoose-paginate-v2');
 const softDelete = require('mongoose-delete');
 const nft = require('./nft');
+const user = require('./user');
 
 const schema = new mongoose.Schema({
   name: {type: String, required: true},
   description: {type: String},
   address: {type: String, required: true},
-  creator: {
-    name: {type: String},
-    ID: {type: ObjectId, required: true},
-  },
+  creator: {type: ObjectId, ref: user, required: true},
   city: {
     ID: {type: ObjectId},
     name: {type: String},
@@ -24,8 +22,6 @@ const schema = new mongoose.Schema({
   },
   nfts: [{type: ObjectId, ref: nft}],
   thumbnail: {type: String},
-  rawFileName: {type: String},
-  rawThumbnail: {type: String},
   videoThumbnail: {type: String},
   assets: [{
     fileName: {type: String},
