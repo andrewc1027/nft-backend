@@ -48,6 +48,13 @@ async function getAll(query, page, limit, self) {
   // Use Creator ID
   if (query.creator) {
     queries['creator.ID'] = new ObjectId(query.creator);
+    queries['owner'] = query.creator;
+  }
+
+  // Use Creator ID
+  if (query.seller) {
+    queries['creator.ID'] = new ObjectId(query.seller);
+    queries['owner'] = {$ne: query.seller};
   }
 
   // Use Owner ID
