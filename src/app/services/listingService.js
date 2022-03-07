@@ -440,7 +440,9 @@ async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
     royalties: joi.number().max(10).optional(),
-    copies: joi.number().required(),
+    copies: joi.number().required().when('sellMethod', {
+      is: 'Auction', then: joi.number().max(1)
+    }),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
     sellMethod: joi.string(),
