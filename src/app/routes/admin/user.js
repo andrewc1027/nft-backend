@@ -20,6 +20,4 @@ router.patch('/admin/users/:id',
     handlerException(admin),
     handlerException(usrController.updateUser));
 
-
-
 module.exports = router;

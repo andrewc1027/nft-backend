@@ -3,10 +3,9 @@ const {handler} = require('./../errHandler');
 
 async function getListings(req, res, next) {
     const page = req.query.page || 0;
-    const limit = req.query.limit || 10;
+    const limit = req.query.limit || 1000;
     const query = req.query;
-    const userId = req.params.userId;
-    listingService.getListings(userId, query, page, limit)
+    listingService.getListings(query, page, limit, query.sort_by)
         .then(function(data) {
             return res.json(data);
         })
@@ -16,5 +15,5 @@ async function getListings(req, res, next) {
 }
 
 module.exports = {
-    getListings
+    getListing: getListings
 }
