@@ -14,14 +14,6 @@ const schema = new mongoose.Schema({
       originalName: {type: String, required: true},
       path: {type: String},
     },
-    raw: {
-      originalName: {type: String},
-      cid: {type: String},
-      pinDate: {type: Date},
-      pinSize: {type: Number},
-      isDuplicate: {type: Boolean},
-      path: {type: String},
-    },
   },
 });
 schema.plugin(softDelete);
