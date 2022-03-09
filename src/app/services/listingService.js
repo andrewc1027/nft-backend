@@ -498,8 +498,11 @@ async function publish(id, data, user, socket) {
   item.bid = {
     highest: data.price,
     endDate: data.endDate,
-  },
-    item.sellMethod = data.sellMethod;
+  };
+  item.tokenIds = data.tokenIds ??= [];
+  item.sellMethod = data.sellMethod;
+  item.copies = data.copies ??= 1;
+  console.log(item.royalties);
   await item.save();
 
   makeZip(id);
