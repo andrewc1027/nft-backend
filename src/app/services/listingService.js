@@ -60,7 +60,7 @@ async function getAll(query, page, limit, self) {
   // Use Owner ID
   if (query.owner) {
     queries['owner'] = query.owner;
-    queries['creator.ID'] = {$ne: query.owner};
+    queries['creator'] = {$ne: query.owner};
   }
 
   if (query.liked) {
@@ -82,7 +82,8 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.originalName ipfs.file.path');
+    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path')
+    .populate('creator', 'username walletAddress');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -171,10 +172,7 @@ async function insert(data, files, user, socket) {
     description: data.description,
     location: data.location,
     address: data.address,
-    creator: {
-      name: user.username,
-      ID: user._id,
-    },
+    creator: user._id,
     owner: user._id,
     blockchain: data.blockchain,
     city: datacity,
@@ -333,27 +331,13 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  let item = await listing.findById(id).select('downloadLink owner price name tokenIds').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
   );
 
-  const schema = joi.object({
-    tokenId: joi.number().required(),
-  });
-  const {error} = schema.validate(data, {presence: 'required'});
-  if (error) {
-    const err = new Error();
-    err.message = error.message;
-    throw err;
-  }
-  const tokenIdx = item.tokenIds.indexOf(data.tokenId); // find Token index in an array. 
-  if (tokenIdx == -1) {
-    const err = new Error();
-    err.message = 'Wrong Token ID';
-    throw err;
-  }
+  item = await validatePurchase(id, item, data);
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -364,19 +348,50 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.tokenIds.length > 1) {
+  if (item.copies > 1) {
     item.tokenIds.splice(tokenIdx, 1);
     await recreateById(id, data, user);
-  } else if (item.tokenIds.length == 1) {
+    item.copies--;
+  } else if (item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
+    item.tokenIds = [data.tokenId];
   }
-  console.log(item.tokenIds);
   await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
+}
+
+/**
+ * 
+ * @param {String} id 
+ * @param {Object} item 
+ * @param {Object} data 
+ */
+async function validatePurchase(id, item, data) {
+  const schema = joi.object({
+    tokenId: joi.number().required(),
+  });
+  const {error} = schema.validate(data, {presence: 'required'});
+  if (error) {
+    const err = new Error();
+    err.message = error.message;
+    throw err;
+  }
+
+  const check = await listing.findOne({
+    tokenIds: data.tokenId,
+    blockchain: item.blockchain,
+    _id: {$ne: new ObjectId(id)},
+  });
+  console.log(check, data.tokenIds);
+  if (check) {
+    throw new ValidationError('Token ID already used by another listing.');
+  }
+
+  return item;
 }
 
 /**
@@ -441,6 +456,7 @@ async function publish(id, data, user, socket) {
     }),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
+    royalties: joi.number().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
     tokenIds: joi.array().required(),
@@ -452,15 +468,7 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
     () => Error('Not Found'),
   );
-  const check = await listing.findOne({
-    tokenIds: {$in: data.tokenIds},
-    blockchain: item.blockchain,
-    _id: {$ne: new ObjectId(id)},
-  });
-  console.log(check, data.tokenIds);
-  if (check) {
-    throw new ValidationError('Token ID already used by another listing.');
-  }
+
   let published = false;
   if (data.activeDate == undefined) {
     published = true;
@@ -469,9 +477,9 @@ async function publish(id, data, user, socket) {
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
-  let royalties = 0;
 
-  if (item.tokenID) {
+  let royalties = 0;
+  if (item.tokenIds.length > 0) {
     royalties = item.royalties;
   } else if (!item.tokenID && !data.royalties) {
     if (data.royalties != 0) {
@@ -481,15 +489,15 @@ async function publish(id, data, user, socket) {
     royalties = data.royalties;
   }
 
-  if (item.tokenID && data.royalties) {
+  if (item.tokenIds.length > 0 && data.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
+
+  item.royalties = royalties;
   item.owner = user._id;
   item.price = data.price;
-  item.royalties = royalties;
   item.activeDate = data.activeDate;
   item.buyerAddress = data.buyerAddress;
-  item.tokenIds = data.tokenIds;
   item.isPublished = published;
   item.bid = {
     highest: data.price,
@@ -817,6 +825,7 @@ async function recreateById(id, data, user) {
   const newListing = item.toObject();
   delete newListing['_id'];
   delete newListing['__v'];
+  newListing.copies = 1;
   newListing.tokenIds = [data.tokenId];
   newListing.owner = user._id;
   newListing.isPublished = false;
