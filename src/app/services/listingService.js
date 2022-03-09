@@ -349,7 +349,7 @@ async function purchase(id, data, user, socket) {
     event: 'Purchasing',
   });
   if (item.copies > 1) {
-    item.tokenIds.splice(tokenIdx, 1);
+    // item.tokenIds.splice(tokenIdx, 1);
     await recreateById(id, data, user);
     item.copies--;
   } else if (item.copies == 1) {
