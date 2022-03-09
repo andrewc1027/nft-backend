@@ -76,7 +76,7 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path');
+    'ipfs.file.originalName ipfs.file.path');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -155,10 +155,6 @@ async function insert(data, files, user, socket) {
   // Pre Check if user exists
   await userSvc.find(user._id);
 
-  if (data.resource != '360 Tour' && !files.raw) {
-    throw new Error('Raw file needed for verification purpose');
-  }
-
   if (data.resource == '360 Tour' && !files.thumbnail) {
     throw new Error('Please provide thumbnail file');
   }
@@ -188,7 +184,7 @@ async function insert(data, files, user, socket) {
   });
 
   // Uploading Jpg NFT to IPFS
-  handleNfts(item._id, files.file, files.raw, files.thumbnail, data.resource, '', socket, user);
+  handleNfts(item._id, files.file, files.thumbnail, data.resource, '', socket, user);
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
@@ -198,38 +194,32 @@ async function insert(data, files, user, socket) {
 /**
  * @param {ObjectId} id
  * @param {Array} files
- * @param {Array} raws
  * @param {Array} thumbnail
  * @param {String} resources
  * @param {String} deletedFiles
  * @param {Object} socket
  * @param {Object} user
  */
-async function handleNfts(id, files, raws, thumbnail, resources,
+async function handleNfts(id, files, thumbnail, resources,
   deletedFiles, socket, user) {
   console.log('Handling File');
 
   if (resources == '360 Tour') {
     nftService.handle360(id, files);
   } else {
-    nftService.handle(id, files, raws);
+    nftService.handle(id, files);
   }
 
 
   // Upload first nft on array as thumbnail
   let fileObj = {};
-  let rawObj = {};
   if (files && files.length > 0) {
     fileObj = files[0];
   }
-  if (raws && raws.length > 0) {
-    rawObj = raws[0];
-  }
-
-  if ((resources == 'Video' && files || resources == 'Video' && raws)) {
-    s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
-  } else if ((resources == 'Image' && files) || (resources == 'Image' && raws)) {
-    s3Utils.upload(id, fileObj, rawObj, socket, user);
+  if (resources == 'Video' && files) {
+    s3Utils.uploadVid(id, fileObj, socket, user);
+  } else if (resources == 'Image' && files) {
+    s3Utils.upload(id, fileObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload360(id, thumbnail[0], files);
   }
@@ -279,7 +269,7 @@ async function update(id, files = {}, data, user) {
   }
   if (Object.entries(files).length > 0) {
     // eslint-disable-next-line max-len
-    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
+    handleNfts(item._id, files.file, files.thumbnail, item.resource);
   }
 
   let dataCity = item.city;
@@ -788,7 +778,6 @@ async function indexer() {
         mimetype: 'image/jpeg',
       }, {});
     });
-    list.rawFileName = nfts[0].ipfs.raw.originalName;
     list.save();
   }
 }
