@@ -12,9 +12,6 @@ const storage = multer.diskStorage({
   filename: function(req, file, cb) {
     const extArray = file.mimetype.split('/');
     let extension = extArray[extArray.length - 1];
-    if (file.fieldname == 'raw') {
-      extension = 'raw';
-    }
     cb(null, `${file.fieldname}_${Date.now()}.${extension}`);
   },
 });

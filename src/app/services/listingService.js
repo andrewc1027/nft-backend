@@ -47,20 +47,26 @@ async function getAll(query, page, limit, self) {
 
   // Use Creator ID
   if (query.creator) {
-    queries['creator.ID'] = new ObjectId(query.creator);
+    queries['creator'] = new ObjectId(query.creator);
+    queries['owner'] = query.creator;
+  }
+
+  // Use Creator ID
+  if (query.seller) {
+    queries['creator'] = new ObjectId(query.seller);
+    queries['owner'] = {$ne: query.seller};
   }
 
   // Use Owner ID
   if (query.owner) {
     queries['owner'] = query.owner;
-    queries['creator.ID'] = {$ne: query.owner};
+    queries['creator'] = {$ne: query.owner};
   }
 
   if (query.liked) {
     const usr = await user.findById(self._id);
     queries['_id'] = {$in: usr.favorites};
   }
-
   const listings = await listing
     .paginate(queries,
       {page: page, limit: limit});
@@ -76,7 +82,8 @@ async function getOne(id, user = {}) {
     () => Error('NotFound'),
   ).populate('nfts',
     // eslint-disable-next-line max-len
-    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path');
+    'ipfs.file.originalName ipfs.file.path ipfs.raw.originalName ipfs.raw.path')
+    .populate('creator', 'username walletAddress');
   if (detail.deleted) {
     throw new Error('Deleted');
   }
@@ -155,10 +162,6 @@ async function insert(data, files, user, socket) {
   // Pre Check if user exists
   await userSvc.find(user._id);
 
-  if (data.resource != '360 Tour' && !files.raw) {
-    throw new Error('Raw file needed for verification purpose');
-  }
-
   if (data.resource == '360 Tour' && !files.thumbnail) {
     throw new Error('Please provide thumbnail file');
   }
@@ -169,10 +172,7 @@ async function insert(data, files, user, socket) {
     description: data.description,
     location: data.location,
     address: data.address,
-    creator: {
-      name: user.username,
-      ID: user._id,
-    },
+    creator: user._id,
     owner: user._id,
     blockchain: data.blockchain,
     city: datacity,
@@ -188,7 +188,7 @@ async function insert(data, files, user, socket) {
   });
 
   // Uploading Jpg NFT to IPFS
-  handleNfts(item._id, files.file, files.raw, files.thumbnail, data.resource, '', socket, user);
+  handleNfts(item._id, files.file, files.thumbnail, data.resource, '', socket, user);
   // if (item.collections) {
   //   collectionItemCount(item.collections.ID);
   // }
@@ -198,38 +198,32 @@ async function insert(data, files, user, socket) {
 /**
  * @param {ObjectId} id
  * @param {Array} files
- * @param {Array} raws
  * @param {Array} thumbnail
  * @param {String} resources
  * @param {String} deletedFiles
  * @param {Object} socket
  * @param {Object} user
  */
-async function handleNfts(id, files, raws, thumbnail, resources,
+async function handleNfts(id, files, thumbnail, resources,
   deletedFiles, socket, user) {
   console.log('Handling File');
 
   if (resources == '360 Tour') {
     nftService.handle360(id, files);
   } else {
-    nftService.handle(id, files, raws);
+    nftService.handle(id, files);
   }
 
 
   // Upload first nft on array as thumbnail
   let fileObj = {};
-  let rawObj = {};
   if (files && files.length > 0) {
     fileObj = files[0];
   }
-  if (raws && raws.length > 0) {
-    rawObj = raws[0];
-  }
-
-  if ((resources == 'Video' && files || resources == 'Video' && raws)) {
-    s3Utils.uploadVid(id, fileObj, rawObj, socket, user);
-  } else if ((resources == 'Image' && files) || (resources == 'Image' && raws)) {
-    s3Utils.upload(id, fileObj, rawObj, socket, user);
+  if (resources == 'Video' && files) {
+    s3Utils.uploadVid(id, fileObj, socket, user);
+  } else if (resources == 'Image' && files) {
+    s3Utils.upload(id, fileObj, socket, user);
   } else if (resources == '360 Tour' && thumbnail) {
     s3Utils.upload360(id, thumbnail[0], files);
   }
@@ -250,7 +244,7 @@ async function update(id, files = {}, data, user) {
     if (Object.entries(files).length > 0) {
       throw new Error('Not Allowed to update nft files after minting/publishing');
     }
-    if (data.address || data.city || data.blockchain) {
+    if (data.address !== item.address || data.city !== item.city.ID.toString() || data.blockchain !== item.blockchain) {
       throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
     }
   }
@@ -279,7 +273,7 @@ async function update(id, files = {}, data, user) {
   }
   if (Object.entries(files).length > 0) {
     // eslint-disable-next-line max-len
-    handleNfts(item._id, files.file, files.raw, files.thumbnail, item.resource);
+    handleNfts(item._id, files.file, files.thumbnail, item.resource);
   }
 
   let dataCity = item.city;
@@ -337,27 +331,13 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  let item = await listing.findById(id).select('downloadLink owner price name tokenIds').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
   );
 
-  const schema = joi.object({
-    tokenId: joi.number().required(),
-  });
-  const {error} = schema.validate(data, {presence: 'required'});
-  if (error) {
-    const err = new Error();
-    err.message = error.message;
-    throw err;
-  }
-  const tokenIdx = item.tokenIds.indexOf(data.tokenId); // find Token index in an array. 
-  if (tokenIdx == -1) {
-    const err = new Error();
-    err.message = 'Wrong Token ID';
-    throw err;
-  }
+  item = await validatePurchase(id, item, data);
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -368,19 +348,50 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.tokenIds.length > 1) {
-    item.tokenIds.splice(tokenIdx, 1);
+  if (item.copies > 1) {
+    // item.tokenIds.splice(tokenIdx, 1);
     await recreateById(id, data, user);
-  } else if (item.tokenIds.length == 1) {
+    item.copies--;
+  } else if (item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
+    item.tokenIds = [data.tokenId];
   }
-  console.log(item.tokenIds);
   await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
   await notificationSvc.itemPurchased(user, item, socket);
   return trade;
+}
+
+/**
+ * 
+ * @param {String} id 
+ * @param {Object} item 
+ * @param {Object} data 
+ */
+async function validatePurchase(id, item, data) {
+  const schema = joi.object({
+    tokenId: joi.number().required(),
+  });
+  const {error} = schema.validate(data, {presence: 'required'});
+  if (error) {
+    const err = new Error();
+    err.message = error.message;
+    throw err;
+  }
+
+  const check = await listing.findOne({
+    tokenIds: data.tokenId,
+    blockchain: item.blockchain,
+    _id: {$ne: new ObjectId(id)},
+  });
+  console.log(check, data.tokenIds);
+  if (check) {
+    throw new ValidationError('Token ID already used by another listing.');
+  }
+
+  return item;
 }
 
 /**
@@ -440,12 +451,15 @@ async function publish(id, data, user, socket) {
   const schema = joi.object({
     price: joi.number().required(),
     royalties: joi.number().max(10).optional(),
-    copies: joi.number().required(),
+    copies: joi.number().required().when('sellMethod', {
+      is: 'Auction', then: joi.number().max(1)
+    }),
     activeDate: joi.date().optional(),
     buyerAddress: joi.string().optional(),
+    royalties: joi.number().optional(),
     sellMethod: joi.string(),
     endDate: joi.date().greater(Date.now()),
-    tokenIds: joi.array().required(),
+    tokenIds: joi.array().when('sellMethod', {is: 'Auction', then: joi.array().required()}),
   });
   const {error} = schema.validate(data);
   if (error) {
@@ -454,15 +468,7 @@ async function publish(id, data, user, socket) {
   const item = await listing.findById(id).orFail(
     () => Error('Not Found'),
   );
-  const check = await listing.findOne({
-    tokenIds: {$in: data.tokenIds},
-    blockchain: item.blockchain,
-    _id: {$ne: new ObjectId(id)},
-  });
-  console.log(check, data.tokenIds);
-  if (check) {
-    throw new ValidationError('Token ID already used by another listing.');
-  }
+
   let published = false;
   if (data.activeDate == undefined) {
     published = true;
@@ -471,9 +477,9 @@ async function publish(id, data, user, socket) {
   if (item.owner != user._id) {
     throw new Error('Not Authorized to publish this listing');
   }
-  let royalties = 0;
 
-  if (item.tokenID) {
+  let royalties = 0;
+  if (item.tokenIds.length > 0) {
     royalties = item.royalties;
   } else if (!item.tokenID && !data.royalties) {
     if (data.royalties != 0) {
@@ -483,21 +489,27 @@ async function publish(id, data, user, socket) {
     royalties = data.royalties;
   }
 
-  if (item.tokenID && data.royalties) {
+  if (item.tokenIds.length > 0 && data.royalties !== item.royalties) {
     throw new ValidationError('Not Allowed to Change Royalties');
   }
+
+  if (!("tokenIds" in item) || item.tokenIds.length === 0) {
+    item.tokenIds = data.tokenIds ??= [];
+  }
+
+  item.royalties = royalties;
   item.owner = user._id;
   item.price = data.price;
-  item.royalties = royalties;
   item.activeDate = data.activeDate;
   item.buyerAddress = data.buyerAddress;
-  item.tokenIds = data.tokenIds;
   item.isPublished = published;
   item.bid = {
     highest: data.price,
     endDate: data.endDate,
-  },
-    item.sellMethod = data.sellMethod;
+  };
+  item.sellMethod = data.sellMethod;
+  item.copies = data.copies ??= 1;
+  console.log(item.royalties);
   await item.save();
 
   makeZip(id);
@@ -680,6 +692,7 @@ async function finishAuction(id, user) {
     listingID: id,
     quantity: 1,
     event: 'Auction',
+    tokenId: item.tokenIds[0] ??= 0,
   });
   nftService.hashMetadata(id, item.tokenID, item.bid.highestBidder);
   await bidSvc.close(id);
@@ -783,7 +796,6 @@ async function indexer() {
         mimetype: 'image/jpeg',
       }, {});
     });
-    list.rawFileName = nfts[0].ipfs.raw.originalName;
     list.save();
   }
 }
@@ -817,6 +829,7 @@ async function recreateById(id, data, user) {
   const newListing = item.toObject();
   delete newListing['_id'];
   delete newListing['__v'];
+  newListing.copies = 1;
   newListing.tokenIds = [data.tokenId];
   newListing.owner = user._id;
   newListing.isPublished = false;

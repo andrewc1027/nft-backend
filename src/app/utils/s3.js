@@ -10,17 +10,14 @@ const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 const {DeleteObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const {default: axios} = require('axios');
-const extractd = require('extractd')
-const dcraw = require('dcraw')
 
 /**
  * @param {String} id
  * @param {File} file
- * @param {File} raw
  * @param {Object} socket
  * @param {Object} user
  */
-async function upload(id, file, raw, socket, user) {
+async function upload(id, file, socket, user) {
 
   let param640 = {}
   let param320 = {}
@@ -61,47 +58,7 @@ async function upload(id, file, raw, socket, user) {
     await s3.send(new PutObjectCommand(param320));
   }
 
-
-  let rawParam = {};
-  if (Object.entries(raw).length > 0) {
-    // Convert raw to thumbnail
-    console.log('Processing Raw: ', raw);
-    let rawPath = raw.path;
-    const currentRawFileFormat = raw.originalname.split('.').pop().toUpperCase();
-    let needPreprocessingFormats = ["ARW", "CR2", "RAF"];
-    if (needPreprocessingFormats.includes(currentRawFileFormat)) {
-      console.log(`upload ::: Need additional processing for: ${currentRawFileFormat}`);
-      const buf = fs.readFileSync(rawPath);
-      rawPath = dcraw(buf, { extractThumbnail: true});
-      console.log(`upload ::: Additional processing done`);
-    }
-    console.log(`upload ::: Processing data with sharp`)
-    const rawImage = await sharp(rawPath)
-        .resize({width: 640})
-        .toFormat('jpeg')
-        .jpeg({
-          quality: 60,
-          mozjpeg: true,
-          force: true,
-        })
-        .toBuffer()
-        .catch((e) => {
-          console.log('Error Occured: ', e);
-          socket.to(user._id.toString()).emit('error', {error: e});
-        });
-    console.log(`upload ::: Prepare buffered data to upload to S3 for ${raw.filename}.jpeg`);
-    rawParam = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `${raw.filename}.jpeg`,
-      Body: rawImage,
-      ContentType: 'image/jpeg',
-      ACL: 'public-read',
-    };
-    await s3.send(new PutObjectCommand(rawParam));
-    rawParam.originalName = raw.originalname;
-  }
-
-  updateImageListing(id, param640, param320, rawParam);
+  updateImageListing(id, param640, param320);
   console.log(`upload ::: ended`)
 }
 
@@ -109,16 +66,13 @@ async function upload(id, file, raw, socket, user) {
 /**
  * @param {String} id
  * @param {File} videoFile
- * @param {File} rawFile
  * @param {Object} socket
  * @param {Object} user
  */
-async function uploadVid(id, videoFile, rawFile = {}, socket, user) {
+async function uploadVid(id, videoFile, socket, user) {
   console.log('Processing Video...', videoFile);
   const newVidPath = path.resolve(__dirname,
     `../../../uploads/${id}.gif`);
-  const rawThumbPath = path.resolve(__dirname,
-    `../../../uploads/${id}.mp4`);
   const compressedVidPath = path.resolve(__dirname,
     `../../../uploads/${id}_compressed.mp4`);
 
@@ -131,17 +85,7 @@ async function uploadVid(id, videoFile, rawFile = {}, socket, user) {
       });
 
     await processVideo(id, videoFile, compressedVidPath, 'mp4_compress',
-      {duration: 60, fps: 15, size: '600x?'}).catch((e) => {
-        console.log('Error Occured: ', e);
-        socket.to(user._id.toString()).emit('error', {error: e});
-      });
-  }
-
-  if (Object.entries(rawFile).length > 0) {
-
-    // Process video raw as thumbnail
-    await processVideo(id, rawFile, rawThumbPath, 'mp4',
-      {duration: 15, fps: 30, size: '300x?'}).catch((e) => {
+      {duration: 3*60*60, fps: 15, size: '600x?'}).catch((e) => {
         console.log('Error Occured: ', e);
         socket.to(user._id.toString()).emit('error', {error: e});
       });
@@ -178,21 +122,7 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
           ACL: 'public-read',
         };
         await s3.send(new PutObjectCommand(param));
-        // updateListing(id, {key: param.Key}, {});
         updateVideoListing(id, param, 'gif');
-      } else if (type == 'mp4') {
-        const rawBuffer = fs.readFileSync(newVidPath);
-        const rawParam = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: `${id}.mp4`,
-          Body: rawBuffer,
-          ContentType: 'video/mp4',
-          ACL: 'public-read',
-        };
-        await s3.send(new PutObjectCommand(rawParam));
-        // updateListing(id, {}, {key: rawParam.Key});
-        rawParam.originalName = videoFile.originalname;
-        updateVideoListing(id, rawParam, 'raw');
       } else if (type == 'mp4_compress') {
         const rawBuffer = fs.readFileSync(newVidPath);
         const param = {
@@ -204,29 +134,23 @@ async function processVideo(id, videoFile, newVidPath, type, options) {
         };
         await s3.send(new PutObjectCommand(param));
         updateVideoListing(id, param, 'compress');
-        // updateListing(id, {}, {}, {key: param.Key, name: videoFile.originalname});
       }
     })
     .save(newVidPath);
 }
 
 /**
+ * @dev for 360 resources
  * @param {String} id
  * @param {Object} file
- * @param {Object} raw
  * @param {Object} compressed
  */
-async function updateListing(id, file, raw, compressed) {
+async function updateListing(id, file, compressed) {
   const item = await listing.findById(id);
   const assets = [];
   if (file) {
     item.thumbnail = `${process.env.AWS_BUCKET_URL}${file}` ?
       `${process.env.AWS_BUCKET_URL}${file}` : item.thumbnail;
-  }
-  if (raw) {
-    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${raw.Key}` ?
-      `${process.env.AWS_BUCKET_URL}${raw.Key}` : item.rawThumbnail;
-    item.rawOriginalName = raw.name;
   }
   console.log(item.assets, 'update listing');
   await item.save();
@@ -332,9 +256,8 @@ async function removeFile(key) {
  * @param {String} id
  * @param {Object} param640 
  * @param {Object} param320 
- * @param {Object} rawParam 
  */
-async function updateImageListing(id, param640, param320, rawParam) {
+async function updateImageListing(id, param640, param320) {
   const item = await listing.findById(id);
   const assets = [];
   if (Object.entries(param320).length > 0) {
@@ -348,11 +271,6 @@ async function updateImageListing(id, param640, param320, rawParam) {
     }
     assets.push(asset);
     item.assets = assets;
-  }
-  if (Object.entries(rawParam).length > 0) {
-    item.rawFileName = rawParam.originalName;
-    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${rawParam.Key}` ?
-      `${process.env.AWS_BUCKET_URL}${rawParam.Key}` : item.rawThumbnail;
   }
   await item.save();
 }
@@ -377,11 +295,6 @@ async function updateVideoListing(id, param, type) {
     item.videoThumbnail = `${process.env.AWS_BUCKET_URL}${param.Key}`;
     assets.push(asset);
     item.assets = assets;
-  }
-  if (type == 'raw') {
-    item.rawFileName = param.originalName;
-    item.rawThumbnail = `${process.env.AWS_BUCKET_URL}${param.Key}` ?
-      `${process.env.AWS_BUCKET_URL}${param.Key}` : item.rawThumbnail;
   }
   await item.save();
 }
