@@ -494,7 +494,7 @@ async function publish(id, data, user, socket) {
   }
 
   if (!("tokenIds" in item) || item.tokenIds.length === 0) {
-    item.tokenIds = data.tokenIds;
+    item.tokenIds = data.tokenIds ??= [];
   }
 
   item.royalties = royalties;
@@ -507,7 +507,6 @@ async function publish(id, data, user, socket) {
     highest: data.price,
     endDate: data.endDate,
   };
-  item.tokenIds = data.tokenIds ??= [];
   item.sellMethod = data.sellMethod;
   item.copies = data.copies ??= 1;
   console.log(item.royalties);
