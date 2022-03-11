@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const {handlerException} = require('../exceptions/handler');
 const tokenValidator = require("../middleware/tokenValidator");
-const customNtfController = require('../controllers/customNtfController');
+const customNtfController = require('../controllers/orderController');
 
 router.get('/orders',
     handlerException(tokenValidator),

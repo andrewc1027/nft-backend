@@ -1,4 +1,4 @@
-const order = require('../models/customNft');
+const order = require('../models/order');
 const userSvc = require('./userService');
 
 

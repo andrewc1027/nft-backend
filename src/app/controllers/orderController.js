@@ -1,4 +1,4 @@
-const customNftService = require('../services/customNftService');
+const customNftService = require('../services/orderService');
 const http = require('https');
 const {handler} = require('./errHandler');
 
