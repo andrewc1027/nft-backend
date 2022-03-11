@@ -1,4 +1,4 @@
-const customNftService = require('../services/orderService');
+const orderService = require('../services/orderService');
 const http = require('https');
 const {handler} = require('./errHandler');
 
@@ -12,7 +12,7 @@ async function index(req, res, next) {
     const limit = req.query.limit || 10;
     const query = req.query;
     const user = req.user;
-    customNftService.getAll(query, page, limit, user)
+    orderService.getAll(query, page, limit, user)
         .then(function (data) {
             return res.json(data);
         })
@@ -27,7 +27,7 @@ async function index(req, res, next) {
  * @param  {Object} next
  */
 async function insert(req, res, next) {
-    customNftService.insert(req.body, req.user)
+    orderService.insert(req.body, req.user)
         .then(function (data) {
             return res.json(data);
         })
