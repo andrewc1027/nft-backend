@@ -9,8 +9,9 @@ const path = require('path');
  * @param {Object} self
  * @param {Object} listing
  * @param {Object} socket
+ * @param {String} sellerId
  */
-async function itemPurchased(self, listing, socket) {
+async function itemPurchased(self, listing, socket, sellerId) {
   if (self.notifications.successfulPurchase) {
     await notification.create({
       title: `${listing.name}: Successful Purchase`,
@@ -33,14 +34,15 @@ async function itemPurchased(self, listing, socket) {
       name: listing.name,
     });
   }
-  await itemSold(listing, socket);
+  await itemSold(listing, socket, sellerId);
 }
 
 /** ]
  * @param {Object} listing
  * @param {Object} socket
+ * @param {String} sellerId
  */
-async function itemSold(listing, socket) {
+async function itemSold(listing, socket, sellerId) {
   const templateFile = fs.readFileSync(
     path.resolve(__dirname, '../../../email-template/itemSold.json'),
   );
@@ -50,9 +52,9 @@ async function itemSold(listing, socket) {
     price: listing.price,
     name: listing.name,
   });
-  const owner = await user.findById(listing.owner);
+  const seller = await user.findById(sellerId);
   itemSoldEmail({
-    email: owner.email,
+    email: seller.email,
     listingName: listing.name || '',
     listingPrice: listing.price || 0,
   })
@@ -105,7 +107,7 @@ async function itemPurchasedEmail(data) {
     subject: 'Your NFT purchase',
     body: `Congratulations!  Your purchase for ${data.listingName} is complete for ${data.listingPrice}. \
     You can access from your profile on ${process.env.HOMEJAB_WEB}. `,
-    buttonText: 'Homejab Web',
+    buttonText: 'Visit Marketplace',
     buttonLink: process.env.HOMEJAB_WEB,
   });
 }
@@ -116,7 +118,7 @@ async function itemSoldEmail(data) {
     subject: 'Your NFT is sold',
     body: `Congratulations!  Purchase for ${data.listingName} is complete for ${data.listingPrice}. \
     Funds from this sale will be deposited in your crypto wallet.`,
-    buttonText: 'Homejab Web',
+    buttonText: 'Visit Marketplace',
     buttonLink: process.env.HOMEJAB_WEB,
   })
 }

@@ -338,6 +338,7 @@ async function purchase(id, data, user, socket) {
   );
 
   item = await validatePurchase(id, item, data);
+  const sellerId = item.owner;
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -360,7 +361,7 @@ async function purchase(id, data, user, socket) {
   await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
-  await notificationSvc.itemPurchased(user, item, socket);
+  await notificationSvc.itemPurchased(user, item, socket, sellerId);
   return trade;
 }
 
