@@ -5,7 +5,10 @@ const {handlerException} = require('../exceptions/handler');
 const tokenValidator = require("../middleware/tokenValidator");
 const customNtfController = require('../controllers/customNtfController');
 
-router.get('/order',
+router.get('/orders',
     handlerException(tokenValidator),
     handlerException(customNtfController.index));
+router.post('/orders',
+    handlerException(tokenValidator),
+    handlerException(customNtfController.insert));
 module.exports = router;

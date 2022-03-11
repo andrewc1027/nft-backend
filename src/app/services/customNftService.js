@@ -1,14 +1,34 @@
-const customNft = require('../models/customNft');
+const order = require('../models/customNft');
+const userSvc = require('./userService');
 
 
 async function getAll(query, page, limit, self) {
     const filters = {};
-    const customNfts = await customNft
+    const orders = await order
         .paginate(filters,
             {page: page, limit: limit});
-    return customNfts;
+    return orders;
+}
+
+async function insert(data, user) {
+    const details = data.details ??= "";
+    await userSvc.find(user._id);
+
+    const item = await order.create({
+        creator: user._id,
+        type: data.type,
+        isAerial: (data.isAerial === 'true'),
+        object: data.object,
+        location: data.location,
+        details: details,
+        contactMethod: data.contactMethod,
+        contactInfo: data.contactInfo,
+        createdAt: Date.now()
+    });
+    return item;
 }
 
 module.exports = {
     getAll,
+    insert
 };
