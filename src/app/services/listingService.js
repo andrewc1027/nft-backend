@@ -265,7 +265,6 @@ async function update(id, files = {}, data, user) {
   item.tags = tagStr;
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
-  console.log(files);
   if (data.filesForDelete) {
     let ids = [];
     ids = data.filesForDelete.split(',');
@@ -331,7 +330,7 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies copiesLeft').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
@@ -348,11 +347,10 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.copies > 1) {
-    // item.tokenIds.splice(tokenIdx, 1);
+  if (item.copiesLeft > 1) {
     await recreateById(id, data, user);
-    item.copies--;
-  } else if (item.copies == 1) {
+    item.copiesLeft--;
+  } else if (item.copiesLeft == 1) {
     item.owner = user._id;
     item.isPublished = false;
     item.tokenIds = [data.tokenId];
@@ -386,7 +384,6 @@ async function validatePurchase(id, item, data) {
     blockchain: item.blockchain,
     _id: {$ne: new ObjectId(id)},
   });
-  console.log(check, data.tokenIds);
   if (check) {
     throw new ValidationError('Token ID already used by another listing.');
   }
@@ -509,7 +506,7 @@ async function publish(id, data, user, socket) {
   };
   item.sellMethod = data.sellMethod;
   item.copies = data.copies ??= 1;
-  console.log(item.royalties);
+  item.copiesLeft = item.copies;
   await item.save();
 
   makeZip(id);
