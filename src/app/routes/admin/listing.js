@@ -10,6 +10,6 @@ const admin = require('../../middleware/admin');
  */
 router.get('/admin/listings',
     handlerException(admin),
-    handlerException(listingController.getListing));
+    handlerException(listingController.getListings));
 
 module.exports = router;
