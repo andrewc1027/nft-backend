@@ -239,13 +239,14 @@ async function handleNfts(id, files, thumbnail, resources,
 async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
     () => Error('Not Found'));
-
-  if (item.isPublished) {
-    if (Object.entries(files).length > 0) {
-      throw new Error('Not Allowed to update nft files after minting/publishing');
-    }
-    if (data.address !== item.address || data.city !== item.city.ID.toString() || data.blockchain !== item.blockchain) {
-      throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
+  if (item.tokenIds.length !== 0) {
+    if (item.isPublished) {
+      if (Object.entries(files).length > 0) {
+        throw new Error('Not Allowed to update nft files after minting/publishing');
+      }
+      if (data.address !== item.address || data.city !== item.city.ID.toString() || data.blockchain !== item.blockchain) {
+        throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
+      }
     }
   }
   let tagStr = item.tags;
