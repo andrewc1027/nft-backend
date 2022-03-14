@@ -6,7 +6,7 @@ async function getListings(req, res, next) {
     const limit = req.query.limit || 1000;
     const query = req.query;
     listingService.getListings(query, page, limit, query.sort_by)
-        .then(function(data) {
+        .then(function (data) {
             return res.json(data);
         })
         .catch((err) => {
@@ -15,5 +15,5 @@ async function getListings(req, res, next) {
 }
 
 module.exports = {
-    getListing: getListings
+    getListings
 }
