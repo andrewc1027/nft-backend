@@ -347,10 +347,10 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.copiesLeft > 1) {
+  if (!item.copiesLeft && item.copies > 1) {
     await recreateById(id, data, user);
-    item.copiesLeft--;
-  } else if (item.copiesLeft == 1) {
+    item.copiesLeft = item.copies - 1;
+  } else if (item.copiesLeft == 1 || item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
     item.tokenIds = [data.tokenId];
@@ -506,7 +506,6 @@ async function publish(id, data, user, socket) {
   };
   item.sellMethod = data.sellMethod;
   item.copies = data.copies ??= 1;
-  item.copiesLeft = item.copies;
   await item.save();
 
   makeZip(id);
@@ -827,6 +826,7 @@ async function recreateById(id, data, user) {
   delete newListing['_id'];
   delete newListing['__v'];
   newListing.copies = 1;
+  newListing.copiesLeft = 1;
   newListing.tokenIds = [data.tokenId];
   newListing.owner = user._id;
   newListing.isPublished = false;
