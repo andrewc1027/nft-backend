@@ -1,5 +1,4 @@
 const orderService = require('../services/orderService');
-const http = require('https');
 const {handler} = require('./errHandler');
 
 /**
@@ -9,10 +8,9 @@ const {handler} = require('./errHandler');
  */
 async function index(req, res, next) {
     const page = req.query.page || 0;
-    const limit = req.query.limit || 10;
+    const limit = req.query.limit || 1000;
     const query = req.query;
-    const user = req.user;
-    orderService.getAll(query, page, limit, user)
+    orderService.getAll(query, page, limit)
         .then(function (data) {
             return res.json(data);
         })
@@ -27,7 +25,7 @@ async function index(req, res, next) {
  * @param  {Object} next
  */
 async function insert(req, res, next) {
-    orderService.insert(req.body, req.user)
+    orderService.insert(req.body)
         .then(function (data) {
             return res.json(data);
         })

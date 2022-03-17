@@ -1,10 +1,7 @@
-const {ObjectId} = require('mongodb');
 const mongoose = require('mongoose');
 const softDelete = require('mongoose-delete');
-const user = require("./user");
 const paginate = require("mongoose-paginate-v2");
 const schema = new mongoose.Schema({
-    creator: {type: ObjectId, ref: user, required: true},
     type: {type: String, required: true},
     isAerial: {type: Boolean, required: true},
     object: {type: String, required: true},

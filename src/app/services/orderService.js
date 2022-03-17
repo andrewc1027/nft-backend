@@ -1,8 +1,7 @@
 const order = require('../models/order');
-const userSvc = require('./userService');
 
 
-async function getAll(query, page, limit, self) {
+async function getAll(query, page, limit) {
     const filters = {};
     const orders = await order
         .paginate(filters,
@@ -10,12 +9,10 @@ async function getAll(query, page, limit, self) {
     return orders;
 }
 
-async function insert(data, user) {
+async function insert(data) {
     const details = data.details ??= "";
-    await userSvc.find(user._id);
 
     const item = await order.create({
-        creator: user._id,
         type: data.type,
         isAerial: (data.isAerial === 'true'),
         object: data.object,
