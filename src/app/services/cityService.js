@@ -86,8 +86,13 @@ async function add(data) {
   if (error) {
     throw new Error(error.details[0].message);
   }
-  const res = await city.create(data);
-  return res;
+  const existingCity = await city.findOne({"name": data.name});
+  if (existingCity) {
+    return existingCity;
+  } else {
+    const res = await city.create(data);
+    return res;
+  }
 }
 
 module.exports = {
