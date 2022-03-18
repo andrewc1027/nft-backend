@@ -14,7 +14,7 @@ async function insert(data) {
 
     const item = await order.create({
         type: data.type,
-        isAerial: (data.isAerial === 'true'),
+        isAerial: (data.isAerial === true || data.isAerial === 'true'),
         object: data.object,
         location: data.location,
         details: details,
