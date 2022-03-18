@@ -238,14 +238,15 @@ async function handleNfts(id, files, thumbnail, resources,
  */
 async function update(id, files = {}, data, user) {
   const item = await listing.findOne({_id: id, owner: user._id}).orFail(
-    () => Error('Not Found'));
-
-  if (item.isPublished) {
+      () => Error('Not Found'));
+  if (item.tokenIds.length !== 0) {
     if (Object.entries(files).length > 0) {
-      throw new Error('Not Allowed to update nft files after minting/publishing');
+      throw new Error('Not Allowed to update nft files after minting.');
     }
-    if (data.address !== item.address || data.city !== item.city.ID.toString() || data.blockchain !== item.blockchain) {
-      throw new Error('Not Allowed to update address, city and blockchain after minting publishing');
+    if ((data.address && data.address !== item.address) ||
+        (data.city && data.city !== item.city.ID.toString()) ||
+        (data.blockchain && data.blockchain !== item.blockchain)) {
+      throw new Error('Not Allowed to update address, city and blockchain after minting.');
     }
   }
   let tagStr = item.tags;
@@ -265,7 +266,6 @@ async function update(id, files = {}, data, user) {
   item.tags = tagStr;
   item.resource = data.resource || item.resource;
   item.updatedAt = Date.now();
-  console.log(files);
   if (data.filesForDelete) {
     let ids = [];
     ids = data.filesForDelete.split(',');
@@ -331,13 +331,14 @@ async function remove(id, user) {
  */
 async function purchase(id, data, user, socket) {
   // What if there's 2 simultaneous purchase ?
-  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies').where({
+  let item = await listing.findById(id).select('downloadLink owner price name tokenIds copies copiesLeft').where({
     isPublished: true,
   }).orFail(
     () => Error('Listing Not Found'),
   );
 
   item = await validatePurchase(id, item, data);
+  const sellerId = item.owner;
   const trade = await transaction.create({
     to: user._id,
     from: item.owner,
@@ -348,11 +349,10 @@ async function purchase(id, data, user, socket) {
     quantity: 1,
     event: 'Purchasing',
   });
-  if (item.copies > 1) {
-    // item.tokenIds.splice(tokenIdx, 1);
+  if (!item.copiesLeft && item.copies > 1) {
     await recreateById(id, data, user);
-    item.copies--;
-  } else if (item.copies == 1) {
+    item.copiesLeft = item.copies - 1;
+  } else if (item.copiesLeft == 1 || item.copies == 1) {
     item.owner = user._id;
     item.isPublished = false;
     item.tokenIds = [data.tokenId];
@@ -360,7 +360,7 @@ async function purchase(id, data, user, socket) {
   await item.save();
 
   // nftService.hashMetadata(id, item.tokenID, user._id);
-  await notificationSvc.itemPurchased(user, item, socket);
+  await notificationSvc.itemPurchased(user, item, socket, sellerId);
   return trade;
 }
 
@@ -386,7 +386,6 @@ async function validatePurchase(id, item, data) {
     blockchain: item.blockchain,
     _id: {$ne: new ObjectId(id)},
   });
-  console.log(check, data.tokenIds);
   if (check) {
     throw new ValidationError('Token ID already used by another listing.');
   }
@@ -509,7 +508,6 @@ async function publish(id, data, user, socket) {
   };
   item.sellMethod = data.sellMethod;
   item.copies = data.copies ??= 1;
-  console.log(item.royalties);
   await item.save();
 
   makeZip(id);
@@ -830,6 +828,7 @@ async function recreateById(id, data, user) {
   delete newListing['_id'];
   delete newListing['__v'];
   newListing.copies = 1;
+  newListing.copiesLeft = 1;
   newListing.tokenIds = [data.tokenId];
   newListing.owner = user._id;
   newListing.isPublished = false;

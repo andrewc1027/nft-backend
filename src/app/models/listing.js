@@ -31,6 +31,7 @@ const schema = new mongoose.Schema({
   // Listing Related
   owner: {type: String}, // Creator are the initial owner
   copies: {type: Number, default: 1},
+  copiesLeft: {type: Number},
   featureImage: {type: String},
   bannerImage: {type: String},
   royalties: {type: Number}, // in percentage
