@@ -28,7 +28,7 @@ async function getAll(query, user, page, limit) {
   if (query.listed === true || query.listed === 'true') {
     let filter;
     let listedCitiesIds = [];
-    let conditions = []
+    let conditions = [];
     if(query.id) {
       conditions.push({"city.ID":query.id});
     }
