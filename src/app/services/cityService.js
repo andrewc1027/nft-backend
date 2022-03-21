@@ -1,5 +1,6 @@
 const {ObjectId} = require('bson');
 const city = require('../models/city');
+const listing = require('../models/listing')
 const qTransform = require('../utils/queryTransform');
 const joi = require('joi');
 /**
@@ -12,6 +13,19 @@ const joi = require('joi');
 async function getAll(query, user, page, limit) {
   const queries = {};
   const sort = {index: 1};
+
+  if (query.listed === true || query.listed === 'true') {
+    const listedCities = await listing.find(
+        {$and: [{isPublished: true}, {deleted: {$ne: true}}]},
+        {"city.ID": 1});
+    let listedCitiesIds = [];
+    for (let i = 0; i < listedCities.length; i++) {
+      listedCitiesIds.push(listedCities[i].city.ID.toString());
+    }
+    listedCitiesIds = Array.from(new Set(listedCitiesIds));
+    queries['_id'] = {$in: listedCitiesIds};
+  }
+
   if (query.url) {
     queries['url'] = query.url;
   }
