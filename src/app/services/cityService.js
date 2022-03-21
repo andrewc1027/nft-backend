@@ -78,7 +78,7 @@ async function getAutocomplete(query, limit = 10) {
   filters['parent'] = true;
   const result = await city.paginate(filters, {
     select: 'name _id',
-    sort: {population: -1},
+    sort: {index: 1},
     limit: limit,
     collation: {
       locale: 'en_US',
