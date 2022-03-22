@@ -241,7 +241,9 @@ async function indexer(req, res, next) {
  *@param {Object} next
  */
 async function getListingsByUsername(req, res, next){
-  listingService.getListingsByUsername(req.params.username)
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  listingService.getListingsByUsername(req.params.username, page, limit)
       .then(function (data) {
         return res.json(data);
       })
@@ -256,7 +258,9 @@ async function getListingsByUsername(req, res, next){
  *@param {Object} next
  */
 async function getSoldListingsByUsername(req, res, next){
-  listingService.getSoldListingsByUsername(req.params.username)
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  listingService.getSoldListingsByUsername(req.params.username, page, limit)
       .then(function (data) {
         return res.json(data);
       })

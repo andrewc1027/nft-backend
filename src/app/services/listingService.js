@@ -838,22 +838,31 @@ async function recreateById(id, data, user) {
 
 /**
  * @param {String} username
+ * @param {Number} page
+ * @param {Number} limit
  */
-async function getListingsByUsername(username) {
+async function getListingsByUsername(username, page, limit) {
   const user = await userSvc.getUserByUsername(username, "_id");
   let queries = {};
+  const sort = {'createdAt': 1};
   queries['isPublished'] = {$eq: true};
   queries['deleted'] = {$ne:true};
   queries['owner'] = user._id.toString();
-  const collections = await listing.paginate(queries,{});
+  const collections = await listing.paginate(queries,{
+    page: page,
+    limit: limit,
+    sort: sort
+  });
   return collections;
 }
 
 /**
  *
  * @param username
+ * @param {Number} page
+ * @param {Number} limit
  */
-async function getSoldListingsByUsername(username) {
+async function getSoldListingsByUsername(username, page, limit) {
   const user = await userSvc.getUserByUsername(username, "_id");
   let queries = {};
   const sort = {'createdAt': 1};
@@ -861,6 +870,8 @@ async function getSoldListingsByUsername(username) {
   queries['owner'] = {$ne: user._id.toString()};
   queries['deleted'] = {$ne: true};
   const collections = await listing.paginate(queries, {
+    page: page,
+    limit: limit,
     sort: sort
   });
   return collections;
