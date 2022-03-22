@@ -840,18 +840,20 @@ async function recreateById(id, data, user) {
  * @param {String} username
  * @param {Number} page
  * @param {Number} limit
+ * @param {String} sort
  */
-async function getListingsByUsername(username, page, limit) {
+async function getListingsByUsername(username, page, limit, sort = 'bid.highest:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] === 'asc' ? '1' : '-1';
   const user = await userSvc.getUserByUsername(username, "_id");
   let queries = {};
-  const sort = {'createdAt': 1};
   queries['isPublished'] = {$eq: true};
   queries['deleted'] = {$ne:true};
   queries['owner'] = user._id.toString();
   const collections = await listing.paginate(queries,{
     page: page,
     limit: limit,
-    sort: sort
+    sort: {[field[0]]: orderBy},
   });
   return collections;
 }
@@ -861,18 +863,20 @@ async function getListingsByUsername(username, page, limit) {
  * @param username
  * @param {Number} page
  * @param {Number} limit
+ * @param {String} sort
  */
-async function getSoldListingsByUsername(username, page, limit) {
+async function getSoldListingsByUsername(username, page, limit,sort = 'bid.highest:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] === 'asc' ? '1' : '-1';
   const user = await userSvc.getUserByUsername(username, "_id");
   let queries = {};
-  const sort = {'createdAt': 1};
-  queries['creator'] = user._id.toString();
+  queries['creator'] = user._id;
   queries['owner'] = {$ne: user._id.toString()};
   queries['deleted'] = {$ne: true};
   const collections = await listing.paginate(queries, {
     page: page,
     limit: limit,
-    sort: sort
+    sort: {[field[0]]: orderBy},
   });
   return collections;
 }
