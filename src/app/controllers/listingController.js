@@ -234,6 +234,41 @@ async function indexer(req, res, next) {
       handler(e, res);
     });
 }
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function getListingsByUsername(req, res, next){
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  listingService.getListingsByUsername(req.params.username, page, limit, req.query.sort)
+      .then(function (data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
+}
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function getSoldListingsByUsername(req, res, next){
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  listingService.getSoldListingsByUsername(req.params.username, page, limit, req.query.sort)
+      .then(function (data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -249,4 +284,6 @@ module.exports = {
   finishAuction,
   download,
   indexer,
+  getListingsByUsername,
+  getSoldListingsByUsername,
 };

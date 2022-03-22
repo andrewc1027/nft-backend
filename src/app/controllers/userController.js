@@ -92,12 +92,29 @@ async function sendVerifyEmail(req, res, next) {
         handler(err, res);
       });
 }
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+async function getUserByUsername(req, res, next) {
+    const projection = req.query.projection ??= {};
+    UserService.getUserByUsername(req.params.username, projection)
+        .then(function (data) {
+            return res.json(data);
+        })
+        .catch((err)=>{
+            handler(err, res);
+        });
+}
+
 
 module.exports = {
-  findAndRegister,
-  find,
-  update,
-  me,
-  checkWallet,
-  sendVerifyEmail,
+    findAndRegister,
+    find,
+    update,
+    me,
+    checkWallet,
+    sendVerifyEmail,
+    getUserByUsername
 };

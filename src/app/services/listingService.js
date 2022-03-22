@@ -836,6 +836,53 @@ async function recreateById(id, data, user) {
   return saved._id;
 }
 
+/**
+ * @param {String} username
+ * @param {Number} page
+ * @param {Number} limit
+ * @param {String} sort
+ */
+async function getListingsByUsername(username, page, limit, sort = 'bid.highest:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] === 'asc' ? '1' : '-1';
+  const user = await userSvc.getUserByUsername(username, "_id");
+  let queries = {};
+  queries['isPublished'] = {$eq: true};
+  queries['deleted'] = {$ne:true};
+  queries['owner'] = user._id.toString();
+  const collections = await listing.paginate(queries,{
+    page: page,
+    limit: limit,
+    sort: {[field[0]]: orderBy},
+    collation: {locale: 'en_US', numericOrdering: true},
+  });
+  return collections;
+}
+
+/**
+ *
+ * @param username
+ * @param {Number} page
+ * @param {Number} limit
+ * @param {String} sort
+ */
+async function getSoldListingsByUsername(username, page, limit,sort = 'bid.highest:asc') {
+  const field = sort.split(':');
+  const orderBy = field[1] === 'asc' ? '1' : '-1';
+  const user = await userSvc.getUserByUsername(username, "_id");
+  let queries = {};
+  queries['creator'] = user._id;
+  queries['owner'] = {$ne: user._id.toString()};
+  queries['deleted'] = {$ne: true};
+  const collections = await listing.paginate(queries, {
+    page: page,
+    limit: limit,
+    sort: {[field[0]]: orderBy},
+    collation: {locale: 'en_US', numericOrdering: true},
+  });
+  return collections;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -851,4 +898,6 @@ module.exports = {
   finishAuction,
   download,
   indexer,
+  getListingsByUsername,
+  getSoldListingsByUsername,
 };
