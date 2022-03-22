@@ -98,7 +98,8 @@ async function sendVerifyEmail(req, res, next) {
  * @param  {Object} next
  */
 async function getUserByUsername(req, res, next) {
-    UserService.getUserByUsername(req.params.username)
+    const projection = req.query.projection ??= {};
+    UserService.getUserByUsername(req.params.username, projection)
         .then(function (data) {
             return res.json(data);
         })

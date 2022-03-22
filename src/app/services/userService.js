@@ -197,9 +197,10 @@ async function sendVerifyEmail(id) {
 /**
  *
  * @param {String} username
+ * @param {Object} projection
  */
-async function getUserByUsername(username){
-  const data = await user.findOne({"username": username}).orFail(
+async function getUserByUsername(username, projection){
+  const data = await user.findOne({"username": username}, projection).orFail(
       () => new DocumentNotFoundError('User not Found'));
   return data;
 }

@@ -836,6 +836,19 @@ async function recreateById(id, data, user) {
   return saved._id;
 }
 
+/**
+ * @param {String} username
+ */
+async function getListingsByUsername(username) {
+  const user = await userSvc.getUserByUsername(username, "_id");
+  let queries = {};
+  queries['isPublished'] = {$eq: true};
+  queries['deleted'] = {$ne:true};
+  queries['owner'] = user._id.toString();
+  const collections = await listing.paginate(queries,{});
+  return collections;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -851,4 +864,5 @@ module.exports = {
   finishAuction,
   download,
   indexer,
+  getListingsByUsername,
 };

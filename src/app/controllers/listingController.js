@@ -234,6 +234,22 @@ async function indexer(req, res, next) {
       handler(e, res);
     });
 }
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function getListingsByUsername(req, res, next){
+  listingService.getListingsByUsername(req.params.username)
+      .then(function (data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -249,4 +265,5 @@ module.exports = {
   finishAuction,
   download,
   indexer,
+  getListingsByUsername,
 };

@@ -33,6 +33,8 @@ router.get('/listings',
 router.get('/listings/:id',
     handlerException(tokenOption),
     handlerException(listingController.detail));
+router.get('/listings/user/:username',
+    handlerException(listingController.getListingsByUsername));
 router.post('/listings',
     multi,
     handlerException(tokenValidator),
