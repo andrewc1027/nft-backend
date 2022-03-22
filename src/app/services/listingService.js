@@ -854,6 +854,7 @@ async function getListingsByUsername(username, page, limit, sort = 'bid.highest:
     page: page,
     limit: limit,
     sort: {[field[0]]: orderBy},
+    collation: {locale: 'en_US', numericOrdering: true},
   });
   return collections;
 }
@@ -877,6 +878,7 @@ async function getSoldListingsByUsername(username, page, limit,sort = 'bid.highe
     page: page,
     limit: limit,
     sort: {[field[0]]: orderBy},
+    collation: {locale: 'en_US', numericOrdering: true},
   });
   return collections;
 }
