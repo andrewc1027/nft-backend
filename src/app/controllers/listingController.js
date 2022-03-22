@@ -243,7 +243,7 @@ async function indexer(req, res, next) {
 async function getListingsByUsername(req, res, next){
   const page = req.query.page || 0;
   const limit = req.query.limit || 10;
-  listingService.getListingsByUsername(req.params.username, page, limit)
+  listingService.getListingsByUsername(req.params.username, page, limit, req.query.sort)
       .then(function (data) {
         return res.json(data);
       })
@@ -260,7 +260,7 @@ async function getListingsByUsername(req, res, next){
 async function getSoldListingsByUsername(req, res, next){
   const page = req.query.page || 0;
   const limit = req.query.limit || 10;
-  listingService.getSoldListingsByUsername(req.params.username, page, limit)
+  listingService.getSoldListingsByUsername(req.params.username, page, limit, req.query.sort)
       .then(function (data) {
         return res.json(data);
       })
