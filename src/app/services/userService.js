@@ -194,6 +194,16 @@ async function sendVerifyEmail(id) {
     sendVerifyRequest(verifyData);  
 }
 
+/**
+ *
+ * @param {String} username
+ */
+async function getUserByUsername(username){
+  const data = await user.findOne({"username": username}).orFail(
+      () => new DocumentNotFoundError('User not Found'));
+  return data;
+}
+
 module.exports = {
   find,
   findAndSignIn,
@@ -203,4 +213,5 @@ module.exports = {
   me,
   checkWallet,
   sendVerifyEmail,
+  getUserByUsername,
 };

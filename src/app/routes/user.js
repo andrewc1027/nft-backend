@@ -33,6 +33,9 @@ router.get('/users/:id',
     handlerException(tokenValidator),
     handlerException(userController.find));
 
+router.get('/users/username/:username',
+    handlerException(userController.getUserByUsername));
+
 router.patch('/users',
     multi,
     handlerException(tokenValidator),
