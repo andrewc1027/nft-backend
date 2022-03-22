@@ -35,6 +35,8 @@ router.get('/listings/:id',
     handlerException(listingController.detail));
 router.get('/listings/user/:username',
     handlerException(listingController.getListingsByUsername));
+router.get('/listings/user/:username/sold',
+    handlerException(listingController.getSoldListingsByUsername));
 router.post('/listings',
     multi,
     handlerException(tokenValidator),

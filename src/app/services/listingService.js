@@ -849,6 +849,23 @@ async function getListingsByUsername(username) {
   return collections;
 }
 
+/**
+ *
+ * @param username
+ */
+async function getSoldListingsByUsername(username) {
+  const user = await userSvc.getUserByUsername(username, "_id");
+  let queries = {};
+  const sort = {'createdAt': 1};
+  queries['creator'] = user._id.toString();
+  queries['owner'] = {$ne: user._id.toString()};
+  queries['deleted'] = {$ne: true};
+  const collections = await listing.paginate(queries, {
+    sort: sort
+  });
+  return collections;
+}
+
 module.exports = {
   getAll,
   getOne,
@@ -865,4 +882,5 @@ module.exports = {
   download,
   indexer,
   getListingsByUsername,
+  getSoldListingsByUsername,
 };

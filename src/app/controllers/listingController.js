@@ -250,6 +250,21 @@ async function getListingsByUsername(req, res, next){
       });
 }
 
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function getSoldListingsByUsername(req, res, next){
+  listingService.getSoldListingsByUsername(req.params.username)
+      .then(function (data) {
+        return res.json(data);
+      })
+      .catch((err)=>{
+        handler(err, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -266,4 +281,5 @@ module.exports = {
   download,
   indexer,
   getListingsByUsername,
+  getSoldListingsByUsername,
 };
