@@ -24,15 +24,15 @@ async function getListings(req, res, next) {
 async function download(req, res, next) {
     try {
         const listing = await listingService.download(req.params.id);
+        const originalName = listing.nfts[0].ipfs.file.originalName.replace(/\s/g, '_');
         http.get(listing.nfts[0].ipfs.file.path, function(file) {
-            res.header('Content-Disposition', `attachment; filename="${listing.nfts[0].ipfs.file.originalName}"`);
+            res.header('Content-Disposition', `attachment; filename="${listing._id}_${originalName}"`);
             file.pipe(res);
         });
     } catch (e) {
         handler(e, res);
     }
 }
-
 
 module.exports = {
     getListings,
