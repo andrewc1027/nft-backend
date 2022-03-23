@@ -107,14 +107,8 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
     }
 
 
-    let listings = await listingModel
-        .paginate(filters, {
-            page: page,
-            populate: 'nfts',
-            limit: limit,
-            sort: {[field[0]]: orderBy}
-            }
-        );
+    const listings = await listingModel
+        .paginate(filters, {page: page, populate: 'nfts', limit: limit, sort: {[field[0]]: orderBy}});
     return listings;
 }
 
