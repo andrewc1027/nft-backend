@@ -25,7 +25,7 @@ async function download(req, res, next) {
     try {
         const listing = await listingService.download(req.params.id);
         http.get(listing.nfts[0].ipfs.file.path, function(file) {
-            res.header('Content-Disposition', `attachment; filename="${listing._id}.jpg"`);
+            res.header('Content-Disposition', `attachment; filename="${listing.nfts[0].ipfs.file.originalName}"`);
             file.pipe(res);
         });
     } catch (e) {
