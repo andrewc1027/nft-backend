@@ -1,5 +1,6 @@
 const listingService = require('../../services/admin/listingService');
 const {handler} = require('./../errHandler');
+const http = require("https");
 
 async function getListings(req, res, next) {
     const page = req.query.page || 0;
@@ -14,6 +15,26 @@ async function getListings(req, res, next) {
         });
 }
 
+
+/**
+ *@param {Object} req
+ *@param {Object} res
+ *@param {Object} next
+ */
+async function download(req, res, next) {
+    try {
+        const listing = await listingService.download(req.params.id);
+        http.get(listing.nfts[0].ipfs.file.path, function(file) {
+            res.header('Content-Disposition', `attachment; filename="${listing._id}.jpg"`);
+            file.pipe(res);
+        });
+    } catch (e) {
+        handler(e, res);
+    }
+}
+
+
 module.exports = {
-    getListings
+    getListings,
+    download
 }

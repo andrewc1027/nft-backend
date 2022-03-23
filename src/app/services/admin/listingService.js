@@ -1,6 +1,8 @@
 const listingModel = require("../../models/listing");
+const nftModel = require("../../models/nft")
 const qTransform = require("../../utils/queryTransform");
 const {ObjectId} = require("bson");
+const listing = require("../../models/listing");
 
 async function getListings(query, page, limit, sort= 'bid.highest:asc') {
     const field = sort.split(':');
@@ -96,6 +98,17 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
     return listings;
 }
 
+async function download(id) {
+    // const item = await listing.findById(id).select('+downloadLink');
+    const item = await listing.findById(id).orFail(
+        () => Error('NotFound'),
+    ).populate('nfts',
+        // eslint-disable-next-line max-len
+        'ipfs.file.originalName ipfs.file.path').select('ipfs.file.path');
+    return item;
+}
+
 module.exports = {
-    getListings
+    getListings,
+    download
 }
