@@ -11,5 +11,8 @@ const admin = require('../../middleware/admin');
 router.get('/admin/listings',
     handlerException(admin),
     handlerException(listingController.getListings));
+router.get('/admin/listings/:id/download',
+    handlerException(admin),
+    handlerException(listingController.download));
 
 module.exports = router;
