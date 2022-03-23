@@ -1,4 +1,5 @@
 const listingModel = require("../../models/listing");
+const nftModel = require("../../models/nft");
 const qTransform = require("../../utils/queryTransform");
 const {ObjectId} = require("bson");
 
@@ -90,9 +91,24 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
         filters['$or'] = ors;
     }
 
+    if (query.ipfsdate) {
+        let nftIds = [];
+        const date_from = new Date(query.ipfsdate).toISOString();
+        const nfts = await nftModel.find(
+            {$and: [
+                    {"ipfs":{$exists:true}},
+                    {"ipfs.file.pinDate":{$gte:date_from}}
+                ]}
+        );
+        nfts.forEach((item) => {
+            nftIds.push(item._id);
+        });
+        filters['nfts'] = {$in: nftIds};
+    }
+
+
     const listings = await listingModel
-        .paginate(filters,
-            {page: page, limit: limit, sort: {[field[0]]: orderBy}});
+        .paginate(filters, {page: page, populate: 'nfts', limit: limit, sort: {[field[0]]: orderBy}});
     return listings;
 }
 
