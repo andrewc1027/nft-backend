@@ -14,7 +14,7 @@ async function getCreators() {
     return new Set(creators);
 }
 
-async function getItemsByCreator(creator, sort = "desc") {
+async function getItemsByCreator(creator) {
     const filters = {};
     filters['deleted'] = {$ne: true};
     filters['creator'] = new ObjectId(creator);
@@ -46,7 +46,7 @@ async function index(query) {
             "_id": creatorId,
             "name": creatorDetails.username,
             "floorPrice": floorPrice,
-            "items": listings.length
+            "items": listings.length,
         });
     }
     const sort = query.sort ??= "items:desc";
@@ -67,7 +67,7 @@ async function index(query) {
         leaderboard.sort((a, b) => {
             return (a.floorPrice - b.floorPrice) * orderBy;
         });
-    } else {    // else sort by # items
+    } else {    // else sort by quantity of items
         leaderboard.sort((a, b) => {
             return (a.items - b.items) * orderBy;
         });
