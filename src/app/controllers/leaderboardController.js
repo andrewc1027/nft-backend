@@ -8,7 +8,9 @@ const leaderboardService = require("../services/leaderboardService")
  * @returns {Promise<void>}
  */
 async function index(req, res, next) {
-    leaderboardService.index(req)
+    leaderboardService.index(req.query).then((data)=>{
+        return res.json(data);
+    })
 }
 
 module.exports = {
