@@ -569,6 +569,8 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
       ors.push({'name': qTransform.regexLike(s)});
       ors.push({'address': qTransform.regexLike(s)});
       ors.push({'city.name': qTransform.regexLike(s)});
+      ors.push({'description': qTransform.regexLike(s)});
+      ors.push({'tags': qTransform.regexLike(s)});
     }
   }
 
