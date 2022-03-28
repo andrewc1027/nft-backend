@@ -1,4 +1,5 @@
 const listingModel = require("../../models/listing");
+const nftModel = require("../../models/nft");
 const qTransform = require("../../utils/queryTransform");
 const {ObjectId} = require("bson");
 
@@ -31,6 +32,8 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
             ors.push({'name': qTransform.regexLike(s)});
             ors.push({'address': qTransform.regexLike(s)});
             ors.push({'city.name': qTransform.regexLike(s)});
+            ors.push({'description': qTransform.regexLike(s)});
+            ors.push({'tags': qTransform.regexLike(s)});
         }
     }
 
@@ -90,12 +93,43 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
         filters['$or'] = ors;
     }
 
+    if (query.ipfsdate_from || query.ipfsdate_to) {
+        let nftIds = [];
+        const nft_ands=[{"ipfs":{$exists:true}}];
+        if (query.ipfsdate_from) {
+            const date_from = new Date(query.ipfsdate_from).toISOString();
+            nft_ands.push({"ipfs.file.pinDate":{$gte:date_from}});
+        }
+        if (query.ipfsdate_to) {
+            let date_to = new Date(query.ipfsdate_to)
+            date_to = new Date(date_to.setDate(date_to.getDate()+1)).toISOString();
+            nft_ands.push({"ipfs.file.pinDate":{$lt:date_to}});
+        }
+        const nfts = await nftModel.find(
+            {$and: nft_ands}
+        );
+        nfts.forEach((item) => {
+            nftIds.push(item._id);
+        });
+        filters['nfts'] = {$in: nftIds};
+    }
+
+
     const listings = await listingModel
-        .paginate(filters,
-            {page: page, limit: limit, sort: {[field[0]]: orderBy}});
+        .paginate(filters, {page: page, populate: 'nfts', limit: limit, sort: {[field[0]]: orderBy}});
     return listings;
 }
 
+async function download(id) {
+    const item = await listingModel.findById(id).orFail(
+        () => Error('NotFound'),
+    ).populate('nfts',
+        // eslint-disable-next-line max-len
+        'ipfs.file.originalName ipfs.file.path').select('ipfs.file.path');
+    return item;
+}
+
 module.exports = {
-    getListings
+    getListings,
+    download
 }

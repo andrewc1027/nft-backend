@@ -1,5 +1,6 @@
 const {ObjectId} = require('bson');
 const city = require('../models/city');
+const listing = require('../models/listing')
 const qTransform = require('../utils/queryTransform');
 const joi = require('joi');
 /**
@@ -12,6 +13,7 @@ const joi = require('joi');
 async function getAll(query, user, page, limit) {
   const queries = {};
   const sort = {index: 1};
+
   if (query.url) {
     queries['url'] = query.url;
   }
@@ -22,6 +24,25 @@ async function getAll(query, user, page, limit) {
 
   if (query.id) {
     queries['_id'] = new ObjectId(query.id);
+  }
+  if (query.listed === true || query.listed === 'true') {
+    let filter;
+    let listedCitiesIds = [];
+    let conditions = [];
+    if(query.id) {
+      conditions.push({"city.ID":query.id});
+    }
+    conditions.push({isPublished: true});
+    conditions.push({deleted: {$ne: true}});
+    filter = {$and: conditions}
+    const listedCities = await listing.find(
+        filter,
+        {"city.ID": 1});
+    for (let i = 0; i < listedCities.length; i++) {
+      listedCitiesIds.push(listedCities[i].city.ID.toString());
+    }
+    listedCitiesIds = Array.from(new Set(listedCitiesIds));
+    queries['_id'] = {$in: listedCitiesIds};
   }
   const collections = await city.paginate(
       queries, {
@@ -57,7 +78,7 @@ async function getAutocomplete(query, limit = 10) {
   filters['parent'] = true;
   const result = await city.paginate(filters, {
     select: 'name _id',
-    sort: {population: -1},
+    sort: {index: 1},
     limit: limit,
     collation: {
       locale: 'en_US',
