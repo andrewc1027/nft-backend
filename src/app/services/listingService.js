@@ -75,9 +75,12 @@ async function getAll(query, page, limit, self) {
 /**
  * @param {String} id
  * @param {Object} user
+ * @param {Boolean} incPageViewCounter
  */
-async function getOne(id, user = {}) {
-  viewCounter(id);
+async function getOne(id, user = {}, incPageViewCounter=true) {
+  if (incPageViewCounter) {
+    await viewCounter(id);
+  }
   const detail = await listing.findById(id).orFail(
     () => Error('NotFound'),
   ).populate('nfts',
