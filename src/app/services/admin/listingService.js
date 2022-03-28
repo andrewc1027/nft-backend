@@ -93,14 +93,20 @@ async function getListings(query, page, limit, sort= 'bid.highest:asc') {
         filters['$or'] = ors;
     }
 
-    if (query.ipfsdate) {
+    if (query.ipfsdate_from || query.ipfsdate_to) {
         let nftIds = [];
-        const date_from = new Date(query.ipfsdate).toISOString();
+        const nft_ands=[{"ipfs":{$exists:true}}];
+        if (query.ipfsdate_from) {
+            const date_from = new Date(query.ipfsdate_from).toISOString();
+            nft_ands.push({"ipfs.file.pinDate":{$gte:date_from}});
+        }
+        if (query.ipfsdate_to) {
+            let date_to = new Date(query.ipfsdate_to)
+            date_to = new Date(date_to.setDate(date_to.getDate()+1)).toISOString();
+            nft_ands.push({"ipfs.file.pinDate":{$lt:date_to}});
+        }
         const nfts = await nftModel.find(
-            {$and: [
-                    {"ipfs":{$exists:true}},
-                    {"ipfs.file.pinDate":{$gte:date_from}}
-                ]}
+            {$and: nft_ands}
         );
         nfts.forEach((item) => {
             nftIds.push(item._id);
