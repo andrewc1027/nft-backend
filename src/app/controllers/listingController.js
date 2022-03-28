@@ -26,7 +26,8 @@ async function index(req, res, next) {
  * @param  {Object} next
  */
 async function detail(req, res, next) {
-  listingService.getOne(req.params.id, req.user)
+  const incPageViewCounter = !req.rawHeaders.includes('node-fetch/1.0 (+https://github.com/bitinn/node-fetch)');
+  listingService.getOne(req.params.id, req.user, incPageViewCounter)
     .then(function(listing) {
       return res.json(listing);
     })
