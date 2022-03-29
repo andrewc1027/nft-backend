@@ -1,4 +1,5 @@
 const order = require('../models/order');
+const notificationSvc = require('./notificationService');
 
 
 async function getAll(query, page, limit) {
@@ -22,6 +23,8 @@ async function insert(data) {
         contactInfo: data.contactInfo,
         createdAt: Date.now()
     });
+    await notificationSvc.sendOrderNotification(item);
+
     return item;
 }
 
