@@ -157,7 +157,7 @@ async function sendOrderNotification(data) {
       <b>Ground or aerial</b>: ${data.isAerial ? 'Aerial' : 'Ground'},<br/>
       <b>What is it</b>: ${data.object},<br/>
       <b>Location</b>: ${data.location},<br/>
-      <b>Details</b>: ${data.details},<br/>
+      <b>Details</b>: ${data.details ? data.details : 'None'},<br/>
       <b>Contact Method</b>: ${data.contactMethod},<br/>
       <b>Contact Info</b>: ${data.contactInfo},<br/>
       <b>Creation date</b>: ${data.createdAt}`;
