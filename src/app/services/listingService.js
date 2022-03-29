@@ -632,7 +632,19 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
     filters['$or'] = ors;
   }
   const listings = await listing.paginate(filters, {
-    page, limit, sort: {[field[0]]: orderBy},
+    page,
+    limit,
+    sort: {[field[0]]: orderBy},
+    select: {
+      "name": 1,
+      "address": 1,
+      "city": 1,
+      "geoLocation": 1,
+      "thumbnail": 1,
+      "bid.highest": 1,
+      "price": 1,
+      "likes": 1,
+    },
   });
   return listings;
 }
