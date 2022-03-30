@@ -152,6 +152,25 @@ async function sendVerifyRequest(data) {
   });
 }
 
+async function sendOrderNotification(data) {
+  const message = `<b>Kind of NFT</b>: ${data.type},<br/>
+      <b>Ground or aerial</b>: ${data.isAerial ? 'Aerial' : 'Ground'},<br/>
+      <b>What is it</b>: ${data.object},<br/>
+      <b>Location</b>: ${data.location},<br/>
+      <b>Details</b>: ${data.details ? data.details : 'None'},<br/>
+      <b>Contact Method</b>: ${data.contactMethod},<br/>
+      <b>Contact Info</b>: ${data.contactInfo},<br/>
+      <b>Creation date</b>: ${data.createdAt}`;
+
+  sendEmail('d-506cd402ff5c42bdbf5a582cf1bf7ebb', {
+    to: 'support@homejab.com',
+    subject: 'New custom NFT Order created',
+    body: message,
+    buttonText: 'Visit Marketplace',
+    buttonLink: process.env.HOMEJAB_WEB,
+  })
+}
+
 module.exports = {
   itemPurchased,
   itemSold,
@@ -159,4 +178,5 @@ module.exports = {
   downloadReady,
   sendInvite,
   sendVerifyRequest,
+  sendOrderNotification,
 };
