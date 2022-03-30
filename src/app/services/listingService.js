@@ -904,8 +904,13 @@ async function getMarkers(query, page, limit, sort = 'bid.highest:asc') {
   if (query.search) {
     const q = query.search;
     ors.push({'name': qTransform.regexLike(q)});
+    ors.push({'description': qTransform.regexLike(q)});
     ors.push({'address': qTransform.regexLike(q)});
     ors.push({'city.name': qTransform.regexLike(q)});
+    ors.push({'tags': qTransform.regexLike(q)});
+    ors.push({'blockchain': qTransform.regexLike(q)});
+    ors.push({'resource': qTransform.regexLike(q)});
+    ors.push({'sellMethod': qTransform.regexLike(q)});
   }
 
   if (query.keyword) {
