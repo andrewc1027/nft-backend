@@ -562,8 +562,13 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   if (query.search) {
     const q = query.search;
     ors.push({'name': qTransform.regexLike(q)});
+    ors.push({'description': qTransform.regexLike(q)});
     ors.push({'address': qTransform.regexLike(q)});
     ors.push({'city.name': qTransform.regexLike(q)});
+    ors.push({'tags': qTransform.regexLike(q)});
+    ors.push({'blockchain': qTransform.regexLike(q)});
+    ors.push({'resource': qTransform.regexLike(q)});
+    ors.push({'sellMethod': qTransform.regexLike(q)});
   }
 
   if (query.keyword) {
@@ -632,7 +637,19 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
     filters['$or'] = ors;
   }
   const listings = await listing.paginate(filters, {
-    page, limit, sort: {[field[0]]: orderBy},
+    page,
+    limit,
+    sort: {[field[0]]: orderBy},
+    // select: {
+    //   "name": 1,
+    //   "address": 1,
+    //   "city": 1,
+    //   "geoLocation": 1,
+    //   "thumbnail": 1,
+    //   "bid.highest": 1,
+    //   "price": 1,
+    //   "likes": 1,
+    // },
   });
   return listings;
 }
