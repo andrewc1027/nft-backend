@@ -270,6 +270,19 @@ async function getSoldListingsByUsername(req, res, next){
       });
 }
 
+async function getMarkers(req, res, next) {
+  const page = req.query.page || 0;
+  const limit = req.query.limit || 10;
+  const query = req.query;
+  listingService.getMarkers(query, page, limit, req.query.sort)
+      .then(function(data) {
+        return res.json(data);
+      })
+      .catch((err) => {
+        handler(err, res);
+      });
+}
+
 module.exports = {
   index,
   detail,
@@ -287,4 +300,5 @@ module.exports = {
   indexer,
   getListingsByUsername,
   getSoldListingsByUsername,
+  getMarkers,
 };

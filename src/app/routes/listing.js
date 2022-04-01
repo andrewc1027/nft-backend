@@ -71,6 +71,9 @@ router.delete('/listings/:id',
 router.get('/explore',
     handlerException(listingController.explore));
 
+router.get('/markers',
+    handlerException(listingController.getMarkers));
+
 router.get('/tags',
     handlerException(listingController.getTags));
 
