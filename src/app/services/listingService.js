@@ -999,7 +999,11 @@ async function getMarkers(query, page, limit, sort = 'bid.highest:asc') {
     filters['$or'] = ors;
   }
   const markers = await listing.paginate(filters, {
-    page, limit, sort: {[field[0]]: orderBy},
+    page, limit,
+    sort: {
+      [field[0]]: orderBy,
+      _id: 1,
+    },
     select: {
       "geoLocation": 1,
       "address": 1,
