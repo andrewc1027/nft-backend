@@ -368,10 +368,10 @@ async function purchase(id, data, user, socket) {
 }
 
 /**
- * 
- * @param {String} id 
- * @param {Object} item 
- * @param {Object} data 
+ *
+ * @param {String} id
+ * @param {Object} item
+ * @param {Object} data
  */
 async function validatePurchase(id, item, data) {
   const schema = joi.object({
@@ -639,7 +639,10 @@ async function explore(query, page, limit, sort = 'bid.highest:asc') {
   const listings = await listing.paginate(filters, {
     page,
     limit,
-    sort: {[field[0]]: orderBy},
+    sort: {
+      [field[0]]: orderBy,
+      _id: 1,
+    },
     // select: {
     //   "name": 1,
     //   "address": 1,
@@ -840,9 +843,9 @@ async function retrieveIPFSFile(fileObj) {
 }
 
 /**
- * @param {String} id 
- * @param {Object} data 
- * @param {Object} user 
+ * @param {String} id
+ * @param {Object} data
+ * @param {Object} user
  */
 async function recreateById(id, data, user) {
   const item = await listing.findById(id).select('+downloadLink');
