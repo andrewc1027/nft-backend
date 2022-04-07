@@ -43,7 +43,10 @@ async function getItemsByCreator(creator) {
  */
 async function countVolume(listings) {
     return listings.reduce(function(a, b) {
-        return a + b['price'];
+        if (b.price == undefined) {
+            b.price = 0;
+        }
+        return a + b.price;
     }, 0);
 }
 
@@ -66,8 +69,8 @@ async function getTransactions(query) {
     }
     const trxs = await trxModel.find({
         date: {
-            $gte: new Date(query.startDate),
-            $lte: new Date(query.endDate)
+            $gte: query.startDate,
+            // $lte: query.endDate
         }
     })
     const listings = [...new Set(trxs.map(item => item.listingID))];
@@ -89,6 +92,7 @@ async function index(query) {
         const creatorDetails = await userService.find(creatorId);
         const listings = await getItemsByCreator(creatorId);
         const totalOwner = await getOwner(listings);
+
         const volume = await countVolume(listings);
         const prices = [];
         for (let i = 0; i < listings.length; i++) {
@@ -113,7 +117,6 @@ async function index(query) {
     const sort = query.sort ??= "items:desc";
     const sortBy = sort.split(':');
     const orderBy = sortBy[1] === 'asc' ? '1' : '-1';
-
     if (sortBy[0] === "name") {
         leaderboard.sort((a, b) => {
             if (a.name < b.name) {
@@ -127,6 +130,10 @@ async function index(query) {
     } else if (sortBy[0] === "price") {
         leaderboard.sort((a, b) => {
             return (a.floorPrice - b.floorPrice) * orderBy;
+        });
+    } else if (sortBy[0] === "volume") {
+        leaderboard.sort((a, b) => {
+            return (a.volume - b.volume) * orderBy;
         });
     } else {    // else sort by quantity of items
         leaderboard.sort((a, b) => {
