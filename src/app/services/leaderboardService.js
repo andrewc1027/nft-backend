@@ -1,4 +1,5 @@
 const listingModel = require('../models/listing');
+const trxModel = require('../models/transaction');
 const userService = require('../services/userService');
 const {ObjectId} = require("mongodb");
 
@@ -16,8 +17,10 @@ async function getCreators(query) {
     if (query.blockchain) {
         filters['blockchain'] = query.blockchain;
     }
+    if (query.listings) {
+        filters['_id'] = {$in: query.listings};
+    }
     const listings = await listingModel.find(filters, {});
-
     const creators = [];
     listings.forEach((listing) => {
         creators.push(listing.creator.toString());
@@ -54,11 +57,33 @@ async function getOwner(listings) {
 }
 
 /**
+ * 
+ * @param {Object} query 
+ */
+async function getTransactions(query) {
+    if (!query.endDate) {
+        query.endDate = Date.now();
+    }
+    const trxs = await trxModel.find({
+        date: {
+            $gte: new Date(query.startDate),
+            $lte: new Date(query.endDate)
+        }
+    })
+    const listings = [...new Set(trxs.map(item => item.listingID))];
+    return listings;
+}
+
+/**
  *
  * @param query
  */
 async function index(query) {
     const leaderboard = [];
+    if (query.startDate) {
+        const listings = await getTransactions(query);
+        query.listings = listings;
+    }
     const creatorIds = await getCreators(query);
     for (const creatorId of creatorIds) {
         const creatorDetails = await userService.find(creatorId);
