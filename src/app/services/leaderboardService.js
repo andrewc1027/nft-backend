@@ -2,9 +2,20 @@ const listingModel = require('../models/listing');
 const userService = require('../services/userService');
 const {ObjectId} = require("mongodb");
 
-async function getCreators() {
+/**
+ * 
+ * @param {Object} query 
+ * @returns 
+ */
+async function getCreators(query) {
     const filters = {};
     filters['deleted'] = {$ne: true};
+    if (query.resource) {
+        filters['resource'] = query.resource;
+    }
+    if (query.blockchain) {
+        filters['blockchain'] = query.blockchain;
+    }
     const listings = await listingModel.find(filters, {});
 
     const creators = [];
@@ -23,15 +34,37 @@ async function getItemsByCreator(creator) {
 }
 
 /**
+ * 
+ * @param {Array} listings 
+ * @returns 
+ */
+async function countVolume(listings) {
+    return listings.reduce(function(a, b) {
+        return a + b['price'];
+    }, 0);
+}
+
+/**
+ * 
+ * @param {Array} listings 
+ */
+async function getOwner(listings) {
+    const uniqueOwner = [...new Set(listings.map(item => item.owner))];
+    return new Set(uniqueOwner).size;
+}
+
+/**
  *
  * @param query
  */
 async function index(query) {
     const leaderboard = [];
-    const creatorIds = await getCreators();
+    const creatorIds = await getCreators(query);
     for (const creatorId of creatorIds) {
         const creatorDetails = await userService.find(creatorId);
         const listings = await getItemsByCreator(creatorId);
+        const totalOwner = await getOwner(listings);
+        const volume = await countVolume(listings);
         const prices = [];
         for (let i = 0; i < listings.length; i++) {
             if (listings[i].price) {
@@ -47,6 +80,9 @@ async function index(query) {
             "name": creatorDetails.username,
             "floorPrice": floorPrice,
             "items": listings.length,
+            "userLogo": creatorDetails.logoImage ?? "",
+            "volume": volume ?? 0,
+            "owner": totalOwner ?? 0,
         });
     }
     const sort = query.sort ??= "items:desc";
