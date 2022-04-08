@@ -11,10 +11,10 @@ const {ObjectId} = require("mongodb");
 async function getCreators(query) {
     const filters = {};
     filters['deleted'] = {$ne: true};
-    if (query.resource) {
+    if (query.resource && query.resource !== 'all') {
         filters['resource'] = query.resource;
     }
-    if (query.blockchain) {
+    if (query.blockchain && query.blockchain !== 'all') {
         filters['blockchain'] = query.blockchain;
     }
     if (query.listings) {
@@ -67,10 +67,14 @@ async function getTransactions(query) {
     if (!query.endDate) {
         query.endDate = Date.now();
     }
+    let date_from = new Date(query.startDate);
+    date_from = new Date(date_from.setDate(date_from.getDate() + 1)).toISOString();
+    let date_to = new Date(query.endDate);
+    date_to = new Date(date_to.setDate(date_to.getDate()+1)).toISOString();
     const trxs = await trxModel.find({
         date: {
-            $gte: new Date(query.startDate).toISOString(),
-            $lte: new Date(query.endDate).toISOString(),
+            $gte: date_from,
+            $lt: date_to,
         }
     })
     const listings = [...new Set(trxs.map(item => item.listingID))];
