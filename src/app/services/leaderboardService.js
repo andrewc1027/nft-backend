@@ -69,8 +69,8 @@ async function getTransactions(query) {
     }
     const trxs = await trxModel.find({
         date: {
-            $gte: query.startDate,
-            // $lte: query.endDate
+            $gte: new Date(query.startDate).toISOString(),
+            $lte: new Date(query.endDate).toISOString(),
         }
     })
     const listings = [...new Set(trxs.map(item => item.listingID))];
@@ -134,6 +134,10 @@ async function index(query) {
     } else if (sortBy[0] === "volume") {
         leaderboard.sort((a, b) => {
             return (a.volume - b.volume) * orderBy;
+        });
+    } else if (sortBy[0] === "owner") {
+        leaderboard.sort((a, b) => {
+            return (a.owner - b.owner) * orderBy;
         });
     } else {    // else sort by quantity of items
         leaderboard.sort((a, b) => {
