@@ -11,15 +11,15 @@ const {ObjectId} = require("mongodb");
 async function getCreators(query) {
     const filters = {};
     filters['deleted'] = {$ne: true};
-    if (query.resource) {
+    if (query.resource && query.resource !== 'all') {
         filters['resource'] = query.resource;
     }
-    if (query.blockchain) {
+    if (query.blockchain && query.blockchain !== 'all') {
         filters['blockchain'] = query.blockchain;
     }
-    if (query.listings) {
-        filters['_id'] = {$in: query.listings};
-    }
+    // if (query.listings) {
+    //     filters['_id'] = {$in: query.listings};
+    // }
     const listings = await listingModel.find(filters, {});
     const creators = [];
     listings.forEach((listing) => {
@@ -67,10 +67,12 @@ async function getTransactions(query) {
     if (!query.endDate) {
         query.endDate = Date.now();
     }
+    let date_to = new Date(query.endDate);
+    date_to = new Date(date_to.setDate(date_to.getDate()+1)).toISOString();
     const trxs = await trxModel.find({
         date: {
             $gte: new Date(query.startDate).toISOString(),
-            $lte: new Date(query.endDate).toISOString(),
+            $lt: query.endDate,
         }
     })
     const listings = [...new Set(trxs.map(item => item.listingID))];
