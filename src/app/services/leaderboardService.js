@@ -37,13 +37,14 @@ async function getItemsByCreator(creator) {
 }
 
 /**
- * 
- * @param {Array} listings 
- * @returns 
+ *
+ * @param {String} creatorId
+ * @returns {Promise<*>}
  */
-async function countVolume(listings) {
-    return listings.reduce(function(a, b) {
-        if (b.price == undefined) {
+async function countVolume(creatorId) {
+    const trxs = await trxModel.find({"from": creatorId})
+    return trxs.reduce(function(a, b) {
+        if (b.price === undefined) {
             b.price = 0;
         }
         return a + b.price;
@@ -68,7 +69,7 @@ async function getTransactions(query) {
         query.endDate = Date.now();
     }
     let date_from = new Date(query.startDate);
-    date_from = new Date(date_from.setDate(date_from.getDate() + 1)).toISOString();
+    date_from = new Date(date_from.setDate(date_from.getDate())).toISOString();
     let date_to = new Date(query.endDate);
     date_to = new Date(date_to.setDate(date_to.getDate()+1)).toISOString();
     const trxs = await trxModel.find({
@@ -97,7 +98,7 @@ async function index(query) {
         const listings = await getItemsByCreator(creatorId);
         const totalOwner = await getOwner(listings);
 
-        const volume = await countVolume(listings);
+        const volume = await countVolume(creatorId);
         const prices = [];
         for (let i = 0; i < listings.length; i++) {
             if (listings[i].price) {
