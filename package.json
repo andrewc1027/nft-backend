@@ -6,7 +6,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./src/bin/www",
+    "start": "node api.js && node ./src/bin/www",
     "test": "npx mocha tests/*.test.js",
     "lint": "npx eslint src/**"
   },
