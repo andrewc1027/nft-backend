@@ -30,7 +30,6 @@ router.get('/users/me',
     handlerException(userController.me));
 
 router.get('/users/:id',
-    handlerException(tokenValidator),
     handlerException(userController.find));
 
 router.get('/users/username/:username',
