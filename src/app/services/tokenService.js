@@ -1,8 +1,11 @@
 const {default: axios} = require('axios');
 const {DocumentNotFoundError} = require('mongoose').Error;
 const contract = require('../config/homejabContract');
+const listingModel = require('../models/listing');
+const nftModel = require('../models/nft');
+
 /**
- * @param {String} token 
+ * @param {Number} token 
  * @return {Array}
  */
 async function getMetadata(token) {
@@ -24,14 +27,33 @@ async function getMetadata(token) {
 
 /**
  * 
- * @param {String} token 
+ * @param {Number} token 
  */
 async function getPolygonMetadata(token) {
   const metadata = await contract.methods.getOwner().call();
   console.log(metadata, token);
 }
 
+/**
+ * 
+ * @param {Number} token 
+ */
+async function getEthMetadata(token) {
+  const listing = await listingModel.findOne({tokenIds: {$in: token}, blockchain: 'ethereum'});
+  if (listing) {
+    const nft = await nftModel.findById(listing.nft[0]).throwIfNotFound();
+    console.log(nft.ipfs.file.cid);
+    const url = `${process.env.PINATA_GATEWAY}/ipfs/${nft.ipfs.file.cid}`;
+    const res = await axios.get(url);
+    return res.data;
+
+  } else {
+    throw new DocumentNotFoundError('Token Detail not Found');
+  }
+}
+
 module.exports = {
   getMetadata,
   getPolygonMetadata,
+  getEthMetadata,
 };

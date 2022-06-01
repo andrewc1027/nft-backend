@@ -26,7 +26,22 @@ async function getPolygonMetadata(req, res, next) {
   return res.json(data);
 }
 
+/**
+ * @param  {Object} req
+ * @param  {Object} res
+ * @param  {Object} next
+ */
+ async function getEthMetadata(req, res, next) {
+  try {
+    const data = await tokenService.getEthMetadata(req.params.token);
+    return res.json(data);
+  }catch(e) {
+    return res.status(e.statusCode || 500).json({message: e.message});
+  }
+}
+
 module.exports = {
   getMetadata,
   getPolygonMetadata,
+  getEthMetadata,
 };

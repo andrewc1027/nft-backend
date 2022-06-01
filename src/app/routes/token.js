@@ -6,5 +6,6 @@ const tokenController = require('../controllers/tokenController');
 
 router.get('/token/ipfs/:token', handlerException(tokenController.getMetadata));
 router.get('/token/polygon/:token', handlerException(tokenController.getPolygonMetadata));
+router.get('/token/eth/:token', handlerException(tokenController.getEthMetadata));
 
 module.exports = router;
