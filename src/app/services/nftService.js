@@ -131,8 +131,9 @@ async function remove(ids) {
  * @param {String} listingID
  * @param {String} token
  * @param {String} owner
+ * @param {String} blockchain
  */
-async function hashMetadata(listingID, token, owner) {
+async function hashMetadata(listingID, token, owner, blockchain) {
   const nfts = await nft.find({listingID: new ObjectId(listingID)}).select('ipfs.file');
   for (const nft of nfts) {
     const url = `${process.env.PINATA_API_URL}pinning/hashMetadata`;
@@ -141,6 +142,7 @@ async function hashMetadata(listingID, token, owner) {
       keyvalues: {
         token: token,
         owner: owner,
+        blockchain: blockchain,
       }
     };
     const res = await axios.default.put(url, body, {

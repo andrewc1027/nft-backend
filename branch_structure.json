@@ -1,0 +1,33 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dev",
+    "feat/eth-metadata",
+    "feat/fix_date_for_firly",
+    "feat/fix_leaderboard_volume",
+    "feat/public-users-detail",
+    "feat/trx-endpoint-sort",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "dev": "main",
+    "feat/eth-metadata": "main",
+    "feat/fix_date_for_firly": "main",
+    "feat/fix_leaderboard_volume": "main",
+    "feat/public-users-detail": "main",
+    "feat/trx-endpoint-sort": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "dev",
+    "feat/eth-metadata",
+    "feat/fix_date_for_firly",
+    "feat/fix_leaderboard_volume",
+    "feat/public-users-detail",
+    "feat/trx-endpoint-sort",
+    "origin"
+  ]
+}
